@@ -7,8 +7,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ShootingStars } from "@/components/ui/shooting-stars";
-import { StarsBackground } from "@/components/ui/stars-background";
 
 const initialState = {
   error: null,
@@ -32,9 +30,26 @@ function Login() {
 
   return (
     <div className="h-screen w-screen relative bg-black/80 flex justify-center items-center">
-      <div className="z-10 max-w-sm md:max-w-lg lg:max-w-2xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-stone-900 bg-stone-950/60">
-        <h2 className="font-bold text-xl text-neutral-200">Login to Lynx</h2>
-        <p className="text-sm max-w-sm mt-2 text-neutral-300">login to ...</p>
+      <div className="z-10 max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input">
+        <Link className="block" href="/">
+          <img
+            src="/assets/logo.png"
+            alt="Lynq Logo"
+            width={120}
+            height={300}
+            className="mx-auto"
+          />
+        </Link>
+        <div className="relative mt-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t"></span>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="text-muted-foreground text-center uppercase bg-black px-2">
+              Login
+            </span>
+          </div>
+        </div>
 
         <form className="mt-8 mb-2">
           <LabelInputContainer className="mb-4">
@@ -81,7 +96,7 @@ function Login() {
         <div>
           <Button
             variant="ghost"
-            className="w-full hover:bg-stone-900/20"
+            className="w-full hover:bg-stone-900/60"
             onClick={handleGuestLogin}
           >
             Explore app as guest &rarr;
@@ -91,8 +106,6 @@ function Login() {
           {loginState?.error && <p>* {loginState?.error}</p>}
         </div>
       </div>
-      <ShootingStars />
-      <StarsBackground starDensity={0.0001} />
     </div>
   );
 }

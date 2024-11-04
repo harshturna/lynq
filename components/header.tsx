@@ -12,13 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 
 const Header = () => {
   const pathname = usePathname();
 
   return (
-    <div className="w-full border-b border-white/5 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between px-6 py-4 items-center">
+    <div className="w-full border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
       <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
       <div className="flex space-x-6">
         {pathname !== "/dashboard" && (

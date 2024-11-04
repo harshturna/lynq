@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: var(--font-satoshi);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
 @layer utilities {
   .button {
     @apply bg-black border border-white/10 px-8 py-2 text-sm font-medium text-white hover:bg-[#0c0c0c] smooth;
@@ -120,6 +128,6 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }

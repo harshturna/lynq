@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { StarsBackground } from "@/components/ui/stars-background";
-import { ShootingStars } from "@/components/ui/shooting-stars";
 
 const initialState = {
   error: null,
@@ -24,9 +22,26 @@ function SignUp() {
 
   return (
     <div className="h-screen w-screen bg-black/80 flex justify-center items-center relative">
-      <div className="max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-gray-900 z-10 bg-stone-950/60">
-        <h2 className="font-bold text-xl text-neutral-200">Welcome to Lynx</h2>
-        <p className="text-sm max-w-sm mt-2 text-neutral-300">Sign up to ...</p>
+      <div className="max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input">
+        <Link className="block" href="/">
+          <img
+            src="/assets/logo.png"
+            alt="Lynq Logo"
+            width={120}
+            height={300}
+            className="mx-auto"
+          />
+        </Link>
+        <div className="relative mt-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t"></span>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="text-muted-foreground text-center uppercase bg-black px-2">
+              Sign up
+            </span>
+          </div>
+        </div>
 
         <form className="mt-8 mb-2">
           <LabelInputContainer className="mb-4">
@@ -74,8 +89,6 @@ function SignUp() {
           </div>
         </form>
       </div>
-      <ShootingStars />
-      <StarsBackground starDensity={0.0001} />
     </div>
   );
 }
