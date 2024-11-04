@@ -24,7 +24,7 @@ function SignUp() {
 
   return (
     <div className="h-screen w-screen bg-black/80 flex justify-center items-center relative">
-      <div className="max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-gray-900 z-10 bg-stone-950/50">
+      <div className="max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-gray-900 z-10 bg-stone-950/60">
         <h2 className="font-bold text-xl text-neutral-200">Welcome to Lynx</h2>
         <p className="text-sm max-w-sm mt-2 text-neutral-300">Sign up to ...</p>
 

@@ -32,7 +32,7 @@ function Login() {
 
   return (
     <div className="h-screen w-screen relative bg-black/80 flex justify-center items-center">
-      <div className="z-10 max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-stone-900 bg-stone-950/50">
+      <div className="z-10 max-w-sm md:max-w-lg lg:max-w-2xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input border border-stone-900 bg-stone-950/60">
         <h2 className="font-bold text-xl text-neutral-200">Login to Lynx</h2>
         <p className="text-sm max-w-sm mt-2 text-neutral-300">login to ...</p>
 
