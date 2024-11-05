@@ -11,10 +11,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/lib/user/client";
 
 const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+
+    // todo: show toast if error
+    if (!error) {
+      router.push("/");
+    }
+  };
 
   return (
     <div className="w-full border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
@@ -66,7 +77,9 @@ const Header = () => {
             </Link>
             <DropdownMenuSeparator className="mx-1 bg-stone-900/80" />
             <DropdownMenuItem className="text-muted-foreground hover:text-white py-0">
-              <DropdownMenuLabel>Logout</DropdownMenuLabel>
+              <DropdownMenuLabel onClick={handleSignOut}>
+                Logout
+              </DropdownMenuLabel>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -35,8 +35,8 @@ const fontHeading = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Aivia",
-  description: "Your AI suite",
+  title: "Lynq",
+  description: "Privacy first analytics",
   icons: {
     icon: "/favicon.ico",
   },
