@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/lib/user/client";
+import { Button } from "./ui/button";
 
 const Header = () => {
   const pathname = usePathname();
@@ -28,24 +28,19 @@ const Header = () => {
   };
 
   return (
-    <div className="w-full border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
+    <div className="w-full mb-6 border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
       <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
       <div className="flex space-x-6">
         {pathname !== "/dashboard" && (
-          <div className="flex items-center space-x-4">
-            <p className="text-sm text-white/60 hover:text-white smooth">
-              snippet
-            </p>
-            <Link
-              prefetch
-              href="/dashboard"
-              className="flex items-center justify-center space-x-2 group"
-            >
-              <button className="text-sm text-white/60 hover:text-white smooth group-hover:text-white">
-                dashboard
-              </button>
+          <div className="mr-2 flex items-center">
+            <Link prefetch href="/dashboard">
+              <Button
+                variant="secondary"
+                className="bg-stone-900 rounded-sm px-6 py-4"
+              >
+                Dashboard
+              </Button>
             </Link>
-            <ArrowRightIcon className="h-4 w-4 stroke-white/60 group-hover:stroke-white smooth" />
           </div>
         )}
         <DropdownMenu>

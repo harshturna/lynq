@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   AlertDialog,
@@ -26,6 +26,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { addWebsite } from "@/lib/actions";
+import { getUser } from "@/lib/user/client";
+import { containsInvalidCharacters } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -38,6 +41,8 @@ const formSchema = z.object({
 
 const AddWebsite = () => {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,9 +52,47 @@ const AddWebsite = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    setError("");
+
+    if (
+      values.url.startsWith("https://") ||
+      values.url.startsWith("http://") ||
+      values.url.includes("/") ||
+      containsInvalidCharacters(values.url)
+    ) {
+      setError("Only add the domain name, e.g. example.com");
+      return;
+    }
+
+    setLoading(true);
+
+    const user = await getUser();
+    if (!user || !user.id) {
+      setError("Your session has expired");
+      return;
+    }
+
+    const response = await addWebsite(values.name, values.url, user.id);
+
+    setLoading(false);
+
+    if (response.error) {
+      // Conflict if website already exists
+      if (response.status === 409 && response.error.code === "23505")
+        setError("This website is already being tracked by lynq");
+      else {
+        setError("Server error when adding website, please try again");
+      }
+      return;
+    }
+
     setOpen(false);
   };
+
+  useEffect(() => {
+    setError("");
+    form.reset();
+  }, [open]);
 
   return (
     <AlertDialog open={open}>
@@ -91,22 +134,24 @@ const AddWebsite = () => {
                   <FormItem>
                     <FormLabel>Website URL</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://clair.byharsh.com"
-                        {...field}
-                      />
+                      <Input placeholder="clair.byharsh.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {error && (
+                <p className="text-red-700 mt-2 mb-6 text-sm">{error}</p>
+              )}
             </div>
 
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setOpen(false)}>
                 Cancel
               </AlertDialogCancel>
-              <Button type="submit">Add Website</Button>
+              <Button type="submit">
+                {loading ? "Adding Website..." : "Add Website"}
+              </Button>
             </AlertDialogFooter>
           </form>
         </Form>

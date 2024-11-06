@@ -13,25 +13,25 @@ import React from "react";
 import Settings from "./settings";
 
 interface WebsiteCardProps {
-  name: string;
-  url: string;
-  visitors: string;
+  website: Website;
 }
 
-const WebsiteCard = ({ name, url, visitors }: WebsiteCardProps) => {
+const WebsiteCard = ({ website }: WebsiteCardProps) => {
   return (
     <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
-      <Link href={url} className="group/card">
+      <Link href={`/${website.slug}`} className="group/card">
         <Card>
           <CardHeader className="mb-4">
             <div>
-              <CardTitle className="text-xl md:text-2xl">{name}</CardTitle>
-              <CardDescription>{url}</CardDescription>
+              <CardTitle className="text-xl md:text-2xl">
+                {website.name}
+              </CardTitle>
+              <CardDescription>{website.url}</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
             <UserRound />
-            <span>{visitors} Visitors</span>
+            <span>{"10"} Visitors</span>
           </CardContent>
         </Card>
         <BottomGradient />
