@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
   Card,
   CardContent,
@@ -21,7 +20,7 @@ interface WebsiteCardProps {
 
 const WebsiteCard = ({ name, url, visitors }: WebsiteCardProps) => {
   return (
-    <div className="relative min-w-[300px] md:min-w-[350px]">
+    <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
       <Link href={url} className="group/card">
         <Card>
           <CardHeader className="mb-4">
