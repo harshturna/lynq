@@ -36,7 +36,7 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
         </Card>
         <BottomGradient />
       </Link>
-      <Settings />
+      <Settings website={website} />
     </div>
   );
 };

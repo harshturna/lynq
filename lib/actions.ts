@@ -2,13 +2,19 @@
 
 import { PostgrestError } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
+import { getUser } from "./user/server";
 
-export async function addWebsite(name: string, url: string, userId: string) {
+export async function addWebsite(name: string, url: string, user_id: string) {
+  // check if the user making the request is the resource owner
+  const user = await getUser();
+  if (!user || !user.id) return "Unauthorized User";
+  if (user_id !== user.id) return "Unauthorized User";
+
   const slug = url.replaceAll(".", "-");
   const supabase = await createClient();
   const response = await supabase
     .from("websites")
-    .insert({ name, url, user_id: userId, slug });
+    .insert({ name, url, user_id: user_id, slug });
 
   return response;
 }
@@ -47,13 +53,38 @@ export async function getWebsite(
 export async function updateWebsiteOne(
   website_slug: string,
   column: string,
-  value: string
+  value: string,
+  user_id: string
 ) {
   const supabase = await createClient();
+
+  // check if the user making the request is the resource owner
+  const user = await getUser();
+  if (!user || !user.id) return "Unauthorized User";
+  if (user_id !== user.id) return new Error("Unauthorized user");
+
   const { error } = await supabase
     .from("websites")
     .update({ [column]: value })
-    .eq("slug", website_slug);
+    .eq("slug", website_slug)
+    .eq("user_id", user_id);
+
+  return error;
+}
+
+export async function deleteWebsite(website_slug: string, user_id: string) {
+  const supabase = await createClient();
+
+  // check if the user making the request is the resource owner
+  const user = await getUser();
+  if (!user || !user.id) return "Unauthorized User";
+  if (user_id !== user.id) return new Error("Unauthorized user");
+
+  const { error } = await supabase
+    .from("websites")
+    .delete()
+    .eq("slug", website_slug)
+    .eq("user_id", user_id);
 
   return error;
 }

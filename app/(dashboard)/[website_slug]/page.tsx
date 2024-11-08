@@ -4,7 +4,7 @@ import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
 import NavTabs from "./_components/nav-tabs";
 import DatePicker from "./_components/date-picker";
-import Loading from "../loading";
+import Loading from "../../../components/loading";
 
 interface WebsitePageProps {
   params: {

@@ -12,7 +12,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Form,
@@ -24,48 +23,37 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { addWebsite } from "@/lib/actions";
+import { updateWebsiteOne } from "@/lib/actions";
 import { getUser } from "@/lib/user/client";
-import { containsInvalidCharacters } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(1, {
     message: "Website display name is required",
   }),
-  url: z.string().min(1, {
-    message: "Website URL is required",
-  }),
 });
 
-const AddWebsite = () => {
-  const [open, setOpen] = useState(false);
+interface UpdateWebsiteProps {
+  website: Website;
+  open: boolean;
+  setOpen: (arg: boolean) => void;
+}
+
+const UpdateWebsite = ({ website, open, setOpen }: UpdateWebsiteProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  console.log(website);
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      url: "",
+      name: website.name,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setError("");
-
-    if (
-      values.url.startsWith("https://") ||
-      values.url.startsWith("http://") ||
-      values.url.includes("/") ||
-      !values.url.includes(".") ||
-      containsInvalidCharacters(values.url)
-    ) {
-      setError("Only add the domain name, e.g. example.com");
-      return;
-    }
 
     setLoading(true);
 
@@ -76,7 +64,12 @@ const AddWebsite = () => {
       return;
     }
 
-    const response = await addWebsite(values.name, values.url, user.id);
+    const response = await updateWebsiteOne(
+      website.slug,
+      "name",
+      values.name,
+      user.id
+    );
 
     setLoading(false);
 
@@ -85,13 +78,8 @@ const AddWebsite = () => {
       return;
     }
 
-    if (response && response.error) {
-      // Conflict if website already exists
-      if (response.status === 409 && response.error.code === "23505")
-        setError("This website is already being tracked by lynq");
-      else {
-        setError("Server error when adding website, please try again");
-      }
+    if (response) {
+      setError("Server error when updating website, please try again");
       return;
     }
 
@@ -101,22 +89,16 @@ const AddWebsite = () => {
 
   useEffect(() => {
     setError("");
-    form.reset();
-  }, [open]);
+    form.reset({
+      name: website.name,
+    });
+  }, [open, website.name]);
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogTrigger asChild>
-        <Button className="px-4 py-5" onClick={() => setOpen(true)}>
-          <div className="flex items-center text-xs md:text-sm">
-            <PlusIcon width={15} height={15} />
-            <span>Add Website</span>
-          </div>
-        </Button>
-      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Add new website</AlertDialogTitle>
+          <AlertDialogTitle>Update website display name</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogDescription className="hidden"></AlertDialogDescription>
         <Form {...form}>
@@ -135,32 +117,16 @@ const AddWebsite = () => {
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="mb-4">
-              <FormField
-                name="url"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Website URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="clair.byharsh.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               {error && (
                 <p className="text-red-700 mt-2 mb-6 text-sm">{error}</p>
               )}
             </div>
-
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setOpen(false)}>
                 Cancel
               </AlertDialogCancel>
               <Button type="submit" disabled={loading}>
-                {loading ? "Adding Website..." : "Add Website"}
+                {loading ? "Updating Website..." : "Update Website"}
               </Button>
             </AlertDialogFooter>
           </form>
@@ -170,4 +136,4 @@ const AddWebsite = () => {
   );
 };
 
-export default AddWebsite;
+export default UpdateWebsite;
