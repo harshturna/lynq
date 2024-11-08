@@ -2,6 +2,9 @@ import { getWebsite, updateWebsiteOne } from "@/lib/actions";
 import { redirect } from "next/navigation";
 import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
+import NavTabs from "./_components/nav-tabs";
+import DatePicker from "./_components/date-picker";
+import Loading from "../loading";
 
 interface WebsitePageProps {
   params: {
@@ -15,7 +18,10 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     redirect("/dashboard");
   }
 
-  const { data: website, error } = await getWebsite(params.website_slug);
+  const { data: website, error } = await getWebsite(
+    params.website_slug,
+    user.id
+  );
 
   if (!website || error || website.user_id !== user.id) {
     redirect("/dashboard");
@@ -29,8 +35,18 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
 
   return (
     <>
-      {website.is_first_visit && <SetupDialog />}
-      <div>WebsitePage</div>
+      {/* {website.is_first_visit && <SetupDialog />} */}
+      <main>
+        <div className="flex justify-between items-center">
+          <NavTabs />
+          <DatePicker />
+        </div>
+
+        <div className="my-8">
+          <h1 className="text-2xl md:text-4xl">{website.name}</h1>
+          <p className="text-muted-foreground">{website.url}</p>
+        </div>
+      </main>
     </>
   );
 };

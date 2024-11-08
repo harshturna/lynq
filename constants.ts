@@ -17,3 +17,11 @@ export const sidePanelItems = [
     icon: Settings,
   },
 ];
+
+export const datePickerValues: DatePickerValues[] = [
+  "Today",
+  "Yesterday",
+  "This week",
+  "This month",
+  "This year",
+];

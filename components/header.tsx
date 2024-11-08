@@ -10,12 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/user/client";
-import { Button } from "./ui/button";
 
 const Header = () => {
-  const pathname = usePathname();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -31,18 +29,6 @@ const Header = () => {
     <div className="w-full mb-6 border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
       <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
       <div className="flex space-x-6">
-        {pathname !== "/dashboard" && (
-          <div className="mr-2 flex items-center">
-            <Link prefetch href="/dashboard">
-              <Button
-                variant="secondary"
-                className="bg-stone-900 rounded-sm px-6 py-4"
-              >
-                Dashboard
-              </Button>
-            </Link>
-          </div>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger className="text-muted-foreground outline-none p-0 m-0 border-none">
             <div className="flex space-x-2 items-center justify-center hover:text-white">

@@ -6,3 +6,10 @@ declare type Website = {
   user_id: string;
   is_first_visit: boolean;
 };
+
+declare type DatePickerValues =
+  | "Today"
+  | "Yesterday"
+  | "This week"
+  | "This month"
+  | "This year";

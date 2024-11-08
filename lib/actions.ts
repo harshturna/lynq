@@ -26,7 +26,10 @@ export async function getAllWebsites(userId: string): Promise<{
   return { data, error };
 }
 
-export async function getWebsite(website_slug: string): Promise<{
+export async function getWebsite(
+  website_slug: string,
+  user_id: string
+): Promise<{
   data: Website | null;
   error: PostgrestError | null;
 }> {
@@ -35,6 +38,7 @@ export async function getWebsite(website_slug: string): Promise<{
     .from("websites")
     .select("*")
     .eq("slug", website_slug)
+    .eq("user_id", user_id)
     .single();
 
   return { data, error };

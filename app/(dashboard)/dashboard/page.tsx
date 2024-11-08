@@ -16,7 +16,7 @@ const DashboardPage = async () => {
   const { data: websites, error } = await getAllWebsites(user.id);
 
   return (
-    <div className="items-center justify-center flex flex-col px-6">
+    <div className="items-center justify-center flex flex-col">
       <div className="w-full flex my-8 gap-16">
         <Sidebar />
         <div className="w-full items-start justify-start flex flex-col">
