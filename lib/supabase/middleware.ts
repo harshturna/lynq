@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/sign-up") &&
+    !request.nextUrl.pathname.startsWith("/api/track") &&
     !(request.nextUrl.pathname == "/")
   ) {
     const url = request.nextUrl.clone();
@@ -45,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // redirect when login
+  // redirect when logged in
   if (
     user &&
     (request.nextUrl.pathname.startsWith("/login") ||
