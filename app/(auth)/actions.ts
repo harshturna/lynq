@@ -84,7 +84,6 @@ export async function signUp(
     });
 
     if (error) {
-      console.log(error);
       return {
         error: error.message,
         success: false,

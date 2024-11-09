@@ -43,7 +43,6 @@ interface UpdateWebsiteProps {
 const UpdateWebsite = ({ website, open, setOpen }: UpdateWebsiteProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  console.log(website);
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
