@@ -35,6 +35,116 @@
     },
   };
 
+  class BrowserDetector {
+    detect(userAgent) {
+      const browser = this.detectBrowser(userAgent);
+      const os = this.detectOS(userAgent);
+
+      return {
+        ...browser,
+        os,
+      };
+    }
+
+    detectBrowser(userAgent) {
+      const browserPatterns = [
+        {
+          pattern: /Edg\/([0-9.]+)/i,
+          name: "Edge",
+        },
+        {
+          pattern: /OPR\/([0-9.]+)/i,
+          name: "Opera",
+        },
+        {
+          pattern: /Chrome\/([0-9.]+)/i,
+          name: "Chrome",
+        },
+        {
+          pattern: /Firefox\/([0-9.]+)/i,
+          name: "Firefox",
+        },
+        {
+          pattern: /Safari\/([0-9.]+)/i,
+          name: "Safari",
+        },
+      ];
+
+      for (const browser of browserPatterns) {
+        const match = userAgent.match(browser.pattern);
+        if (match) {
+          return {
+            name: browser.name,
+            version: match[1],
+          };
+        }
+      }
+
+      return {
+        name: "Unknown",
+        version: "Unknown",
+      };
+    }
+
+    detectOS(userAgent) {
+      const osPatterns = {
+        windows: {
+          pattern: /Windows NT ([0-9.]+)/i,
+          versions: {
+            "10.0": "10",
+            6.3: "8.1",
+            6.2: "8",
+            6.1: "7",
+            "6.0": "Vista",
+            5.2: "XP 64-bit",
+            5.1: "XP",
+          },
+        },
+        mac: {
+          pattern: /Mac OS X ([0-9._]+)/i,
+          clean: (version) => version.replace(/_/g, "."),
+        },
+        ios: {
+          pattern: /OS ([0-9._]+) like Mac OS X/i,
+          clean: (version) => version.replace(/_/g, "."),
+        },
+        android: {
+          pattern: /Android ([0-9.]+)/i,
+        },
+        linux: {
+          pattern: /Linux/i,
+        },
+      };
+
+      for (const [osName, data] of Object.entries(osPatterns)) {
+        const match = userAgent.match(data.pattern);
+        if (match) {
+          let version = match[1] || "";
+
+          // Handle Windows version mapping
+          if (osName === "windows" && data.versions[version]) {
+            version = data.versions[version];
+          }
+
+          // Clean version if needed
+          if (data.clean) {
+            version = data.clean(version);
+          }
+
+          return {
+            name: osName.charAt(0).toUpperCase() + osName.slice(1),
+            version: version || "Unknown",
+          };
+        }
+      }
+
+      return {
+        name: "Unknown",
+        version: "Unknown",
+      };
+    }
+  }
+
   class PerformanceTracker {
     constructor(analyticsTracker) {
       this.analyticsTracker = analyticsTracker;
@@ -375,7 +485,7 @@
         }
         return clientId;
       } catch (error) {
-        console.error("Failed to manage client ID:", error);
+        // console.error("Failed to manage client ID:", error);
         return `client-${Math.random().toString(36).substring(2, 9)}`;
       }
     }
@@ -404,10 +514,6 @@
           !expirationTime ||
           this.isSessionExpired(expirationTime)
         ) {
-          if (sessionId) {
-            this.trackEvent(CONFIG.EVENTS.SESSION_END);
-          }
-
           const newSessionId = this.generateSessionId();
           const newExpirationTime = Date.now() + CONFIG.SESSION_DURATION;
 
@@ -420,12 +526,14 @@
           this.session = {
             sessionId: newSessionId,
             expirationTime: newExpirationTime,
+            startTime: Date.now(),
           };
           this.trackEvent(CONFIG.EVENTS.SESSION_START);
         } else {
           this.session = {
             sessionId,
             expirationTime: parseInt(expirationTime),
+            startTime: Date.now(),
           };
         }
 
@@ -435,7 +543,7 @@
           CONFIG.SESSION_DURATION / 2
         );
       } catch (error) {
-        console.error("Failed to initialize session:", error);
+        // console.error("Failed to initialize session:", error);
       }
     }
 
@@ -449,7 +557,7 @@
           );
           this.session.expirationTime = newExpirationTime;
         } catch (error) {
-          console.error("Failed to refresh session:", error);
+          // console.error("Failed to refresh session:", error);
         }
       }
     }
@@ -459,22 +567,18 @@
 
       // Safety check for session
       if (!this.session?.sessionId) {
-        console.warn("Tracking attempted before session initialization");
+        // console.warn("Tracking attempted before session initialization");
         await new Promise((resolve) => setTimeout(resolve, 100));
         if (!this.session?.sessionId) return;
       }
 
-      // Get device information from user agent client-side
+      // device information from user agent client-side
+      const browserDetector = new BrowserDetector();
       const userAgentData = {
-        userAgent: navigator.userAgent,
+        userAgent: browserDetector.detectBrowser(navigator.userAgent),
         language: navigator.language,
         platform: navigator.userAgentData?.platform || navigator.platform,
-        // Screen and window information
         screenResolution: `${window.screen.width}x${window.screen.height}`,
-        viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-        screenColorDepth: window.screen.colorDepth,
-        devicePixelRatio: window.devicePixelRatio,
-        // Time zone
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
@@ -487,7 +591,7 @@
         sessionId: this.session.sessionId,
         pageLoadId: this.pageLoadId,
         userAgentData,
-        ...eventData,
+        eventData,
       };
 
       return this.sendRequestWithRetry(payload, options);
@@ -506,7 +610,8 @@
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          // throw new Error(`HTTP error! status: ${response.status}`);
+          return;
         }
 
         return await response.json();
@@ -517,8 +622,8 @@
           await new Promise((resolve) => setTimeout(resolve, backoffTime));
           return this.sendRequestWithRetry(payload, options, attempt + 1);
         }
-        console.error("Failed to send analytics event:", error);
-        throw error;
+        // console.error("Failed to send analytics event:", error);
+        // throw error;
       }
     }
 
@@ -599,10 +704,10 @@
           if (Array.isArray(args)) {
             this.trackEvent(...args);
           } else {
-            console.warn("Invalid queue item:", args);
+            // console.warn("Invalid queue item:", args);
           }
         } catch (error) {
-          console.error("Failed to process queue item:", error);
+          // console.error("Failed to process queue item:", error);
         }
       });
     }

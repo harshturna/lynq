@@ -88,3 +88,12 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
 
   return error;
 }
+
+// Analytics
+
+export async function addVisitor(clientId: string, websiteUrl: string) {
+  const supabase = await createClient();
+  supabase
+    .from("visitors")
+    .insert({ client_id: clientId, website_url: websiteUrl });
+}
