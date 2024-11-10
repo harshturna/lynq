@@ -35,19 +35,20 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     user.id
   );
 
+  // TODO: Update this as we don't want to do this
   if (!analyticsData) {
     redirect("/dashboard");
   }
 
   // set the is_first_visit flag to false after visiting the dashboard for the first time
   // TODO: Uncomment after development
-  // if (website.is_first_visit) {
-  //   updateWebsiteOne(params.website_slug, "is_first_visit", "false");
-  // }
+  if (website.is_first_visit) {
+    updateWebsiteOne(params.website_slug, "is_first_visit", "false", user.id);
+  }
 
   return (
     <>
-      {/* {website.is_first_visit && <SetupDialog />} */}
+      {website.is_first_visit && <SetupDialog />}
       <main>
         <div className="flex justify-between items-center">
           <NavTabs />
@@ -58,7 +59,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
           <h1 className="text-2xl md:text-4xl">{website.name}</h1>
           <p className="text-muted-foreground">{website.url}</p>
         </div>
-        <AnalyticsDataViewer />
+        <AnalyticsDataViewer analyticsData={analyticsData} />
       </main>
     </>
   );

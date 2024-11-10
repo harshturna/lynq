@@ -96,9 +96,9 @@ type AnalyticsData = {
 };
 
 type AnalyticsGroupBy =
-  | "page"
-  | "device"
-  | "operating_system"
-  | "country"
-  | "browser"
-  | "referrer";
+  | "pages"
+  | "devices"
+  | "operating_systems"
+  | "countries"
+  | "browsers"
+  | "referrers";

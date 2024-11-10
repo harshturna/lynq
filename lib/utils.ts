@@ -52,7 +52,7 @@ export function groupByAnalytics(
 ) {
   switch (groupBy) {
     // pathname
-    case "page":
+    case "pages":
       const res = data.reduce<{ group: string; count: number }[]>(
         (res, site) => {
           const existingIndex = res.findIndex(
@@ -74,7 +74,7 @@ export function groupByAnalytics(
       );
       return res;
 
-    case "browser": {
+    case "browsers": {
       const res = data.reduce<{ group: Browser; count: number }[]>(
         (res, site) => {
           const existingIndex = res.findIndex(
@@ -96,7 +96,7 @@ export function groupByAnalytics(
       );
       return res;
     }
-    case "device": {
+    case "devices": {
       const res = data.reduce<{ group: Device; count: number }[]>(
         (res, site) => {
           const existingIndex = res.findIndex(
@@ -119,7 +119,7 @@ export function groupByAnalytics(
       return res;
     }
 
-    case "operating_system": {
+    case "operating_systems": {
       const res = data.reduce<{ group: Os; count: number }[]>((res, site) => {
         const existingIndex = res.findIndex(
           (obj) => obj.group === site.operating_system
@@ -139,7 +139,7 @@ export function groupByAnalytics(
       return res;
     }
 
-    case "country": {
+    case "countries": {
       const res = data.reduce<{ group: string; count: number }[]>(
         (res, site) => {
           const existingIndex = res.findIndex(
@@ -162,7 +162,7 @@ export function groupByAnalytics(
       return res;
     }
 
-    case "referrer": {
+    case "referrers": {
       const res = data.reduce<
         { group: "Direct" | "Unknown" | string; count: number }[]
       >((res, site) => {

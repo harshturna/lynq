@@ -6,14 +6,20 @@ import {
   MapPin,
   MonitorSmartphone,
 } from "lucide-react";
+import AnalyticsDataList from "./analytics-data-list";
+import DevicesDataViewer from "./devices-data-viewer";
+
+interface AnalyticsDataViewer {
+  analyticsData: AnalyticsData[];
+}
 
 const tabs = [
   {
-    name: "Page",
+    name: "Pages",
     icon: LayoutPanelTop,
   },
   {
-    name: "Location",
+    name: "Locations",
     icon: MapPin,
   },
   {
@@ -21,22 +27,22 @@ const tabs = [
     icon: MonitorSmartphone,
   },
   {
-    name: "Referees",
+    name: "Referrers",
     icon: Asterisk,
   },
 ];
 
-const AnalyticsDataViewer = () => {
+const AnalyticsDataViewer = ({ analyticsData }: AnalyticsDataViewer) => {
   return (
-    <Card className="w-[800px] rounded-2xl overflow-hidden border-2">
+    <Card className="max-w-[800px] rounded-t-2xl rounded-b-xl overflow-hidden border-2">
       <CardContent className="px-0">
-        <Tabs>
+        <Tabs defaultValue={tabs[0].name}>
           <TabsList className="bg-stone-900 rounded-xl h-[40px] w-full justify-evenly rounded-b-none">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.name}
                 value={tab.name}
-                className="py-1 rounded-sm text-sm"
+                className="py-1 rounded-sm text-xs md:text-sm px-2 md:px-8"
               >
                 <div className="flex items-center justify-center gap-2">
                   {<tab.icon width={15} height={15} />}
@@ -45,7 +51,18 @@ const AnalyticsDataViewer = () => {
               </TabsTrigger>
             ))}
           </TabsList>
-          <TabsContent value="Page"></TabsContent>
+          <TabsContent value="Pages">
+            <AnalyticsDataList groupBy="pages" data={analyticsData} />
+          </TabsContent>
+          <TabsContent value="Locations">
+            <AnalyticsDataList groupBy="countries" data={analyticsData} />
+          </TabsContent>
+          <TabsContent value="Devices">
+            <DevicesDataViewer analyticsData={analyticsData} />
+          </TabsContent>
+          <TabsContent value="Referrers">
+            <AnalyticsDataList groupBy="referrers" data={analyticsData} />
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
