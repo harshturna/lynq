@@ -21,9 +21,9 @@ type TTrackEvent =
   | "vital"
   | "web-vitals";
 
-type SessionStartEventData = {};
+type SessionStartEventData = Record<never, never>;
 
-type PageViewEventData = {};
+type PageViewEventData = Record<never, never>;
 
 type SessionEndEventData = {
   sessionDuration: number;
@@ -41,18 +41,18 @@ type VitalEventData =
       partial: boolean;
     };
 
+type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | "Unknown";
+type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux";
+
 interface BaseTrackedEvent {
   timestamp: number;
   url: string;
   dataDomain: string;
   clientId: string;
+  sessionId: string;
   userAgentData: {
-    userAgent: string;
-    language: string;
-    platform: string;
-    screenResolution: string;
-    viewportSize: string;
-    timeZone: string;
+    browser: Browser;
+    os: Os;
   };
 }
 

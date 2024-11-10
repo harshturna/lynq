@@ -72,18 +72,13 @@
 
       for (const browser of browserPatterns) {
         const match = userAgent.match(browser.pattern);
+
         if (match) {
-          return {
-            name: browser.name,
-            version: match[1],
-          };
+          return browser.name;
         }
       }
 
-      return {
-        name: "Unknown",
-        version: "Unknown",
-      };
+      return "Unknown";
     }
 
     detectOS(userAgent) {
@@ -119,29 +114,24 @@
       for (const [osName, data] of Object.entries(osPatterns)) {
         const match = userAgent.match(data.pattern);
         if (match) {
-          let version = match[1] || "";
+          // Uncomment versioning if needed
+          // let version = match[1] || "";
 
-          // Handle Windows version mapping
-          if (osName === "windows" && data.versions[version]) {
-            version = data.versions[version];
-          }
+          // // Handle Windows version mapping
+          // if (osName === "windows" && data.versions[version]) {
+          //   version = data.versions[version];
+          // }
 
-          // Clean version if needed
-          if (data.clean) {
-            version = data.clean(version);
-          }
+          // // Clean version if needed
+          // if (data.clean) {
+          //   version = data.clean(version);
+          // }
 
-          return {
-            name: osName.charAt(0).toUpperCase() + osName.slice(1),
-            version: version || "Unknown",
-          };
+          return osName.charAt(0).toUpperCase() + osName.slice(1);
         }
       }
 
-      return {
-        name: "Unknown",
-        version: "Unknown",
-      };
+      return "Unknown";
     }
   }
 
@@ -335,7 +325,7 @@
         if (document.readyState === "complete") {
           callback();
         } else {
-          const handler = (event) => {
+          const handler = () => {
             if (document.readyState === "complete") {
               document.removeEventListener("readystatechange", handler);
               callback();
@@ -480,21 +470,21 @@
       try {
         let clientId = localStorage.getItem(CONFIG.STORAGE_KEYS.CLIENT_ID);
         if (!clientId) {
-          clientId = `client-${crypto.randomUUID()}`;
+          clientId = `${crypto.randomUUID()}`;
           localStorage.setItem(CONFIG.STORAGE_KEYS.CLIENT_ID, clientId);
         }
         return clientId;
       } catch (error) {
-        // console.error("Failed to manage client ID:", error);
-        return `client-${Math.random().toString(36).substring(2, 9)}`;
+        console.error("Failed to manage client ID:", error);
+        return `${Math.random().toString(36).substring(2, 9)}`;
       }
     }
 
     generateSessionId() {
       try {
-        return `session-${crypto.randomUUID()}`;
-      } catch (error) {
-        return `session-${Math.random().toString(36).substring(2, 9)}`;
+        return `${crypto.randomUUID()}`;
+      } catch {
+        return `${Math.random().toString(36).substring(2, 9)}`;
       }
     }
 
@@ -542,7 +532,7 @@
           () => this.refreshSession(),
           CONFIG.SESSION_DURATION / 2
         );
-      } catch (error) {
+      } catch {
         // console.error("Failed to initialize session:", error);
       }
     }
@@ -556,7 +546,7 @@
             newExpirationTime
           );
           this.session.expirationTime = newExpirationTime;
-        } catch (error) {
+        } catch {
           // console.error("Failed to refresh session:", error);
         }
       }
@@ -573,20 +563,18 @@
       }
 
       // device information from user agent client-side
-      const browserDetector = new BrowserDetector();
+      const detector = new BrowserDetector();
       const userAgentData = {
-        userAgent: browserDetector.detectBrowser(navigator.userAgent),
-        language: navigator.language,
-        platform: navigator.userAgentData?.platform || navigator.platform,
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        browser: detector.detectBrowser(navigator.userAgent),
+        os: detector.detectOS(navigator.userAgent),
       };
 
       const payload = {
         event: eventName,
         timestamp: Date.now(),
         url: window.location.href,
-        dataDomain: this.dataDomain,
+        // TODO: Temp - delete after testing
+        dataDomain: this.dataDomain || "clair.byharsh.com",
         clientId: this.clientId,
         sessionId: this.session.sessionId,
         pageLoadId: this.pageLoadId,
@@ -615,7 +603,7 @@
         }
 
         return await response.json();
-      } catch (error) {
+      } catch {
         if (attempt < CONFIG.RETRY.MAX_ATTEMPTS && !this.isDestroyed) {
           const backoffTime =
             Math.pow(2, attempt - 1) * CONFIG.RETRY.BACKOFF_FACTOR;
@@ -670,7 +658,7 @@
       window.addEventListener("hashchange", this.trackPageView);
 
       // Handle client-side navigation
-      this.mutationObserver = new MutationObserver((mutations) => {
+      this.mutationObserver = new MutationObserver(() => {
         if (
           !this.isDestroyed &&
           window.location.pathname !== this.initialPathname
@@ -706,7 +694,7 @@
           } else {
             // console.warn("Invalid queue item:", args);
           }
-        } catch (error) {
+        } catch {
           // console.error("Failed to process queue item:", error);
         }
       });

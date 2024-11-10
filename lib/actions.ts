@@ -91,9 +91,32 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
 
 // Analytics
 
-export async function addVisitor(clientId: string, websiteUrl: string) {
+export async function addVisitor(clientId: string, website_url: string) {
   const supabase = await createClient();
-  supabase
-    .from("visitors")
-    .insert({ client_id: clientId, website_url: websiteUrl });
+  supabase.from("visitors").insert({ client_id: clientId, website_url });
+}
+
+export async function addPageView(
+  website_url: string,
+  page: string,
+  session_id: string,
+  userAgentData: {
+    browser: Browser;
+    os: Os;
+  }
+) {
+  const supabase = await createClient();
+
+  const device = userAgentData.os === "Ios" || "Android" ? "Mobile" : "Desktop";
+
+  const { data, error } = await supabase.from("page_views").insert({
+    website_url,
+    page,
+    device,
+    session_id,
+    browser: userAgentData.browser,
+    operating_system: userAgentData.os,
+  });
+
+  console.log("ERROR", error);
 }

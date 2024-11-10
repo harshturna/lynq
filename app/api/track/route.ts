@@ -1,5 +1,4 @@
-import { addVisitor } from "@/lib/actions";
-import { headers } from "next/headers";
+import { addPageView, addVisitor } from "@/lib/actions";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -13,16 +12,19 @@ export async function POST(req: Request) {
     switch (body.event) {
       case "session-start":
         addVisitor(body.clientId, body.dataDomain);
+
+      case "page-view":
+        addPageView(
+          body.dataDomain,
+          body.url,
+          body.sessionId,
+          body.userAgentData
+        );
     }
+
+    return new NextResponse("Success", { status: 200 });
   } catch (error) {
     console.log("[TRACK_ERROR]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
-}
-
-export async function GET(req: Request) {
-  const headersList = headers();
-  console.log(headersList.get("x-forwarded-for"));
-
-  return;
 }
