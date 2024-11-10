@@ -1,4 +1,9 @@
-import { addPageView, addVisitor } from "@/lib/actions";
+import {
+  addPageView,
+  addSession,
+  addSessionDuration,
+  addVisitor,
+} from "@/lib/actions";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -9,17 +14,22 @@ export async function POST(req: Request) {
       return;
     }
 
-    switch (body.event) {
-      case "session-start":
-        addVisitor(body.clientId, body.dataDomain);
-
-      case "page-view":
-        addPageView(
-          body.dataDomain,
-          body.url,
-          body.sessionId,
-          body.userAgentData
-        );
+    if (body.event === "session-start") {
+      addVisitor(body.clientId, body.dataDomain);
+      addSession(body.sessionId, body.dataDomain);
+    } else if (body.event === "page-view") {
+      addPageView(
+        body.dataDomain,
+        body.url,
+        body.sessionId,
+        body.userAgentData
+      );
+    } else if (body.event === "session-end") {
+      addSessionDuration(
+        body.dataDomain,
+        body.sessionId,
+        body.eventData.sessionDuration
+      );
     }
 
     return new NextResponse("Success", { status: 200 });

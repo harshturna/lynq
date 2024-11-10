@@ -93,7 +93,7 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
 
 export async function addVisitor(clientId: string, website_url: string) {
   const supabase = await createClient();
-  supabase.from("visitors").insert({ client_id: clientId, website_url });
+  await supabase.from("visitors").insert({ client_id: clientId, website_url });
 }
 
 export async function addPageView(
@@ -107,9 +107,12 @@ export async function addPageView(
 ) {
   const supabase = await createClient();
 
-  const device = userAgentData.os === "Ios" || "Android" ? "Mobile" : "Desktop";
+  const device =
+    userAgentData.os === "Ios" || userAgentData.os === "Android"
+      ? "Mobile"
+      : "Desktop";
 
-  const { data, error } = await supabase.from("page_views").insert({
+  await supabase.from("page_views").insert({
     website_url,
     page,
     device,
@@ -117,6 +120,22 @@ export async function addPageView(
     browser: userAgentData.browser,
     operating_system: userAgentData.os,
   });
+}
 
-  console.log("ERROR", error);
+export async function addSession(session_id: string, website_url: string) {
+  const supabase = await createClient();
+  await supabase.from("sessions").insert({ website_url, session_id });
+}
+
+export async function addSessionDuration(
+  website_url: string,
+  session_id: string,
+  session_duration: number
+) {
+  const supabase = await createClient();
+  await supabase
+    .from("sessions")
+    .update({ session_duration: session_duration })
+    .eq("website_url", website_url)
+    .eq("session_id", session_id);
 }
