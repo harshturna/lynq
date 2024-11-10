@@ -9,10 +9,10 @@ type Website = {
 
 type DatePickerValues =
   | "Today"
-  | "Yesterday"
-  | "This week"
-  | "This month"
-  | "This year";
+  | "Last 7 days"
+  | "Last 30 days"
+  | "Last 3 months"
+  | "Last 12 months";
 
 type TTrackEvent =
   | "session-start"
@@ -41,8 +41,9 @@ type VitalEventData =
       partial: boolean;
     };
 
-type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | null;
-type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux" | null;
+type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | "Unknown";
+type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux" | "Unknown";
+type Device = "Desktop" | "Mobile" | "Unknown";
 
 interface BaseTrackedEvent {
   timestamp: number;
@@ -79,3 +80,25 @@ type TTrackedEvent =
       event: "web-vitals";
       eventData: WebVitalsEventData;
     });
+
+type AnalyticsData = {
+  id: number;
+  created_at: string;
+  website_url: string;
+  page: string;
+  country: string | null;
+  device: Device;
+  operating_system: Os;
+  browser: Browser;
+  session_id: string;
+  pathname: string;
+  referrer: "Direct" | "Unknown" | string;
+};
+
+type AnalyticsGroupBy =
+  | "page"
+  | "device"
+  | "operating_system"
+  | "country"
+  | "browser"
+  | "referrer";

@@ -3,6 +3,7 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 import { getUser } from "./user/server";
+import { getTimeFrame } from "./utils";
 
 export async function addWebsite(name: string, url: string, user_id: string) {
   // check if the user making the request is the resource owner
@@ -61,7 +62,7 @@ export async function updateWebsiteOne(
   // check if the user making the request is the resource owner
   const user = await getUser();
   if (!user || !user.id) return "Unauthorized User";
-  if (user_id !== user.id) return new Error("Unauthorized user");
+  if (user_id !== user.id) return "Unauthorized user";
 
   const { error } = await supabase
     .from("websites")
@@ -112,6 +113,8 @@ export async function addPageView(
   const device =
     userAgentData.os === "Ios" || userAgentData.os === "Android"
       ? "Mobile"
+      : userAgentData.os === "Unknown"
+      ? "Unknown"
       : "Desktop";
 
   const { error } = await supabase.from("page_views").insert({
@@ -153,11 +156,43 @@ export async function addSessionDuration(
     .eq("session_id", session_id);
 }
 
-export async function getAllTimeVisitors() {
+export async function getAllTimeVisitors(website_url: string, user_id: string) {
+  // check if the user making the request is the resource owner
+  const user = await getUser();
+  if (!user || !user.id) return "Unauthorized User";
+  if (user_id !== user.id) return "Unauthorized User";
+
   const supabase = await createClient();
   const { count } = await supabase
     .from("visitors")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("website_url", website_url);
 
   return count;
+}
+
+export async function getAnalytics(
+  pickedTimeFrame: DatePickerValues,
+  website_url: string,
+  user_id: string
+): Promise<{
+  data: AnalyticsData[] | null;
+  error: PostgrestError | null | string;
+}> {
+  // check if the user making the request is the resource owner
+  const user = await getUser();
+  if (!user || !user.id) return { data: null, error: "Unauthorized User" };
+  if (user_id !== user.id) return { data: null, error: "Unauthorized User" };
+
+  const supabase = await createClient();
+  const timeFrame = getTimeFrame(pickedTimeFrame);
+  const currentDateTime = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("page_views")
+    .select("*")
+    .eq("website_url", website_url)
+    .gte("created_at", timeFrame)
+    .lte("created_at", currentDateTime);
+  return { data, error };
 }

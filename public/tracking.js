@@ -78,7 +78,7 @@
         }
       }
 
-      return null;
+      return "Unknown";
     }
 
     detectOS(userAgent) {
@@ -131,7 +131,7 @@
         }
       }
 
-      return null;
+      return "Unknown";
     }
   }
 
@@ -569,12 +569,16 @@
         os: detector.detectOS(navigator.userAgent),
       };
 
+      const referrer = document.referrer.startsWith(window.location.origin)
+        ? "Direct"
+        : document.referrer;
+
       const payload = {
         event: eventName,
         timestamp: Date.now(),
         url: window.location.href,
         pathname: window.location.pathname,
-        referrer: document.referrer || null,
+        referrer: referrer || "Direct",
         // TODO: Temp - delete after testing
         dataDomain: this.dataDomain || "clair.byharsh.com",
         clientId: this.clientId,

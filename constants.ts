@@ -20,8 +20,10 @@ export const sidePanelItems = [
 
 export const datePickerValues: DatePickerValues[] = [
   "Today",
-  "Yesterday",
-  "This week",
-  "This month",
-  "This year",
+  "Last 7 days",
+  "Last 30 days",
+  "Last 3 months",
+  "Last 12 months",
 ];
+
+export const TODAY_FACTOR = 24 * 60 * 60 * 1000;

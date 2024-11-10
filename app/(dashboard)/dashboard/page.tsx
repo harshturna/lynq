@@ -1,7 +1,11 @@
 import Sidebar from "./_components/sidebar";
 import AddWebsite from "./_components/add-website";
 import WebsiteCard from "./_components/website-card";
-import { getAllTimeVisitors, getAllWebsites } from "@/lib/actions";
+import {
+  getAllTimeVisitors,
+  getAllWebsites,
+  getAnalytics,
+} from "@/lib/actions";
 import { getUser } from "@/lib/user/server";
 import { redirect } from "next/navigation";
 import NoWebsitePrompt from "./_components/no-website-prompt";
@@ -14,7 +18,7 @@ const DashboardPage = async () => {
   }
 
   const { data: websites, error } = await getAllWebsites(user.id);
-  const allTimeVisitorsCount = await getAllTimeVisitors();
+  await getAnalytics("Last 12 months", "clair.byharsh.com", user.id);
 
   // TODO: Handle Error
 
@@ -38,11 +42,7 @@ const DashboardPage = async () => {
               <NoWebsitePrompt />
             ) : (
               websites.map((website) => (
-                <WebsiteCard
-                  website={website}
-                  visitors={allTimeVisitorsCount || 0}
-                  key={website.url}
-                />
+                <WebsiteCard website={website} visitors={0} key={website.url} />
               ))
             )}
           </div>
