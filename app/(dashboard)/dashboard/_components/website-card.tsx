@@ -14,9 +14,10 @@ import Settings from "./settings";
 
 interface WebsiteCardProps {
   website: Website;
+  visitors: number;
 }
 
-const WebsiteCard = ({ website }: WebsiteCardProps) => {
+const WebsiteCard = ({ website, visitors }: WebsiteCardProps) => {
   return (
     <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
       <Link href={`/${website.slug}`} className="group/card">
@@ -31,7 +32,7 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
           </CardHeader>
           <CardContent className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
             <UserRound />
-            <span>{"10"} Visitors</span>
+            <span>{visitors} Visitors</span>
           </CardContent>
         </Card>
         <BottomGradient />

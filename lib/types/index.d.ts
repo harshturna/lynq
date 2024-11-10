@@ -41,12 +41,14 @@ type VitalEventData =
       partial: boolean;
     };
 
-type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | "Unknown";
-type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux";
+type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | null;
+type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux" | null;
 
 interface BaseTrackedEvent {
   timestamp: number;
   url: string;
+  pathname: string;
+  referrer: string | null;
   dataDomain: string;
   clientId: string;
   sessionId: string;

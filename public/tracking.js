@@ -78,7 +78,7 @@
         }
       }
 
-      return "Unknown";
+      return null;
     }
 
     detectOS(userAgent) {
@@ -131,7 +131,7 @@
         }
       }
 
-      return "Unknown";
+      return null;
     }
   }
 
@@ -573,6 +573,8 @@
         event: eventName,
         timestamp: Date.now(),
         url: window.location.href,
+        pathname: window.location.pathname,
+        referrer: document.referrer || null,
         // TODO: Temp - delete after testing
         dataDomain: this.dataDomain || "clair.byharsh.com",
         clientId: this.clientId,
@@ -654,7 +656,6 @@
       this.trackPageView();
 
       // Handle navigation events
-      window.addEventListener("popstate", this.trackPageView);
       window.addEventListener("hashchange", this.trackPageView);
 
       // Handle client-side navigation
@@ -711,7 +712,6 @@
       // Remove event listeners
       window.removeEventListener("error", this.errorHandler);
       window.removeEventListener("unhandledrejection", this.rejectionHandler);
-      window.removeEventListener("popstate", this.trackPageView);
       window.removeEventListener("hashchange", this.trackPageView);
 
       // Disconnect observers

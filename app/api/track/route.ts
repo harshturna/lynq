@@ -22,6 +22,8 @@ export async function POST(req: Request) {
         body.dataDomain,
         body.url,
         body.sessionId,
+        body.pathname,
+        body.referrer,
         body.userAgentData
       );
     } else if (body.event === "session-end") {

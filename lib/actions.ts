@@ -100,6 +100,8 @@ export async function addPageView(
   website_url: string,
   page: string,
   session_id: string,
+  pathname: string,
+  referrer: string | null,
   userAgentData: {
     browser: Browser;
     os: Os;
@@ -112,14 +114,17 @@ export async function addPageView(
       ? "Mobile"
       : "Desktop";
 
-  await supabase.from("page_views").insert({
+  const { error } = await supabase.from("page_views").insert({
     website_url,
     page,
     device,
     session_id,
+    pathname,
+    referrer,
     browser: userAgentData.browser,
     operating_system: userAgentData.os,
   });
+  console.log("ERROR", error);
 }
 
 export async function addSession(session_id: string, website_url: string) {
@@ -133,9 +138,26 @@ export async function addSessionDuration(
   session_duration: number
 ) {
   const supabase = await createClient();
+  const { data } = await supabase
+    .from("sessions")
+    .select("session_duration")
+    .eq("website_url", website_url)
+    .eq("session_id", session_id)
+    .single();
+  const updatedDuration = (data?.session_duration || 0) + session_duration;
+
   await supabase
     .from("sessions")
-    .update({ session_duration: session_duration })
+    .update({ session_duration: updatedDuration })
     .eq("website_url", website_url)
     .eq("session_id", session_id);
+}
+
+export async function getAllTimeVisitors() {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("visitors")
+    .select("*", { count: "exact", head: true });
+
+  return count;
 }

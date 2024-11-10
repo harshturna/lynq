@@ -26,7 +26,7 @@ const Header = () => {
   };
 
   return (
-    <div className="w-full mb-6 px-3 border-b border-stone-900/80 sticky top-0 flex justify-between py-4 items-center">
+    <div className="w-full px-4 md:px-10 mb-6 border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
       <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
       <div className="flex space-x-6">
         <DropdownMenu>
