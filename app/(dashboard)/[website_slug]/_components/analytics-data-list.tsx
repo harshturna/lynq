@@ -18,17 +18,19 @@ const AnalyticsDataList = ({ data, groupBy }: AnalyticsDataListProps) => {
         <span>Visits</span>
       </div>
       <hr className="border-t border-stone-800 my-4" />
-      <div>
-        {groupedData.map((item) => (
-          <div
-            key={item.group}
-            className="flex justify-between items-center mt-4 text-xs md:text-sm text-muted-foreground"
-          >
-            <span>{item.group}</span>
-            <span>{item.count}</span>
-          </div>
-        ))}
-      </div>
+      {groupedData.length ? (
+        <div>
+          {groupedData.map((item) => (
+            <div
+              key={item.group}
+              className="flex justify-between items-center mt-4 text-xs md:text-sm text-muted-foreground"
+            >
+              <span>{item.group}</span>
+              <span>{item.count}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 };

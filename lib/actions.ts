@@ -153,7 +153,18 @@ export async function addPageView(
       ? "Unknown"
       : "Desktop";
 
-  const { error } = await supabase.from("page_views").insert({
+  const { data: countryObj } = await supabase
+    .from("sessions")
+    .select("country")
+    .eq("session_id", session_id)
+    .single();
+
+  let country = "Unknown";
+  if (countryObj && countryObj.country) {
+    country = countryObj.country;
+  }
+
+  const { data, error } = await supabase.from("page_views").insert({
     website_url,
     page,
     device,
@@ -162,13 +173,22 @@ export async function addPageView(
     referrer,
     browser: userAgentData.browser,
     operating_system: userAgentData.os,
+    country,
   });
-  console.log("ERROR", error);
+
+  console.log("error", error);
 }
 
-export async function addSession(session_id: string, website_url: string) {
+export async function addSession(
+  session_id: string,
+  client_id: string,
+  country: string,
+  website_url: string
+) {
   const supabase = await createClient();
-  await supabase.from("sessions").insert({ website_url, session_id });
+  await supabase
+    .from("sessions")
+    .insert({ website_url, session_id, client_id, country });
 }
 
 export async function addSessionDuration(

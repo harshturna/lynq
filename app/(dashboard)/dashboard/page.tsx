@@ -9,6 +9,7 @@ import {
 import { getUser } from "@/lib/user/server";
 import { redirect } from "next/navigation";
 import NoWebsitePrompt from "./_components/no-website-prompt";
+import ErrorAlert from "@/components/error";
 
 const DashboardPage = async () => {
   const user = await getUser();
@@ -20,7 +21,14 @@ const DashboardPage = async () => {
   const { data: websites, error } = await getAllWebsites(user.id);
   await getAnalytics("Last 12 months", "clair.byharsh.com", user.id);
 
-  // TODO: Handle Error
+  if (error) {
+    return (
+      <ErrorAlert
+        title="Failed to get websites"
+        description="Ran into an error while fetching websites, try refreshing the page"
+      />
+    );
+  }
 
   return (
     <div className="items-center justify-center flex flex-col">

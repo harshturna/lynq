@@ -209,7 +209,6 @@ export const calculateBounceRate = (
   if (!sessions?.length) return 0;
 
   const BOUNCE_THRESHOLD_MILLISECONDS = 10000; // 10 seconds
-  console.log(sessions);
 
   // Count bounces
   const bounceCount = sessions.reduce((acc, session) => {

@@ -5,8 +5,10 @@ import {
   addVisitor,
 } from "@/lib/actions";
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
 export async function POST(req: Request) {
+  console.log(req);
   // make sure the request is coming from the domain in data-domain
   try {
     const body: TTrackedEvent = await req.json();
@@ -15,8 +17,23 @@ export async function POST(req: Request) {
     }
 
     if (body.event === "session-start") {
-      addVisitor(body.clientId, body.dataDomain);
-      addSession(body.sessionId, body.dataDomain);
+      let country = "Unknown";
+      const ip = headers().get("x-forwarded-for");
+      if (ip && ip !== "::1") {
+        try {
+          const response = await fetch(
+            `http://ip-api.com/json/${ip}?fields=status,country`
+          );
+          const ipInfo = await response.json();
+          console.log(ipInfo);
+          if (ipInfo.country) {
+            country = ipInfo.country;
+          }
+        } catch {}
+      }
+
+      await addVisitor(body.clientId, body.dataDomain);
+      addSession(body.sessionId, body.clientId, country, body.dataDomain);
     } else if (body.event === "page-view") {
       addPageView(
         body.dataDomain,

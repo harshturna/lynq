@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
 import WebsiteDashboard from "./_components/website-dashboard";
+import ErrorAlert from "@/components/error";
 
 interface WebsitePageProps {
   params: {
@@ -21,7 +22,16 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     user.id
   );
 
-  if (!website || error || website.user_id !== user.id) {
+  if (!website || error) {
+    return (
+      <ErrorAlert
+        title="Failed to get the website data"
+        description="Ran into an error while getting the data, try refreshing the page"
+      />
+    );
+  }
+
+  if (website.user_id !== user.id) {
     redirect("/dashboard");
   }
 
@@ -31,12 +41,16 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     user.id
   );
 
-  // TODO: Update this as we don't want to do this
-  if (!analyticsData || error) {
-    return <SetupDialog title="Add script to start tracking" />;
+  if (!analyticsData || analyticsError) {
+    return (
+      <ErrorAlert
+        title="Failed to get analytics"
+        description="Ran into an error while getting the data, try refreshing the page"
+      />
+    );
   }
 
-  // set the is_first_visit flag to false after visiting the dashboard for the first time
+  // setting the is_first_visit flag to false after visiting the dashboard for the first time
   if (website.is_first_visit) {
     updateWebsiteOne(params.website_slug, "is_first_visit", "false", user.id);
   }

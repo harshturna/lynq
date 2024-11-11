@@ -8,6 +8,7 @@ import { useState } from "react";
 import SetupDialog from "./setup-dialog";
 import DataCard from "./data-card";
 import { ChartSpline, Eye, TimerIcon, User2, View } from "lucide-react";
+import ErrorAlert from "@/components/error";
 
 interface WebsiteDashboardProps {
   websiteName: string;
@@ -23,7 +24,7 @@ const WebsiteDashboard = ({
   initialAnalyticsData,
 }: WebsiteDashboardProps) => {
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<null | string>();
 
   async function getUpdatedAnalyticsData(pickedTimeFrame: DatePickerValues) {
     const { res: analyticsData, error: analyticsError } = await getAnalytics(
@@ -32,7 +33,7 @@ const WebsiteDashboard = ({
       userId
     );
 
-    if (!analyticsData || error) {
+    if (!analyticsData || analyticsError) {
       setError("Unable to fetch data");
       return;
     }
@@ -41,7 +42,12 @@ const WebsiteDashboard = ({
   }
 
   if (error) {
-    return <SetupDialog title="Add script to start collecting data" />;
+    return (
+      <ErrorAlert
+        title="Failed to get analytics"
+        description="Ran into an error while getting the data, try refreshing the page"
+      />
+    );
   }
 
   return (
