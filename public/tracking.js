@@ -17,10 +17,6 @@
       CORE_VITAL: "vital",
       WEB_VITALS: "web-vitals",
     },
-    RETRY: {
-      MAX_ATTEMPTS: 0,
-      BACKOFF_FACTOR: 1000,
-    },
     PERFORMANCE: {
       MAX_LCP_TIME: 5000, // Maximum time to wait for LCP
       METRIC_TYPES: {
@@ -588,37 +584,15 @@
         eventData,
       };
 
-      return this.sendRequestWithRetry(payload, options);
+      return this.sendAnalyticsRequest(payload, options);
     }
 
-    async sendRequestWithRetry(payload, options = {}, attempt = 1) {
-      try {
-        const response = await fetch(CONFIG.ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-          keepalive: true,
-          ...options,
-        });
+    sendAnalyticsRequest(payload) {
+      const blob = new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      });
 
-        if (!response.ok) {
-          // throw new Error(`HTTP error! status: ${response.status}`);
-          return;
-        }
-
-        return await response.json();
-      } catch {
-        if (attempt < CONFIG.RETRY.MAX_ATTEMPTS && !this.isDestroyed) {
-          const backoffTime =
-            Math.pow(2, attempt - 1) * CONFIG.RETRY.BACKOFF_FACTOR;
-          await new Promise((resolve) => setTimeout(resolve, backoffTime));
-          return this.sendRequestWithRetry(payload, options, attempt + 1);
-        }
-        // console.error("Failed to send analytics event:", error);
-        // throw error;
-      }
+      return navigator.sendBeacon(CONFIG.ENDPOINT, blob);
     }
 
     setupErrorTracking() {
@@ -650,14 +624,14 @@
       this.pageLoadId = crypto.randomUUID();
 
       // Track page views
-      this.trackPageView = () => {
+      this.trackPageView = (isInitial = false) => {
         if (this.isDestroyed) return;
-        this.trackEvent(CONFIG.EVENTS.PAGE_VIEW);
+        this.trackEvent(CONFIG.EVENTS.PAGE_VIEW, { isInitial });
         this.initialPathname = window.location.pathname;
       };
 
       // Initial page view
-      this.trackPageView();
+      this.trackPageView(true);
 
       // Handle navigation events
       window.addEventListener("hashchange", this.trackPageView);

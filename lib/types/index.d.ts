@@ -24,7 +24,9 @@ type TTrackEvent =
 
 type SessionStartEventData = Record<never, never>;
 
-type PageViewEventData = Record<never, never>;
+type PageViewEventData = {
+  isInitial: boolean;
+};
 
 type SessionEndEventData = {
   sessionDuration: number;

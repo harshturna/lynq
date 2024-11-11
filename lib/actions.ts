@@ -94,6 +94,22 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
   return error;
 }
 
+export async function getCountryFromIp(ip: string | null) {
+  if (!ip || ip === "::1") return "Unknown";
+  try {
+    const response = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,country`
+    );
+    const ipInfo = await response.json();
+    if (ipInfo.country) {
+      return ipInfo.country;
+    }
+    return "Unknown";
+  } catch {
+    return "Unknown";
+  }
+}
+
 // Analytics
 
 export async function addVisitor(clientId: string, website_url: string) {
@@ -153,18 +169,15 @@ export async function addPageView(
       ? "Unknown"
       : "Desktop";
 
-  const { data: countryObj } = await supabase
+  const { data: countryData } = await supabase
     .from("sessions")
     .select("country")
     .eq("session_id", session_id)
     .single();
 
-  let country = "Unknown";
-  if (countryObj && countryObj.country) {
-    country = countryObj.country;
-  }
+  const country = countryData?.country || "Unknown";
 
-  const { data, error } = await supabase.from("page_views").insert({
+  await supabase.from("page_views").insert({
     website_url,
     page,
     device,
@@ -175,8 +188,6 @@ export async function addPageView(
     operating_system: userAgentData.os,
     country,
   });
-
-  console.log("error", error);
 }
 
 export async function addSession(
@@ -210,21 +221,6 @@ export async function addSessionDuration(
     .update({ session_duration: updatedDuration })
     .eq("website_url", website_url)
     .eq("session_id", session_id);
-}
-
-export async function getAllTimeVisitors(website_url: string, user_id: string) {
-  // check if the user making the request is the resource owner
-  const user = await getUser();
-  if (!user || !user.id) return "Unauthorized User";
-  if (user_id !== user.id) return "Unauthorized User";
-
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("visitors")
-    .select("*", { count: "exact", head: true })
-    .eq("website_url", website_url);
-
-  return count;
 }
 
 export async function getAnalytics(

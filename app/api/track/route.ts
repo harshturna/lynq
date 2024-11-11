@@ -3,12 +3,12 @@ import {
   addSession,
   addSessionDuration,
   addVisitor,
+  getCountryFromIp,
 } from "@/lib/actions";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
 export async function POST(req: Request) {
-  console.log(req);
   // make sure the request is coming from the domain in data-domain
   try {
     const body: TTrackedEvent = await req.json();
@@ -16,33 +16,45 @@ export async function POST(req: Request) {
       return;
     }
 
-    if (body.event === "session-start") {
-      let country = "Unknown";
-      const ip = headers().get("x-forwarded-for");
-      if (ip && ip !== "::1") {
-        try {
-          const response = await fetch(
-            `http://ip-api.com/json/${ip}?fields=status,country`
-          );
-          const ipInfo = await response.json();
-          console.log(ipInfo);
-          if (ipInfo.country) {
-            country = ipInfo.country;
-          }
-        } catch {}
-      }
+    const ip = headers().get("x-forwarded-for");
 
-      await addVisitor(body.clientId, body.dataDomain);
-      addSession(body.sessionId, body.clientId, country, body.dataDomain);
-    } else if (body.event === "page-view") {
-      addPageView(
-        body.dataDomain,
-        body.url,
-        body.sessionId,
-        body.pathname,
-        body.referrer,
-        body.userAgentData
-      );
+    if (body.event === "session-start" || body.event === "page-view") {
+      const country = await getCountryFromIp(ip);
+
+      if (body.event === "session-start") {
+        await addVisitor(body.clientId, body.dataDomain);
+        await addSession(
+          body.sessionId,
+          body.clientId,
+          country,
+          body.dataDomain
+        );
+      } else if (body.event === "page-view" && body.eventData.isInitial) {
+        await addVisitor(body.clientId, body.dataDomain);
+        await addSession(
+          body.sessionId,
+          body.clientId,
+          country,
+          body.dataDomain
+        );
+        addPageView(
+          body.dataDomain,
+          body.url,
+          body.sessionId,
+          body.pathname,
+          body.referrer,
+          body.userAgentData
+        );
+      } else {
+        addPageView(
+          body.dataDomain,
+          body.url,
+          body.sessionId,
+          body.pathname,
+          body.referrer,
+          body.userAgentData
+        );
+      }
     } else if (body.event === "session-end") {
       addSessionDuration(
         body.dataDomain,
