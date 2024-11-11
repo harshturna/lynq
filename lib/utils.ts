@@ -185,3 +185,40 @@ export function groupByAnalytics(
     }
   }
 }
+
+export const calculateAverageSessionDuration = (
+  sessions: Array<{ session_duration: number }>
+) => {
+  if (!sessions?.length) return 0;
+
+  return Number(
+    (
+      sessions.reduce(
+        (acc, session) => acc + (session.session_duration || 0),
+        0
+      ) /
+      sessions.length /
+      60000
+    ).toFixed(2)
+  );
+};
+
+export const calculateBounceRate = (
+  sessions: Array<{ session_duration: number }>
+) => {
+  if (!sessions?.length) return 0;
+
+  const BOUNCE_THRESHOLD_MILLISECONDS = 10000; // 10 seconds
+  console.log(sessions);
+
+  // Count bounces
+  const bounceCount = sessions.reduce((acc, session) => {
+    if (session.session_duration < BOUNCE_THRESHOLD_MILLISECONDS) {
+      return acc + 1;
+    }
+    return acc;
+  }, 0);
+
+  // Calculate percentage
+  return Number(((bounceCount / sessions.length) * 100).toFixed(2));
+};

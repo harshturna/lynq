@@ -12,7 +12,11 @@ import { datePickerValues } from "@/constants";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 
-const DatePicker = () => {
+interface DatePickerProps {
+  selectedTimeFrame: (timeFrame: DatePickerValues) => void;
+}
+
+const DatePicker = ({ selectedTimeFrame }: DatePickerProps) => {
   const [selected, setSelected] = useState(datePickerValues[0]);
 
   const [datePickerStartingValues, datePickerEndValues] = [
@@ -20,10 +24,17 @@ const DatePicker = () => {
     datePickerValues.slice(2),
   ];
 
+  function onValueChangeHandler(newValue: DatePickerValues) {
+    setSelected(newValue);
+    selectedTimeFrame(newValue);
+  }
+
   return (
     <Select
       value={selected}
-      onValueChange={(newValue: DatePickerValues) => setSelected(newValue)}
+      onValueChange={(newValue: DatePickerValues) =>
+        onValueChangeHandler(newValue)
+      }
     >
       <SelectTrigger className="w-[180px] h-[44px]">
         <div className="justify-start gap-3 flex items-center">

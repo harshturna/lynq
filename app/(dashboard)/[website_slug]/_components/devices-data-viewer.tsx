@@ -23,13 +23,22 @@ const DevicesDataViewer = ({ analyticsData }: DevicesDataViewer) => {
           ))}
         </TabsList>
       </div>
-      <TabsContent value="Devices">
+      <TabsContent
+        value="Devices"
+        className="h-[436px] overflow-x-hidden overflow-y-scroll"
+      >
         <AnalyticsDataList groupBy="devices" data={analyticsData} />
       </TabsContent>
-      <TabsContent value="Browsers">
+      <TabsContent
+        value="Browsers"
+        className="h-[436px] overflow-x-hidden overflow-y-scroll"
+      >
         <AnalyticsDataList groupBy="browsers" data={analyticsData} />
       </TabsContent>
-      <TabsContent value="OS">
+      <TabsContent
+        value="OS"
+        className="h-[436px] overflow-x-hidden overflow-y-scroll"
+      >
         <AnalyticsDataList groupBy="operating_systems" data={analyticsData} />
       </TabsContent>
     </Tabs>

@@ -5,6 +5,7 @@ type Website = {
   slug: string;
   user_id: string;
   is_first_visit: boolean;
+  visitors: number;
 };
 
 type DatePickerValues =
@@ -93,6 +94,14 @@ type AnalyticsData = {
   session_id: string;
   pathname: string;
   referrer: "Direct" | "Unknown" | string;
+};
+
+type AnalyticsDataWithCounts = {
+  analyticsData: AnalyticsData[];
+  views_count: number;
+  visitors_count: number;
+  average_session_duration: number;
+  bounce_rate: number;
 };
 
 type AnalyticsGroupBy =

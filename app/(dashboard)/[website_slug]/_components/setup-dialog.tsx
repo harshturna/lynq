@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
-const SetupDialog = () => {
+const SetupDialog = ({ title }: { title: string }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isCopy, setIsCopy] = useState(false);
 
@@ -40,9 +40,7 @@ const SetupDialog = () => {
       <AlertDialogContent className="min-w-[300px] max-w-[600px] w-full">
         <AlertDialogHeader className="flex flex-row justify-between gap-20 mb-6">
           <div>
-            <AlertDialogTitle className="font-light">
-              Add the script to your HTML
-            </AlertDialogTitle>
+            <AlertDialogTitle className="font-light">{title}</AlertDialogTitle>
             <AlertDialogDescription>
               {
                 "Add the script tag to the `<head>` of your HTML file for us to start tracking your website"

@@ -2,11 +2,7 @@ import { getAnalytics, getWebsite, updateWebsiteOne } from "@/lib/actions";
 import { redirect } from "next/navigation";
 import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
-import NavTabs from "./_components/nav-tabs";
-import DatePicker from "./_components/date-picker";
-import Loading from "../../../components/loading";
-import { groupByAnalytics } from "@/lib/utils";
-import AnalyticsDataViewer from "./_components/analytics-data-viewer";
+import WebsiteDashboard from "./_components/website-dashboard";
 
 interface WebsitePageProps {
   params: {
@@ -29,38 +25,31 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     redirect("/dashboard");
   }
 
-  const { data: analyticsData, error: analyticsError } = await getAnalytics(
+  const { res: analyticsData, error: analyticsError } = await getAnalytics(
     "Today",
     website.url,
     user.id
   );
 
   // TODO: Update this as we don't want to do this
-  if (!analyticsData) {
-    redirect("/dashboard");
+  if (!analyticsData || error) {
+    return <SetupDialog title="Add script to start tracking" />;
   }
 
   // set the is_first_visit flag to false after visiting the dashboard for the first time
-  // TODO: Uncomment after development
   if (website.is_first_visit) {
     updateWebsiteOne(params.website_slug, "is_first_visit", "false", user.id);
   }
 
   return (
     <>
-      {website.is_first_visit && <SetupDialog />}
-      <main>
-        <div className="flex justify-between items-center">
-          <NavTabs />
-          <DatePicker />
-        </div>
-
-        <div className="my-8">
-          <h1 className="text-2xl md:text-4xl">{website.name}</h1>
-          <p className="text-muted-foreground">{website.url}</p>
-        </div>
-        <AnalyticsDataViewer analyticsData={analyticsData} />
-      </main>
+      {website.is_first_visit && <SetupDialog title="Add script" />}
+      <WebsiteDashboard
+        userId={user.id}
+        websiteName={website.name}
+        websiteUrl={website.url}
+        initialAnalyticsData={analyticsData}
+      />
     </>
   );
 };

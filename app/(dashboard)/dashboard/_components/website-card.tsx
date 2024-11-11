@@ -11,13 +11,13 @@ import { UserRound } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import Settings from "./settings";
+import BottomGradient from "@/components/bottom-gradient";
 
 interface WebsiteCardProps {
   website: Website;
-  visitors: number;
 }
 
-const WebsiteCard = ({ website, visitors }: WebsiteCardProps) => {
+const WebsiteCard = ({ website }: WebsiteCardProps) => {
   return (
     <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
       <Link href={`/${website.slug}`} className="group/card">
@@ -32,22 +32,13 @@ const WebsiteCard = ({ website, visitors }: WebsiteCardProps) => {
           </CardHeader>
           <CardContent className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
             <UserRound />
-            <span>{visitors} Visitors</span>
+            <span>{website.visitors} Visitors</span>
           </CardContent>
         </Card>
         <BottomGradient />
       </Link>
       <Settings website={website} />
     </div>
-  );
-};
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/card:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/card:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
   );
 };
 

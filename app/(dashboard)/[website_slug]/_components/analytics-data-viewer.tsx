@@ -10,7 +10,7 @@ import AnalyticsDataList from "./analytics-data-list";
 import DevicesDataViewer from "./devices-data-viewer";
 
 interface AnalyticsDataViewer {
-  analyticsData: AnalyticsData[];
+  analyticsDataWithCount: AnalyticsDataWithCounts;
 }
 
 const tabs = [
@@ -32,9 +32,11 @@ const tabs = [
   },
 ];
 
-const AnalyticsDataViewer = ({ analyticsData }: AnalyticsDataViewer) => {
+const AnalyticsDataViewer = ({
+  analyticsDataWithCount,
+}: AnalyticsDataViewer) => {
   return (
-    <Card className="max-w-[800px] rounded-t-2xl rounded-b-xl overflow-hidden border-2">
+    <Card className="rounded-t-2xl rounded-b-xl overflow-hidden border-2">
       <CardContent className="px-0">
         <Tabs defaultValue={tabs[0].name}>
           <TabsList className="bg-stone-900 rounded-xl h-[40px] w-full justify-evenly rounded-b-none">
@@ -51,17 +53,37 @@ const AnalyticsDataViewer = ({ analyticsData }: AnalyticsDataViewer) => {
               </TabsTrigger>
             ))}
           </TabsList>
-          <TabsContent value="Pages">
-            <AnalyticsDataList groupBy="pages" data={analyticsData} />
+          <TabsContent
+            value="Pages"
+            className="h-[500px] overflow-x-hidden overflow-y-scroll"
+          >
+            <AnalyticsDataList
+              groupBy="pages"
+              data={analyticsDataWithCount.analyticsData}
+            />
           </TabsContent>
-          <TabsContent value="Locations">
-            <AnalyticsDataList groupBy="countries" data={analyticsData} />
+          <TabsContent
+            value="Locations"
+            className="h-[500px] overflow-x-hidden overflow-y-scroll"
+          >
+            <AnalyticsDataList
+              groupBy="countries"
+              data={analyticsDataWithCount.analyticsData}
+            />
           </TabsContent>
           <TabsContent value="Devices">
-            <DevicesDataViewer analyticsData={analyticsData} />
+            <DevicesDataViewer
+              analyticsData={analyticsDataWithCount.analyticsData}
+            />
           </TabsContent>
-          <TabsContent value="Referrers">
-            <AnalyticsDataList groupBy="referrers" data={analyticsData} />
+          <TabsContent
+            value="Referrers"
+            className="h-[500px] overflow-x-hidden overflow-y-scroll"
+          >
+            <AnalyticsDataList
+              groupBy="referrers"
+              data={analyticsDataWithCount.analyticsData}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

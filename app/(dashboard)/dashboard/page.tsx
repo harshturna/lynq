@@ -42,7 +42,7 @@ const DashboardPage = async () => {
               <NoWebsitePrompt />
             ) : (
               websites.map((website) => (
-                <WebsiteCard website={website} visitors={0} key={website.url} />
+                <WebsiteCard website={website} key={website.url} />
               ))
             )}
           </div>
