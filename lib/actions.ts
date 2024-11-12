@@ -295,6 +295,14 @@ export async function getAnalytics(
       ? calculateBounceRate(sessionsResult.data)
       : 0;
 
+    console.log({
+      analyticsData: analyticsResponse.data ?? [],
+      views_count,
+      visitors_count,
+      average_session_duration,
+      bounce_rate,
+    });
+
     // Prepare and return response
     return {
       res: {
