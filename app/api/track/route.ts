@@ -18,43 +18,29 @@ export async function POST(req: Request) {
 
     const ip = headers().get("x-forwarded-for");
 
-    if (body.event === "session-start" || body.event === "page-view") {
+    if (body.event === "session-start") {
       const country = await getCountryFromIp(ip);
 
-      if (body.event === "session-start") {
-        await addVisitor(body.clientId, body.dataDomain);
-        await addSession(
-          body.sessionId,
-          body.clientId,
-          country,
-          body.dataDomain
-        );
-      } else if (body.event === "page-view" && body.eventData.isInitial) {
-        await addVisitor(body.clientId, body.dataDomain);
-        await addSession(
-          body.sessionId,
-          body.clientId,
-          country,
-          body.dataDomain
-        );
-        addPageView(
-          body.dataDomain,
-          body.url,
-          body.sessionId,
-          body.pathname,
-          body.referrer,
-          body.userAgentData
-        );
-      } else {
-        addPageView(
-          body.dataDomain,
-          body.url,
-          body.sessionId,
-          body.pathname,
-          body.referrer,
-          body.userAgentData
-        );
-      }
+      await addVisitor(body.clientId, body.dataDomain);
+      await addSession(body.sessionId, body.clientId, country, body.dataDomain);
+      // capture the page view from initial session
+      addPageView(
+        body.dataDomain,
+        body.url,
+        body.sessionId,
+        body.pathname,
+        body.referrer,
+        body.userAgentData
+      );
+    } else if (body.event === "page-view") {
+      addPageView(
+        body.dataDomain,
+        body.url,
+        body.sessionId,
+        body.pathname,
+        body.referrer,
+        body.userAgentData
+      );
     } else if (body.event === "session-end") {
       addSessionDuration(
         body.dataDomain,

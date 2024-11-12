@@ -110,19 +110,6 @@
       for (const [osName, data] of Object.entries(osPatterns)) {
         const match = userAgent.match(data.pattern);
         if (match) {
-          // Uncomment versioning if needed
-          // let version = match[1] || "";
-
-          // // Handle Windows version mapping
-          // if (osName === "windows" && data.versions[version]) {
-          //   version = data.versions[version];
-          // }
-
-          // // Clean version if needed
-          // if (data.clean) {
-          //   version = data.clean(version);
-          // }
-
           return osName.charAt(0).toUpperCase() + osName.slice(1);
         }
       }
@@ -449,7 +436,6 @@
       this.scriptElement = document.currentScript;
       this.dataDomain = this.scriptElement?.getAttribute("data-domain");
       this.clientId = this.getOrCreateClientId();
-      this.queue = [];
       this.initialPathname = window.location.pathname;
       this.session = null;
       this.mutationObserver = null;
@@ -457,10 +443,8 @@
 
       // Initialize in correct order
       this.initializeSession();
-      this.setupErrorTracking();
       this.performanceTracker = new PerformanceTracker(this);
       this.setupEventListeners();
-      this.processQueue();
     }
     getOrCreateClientId() {
       try {
@@ -516,6 +500,8 @@
           };
           this.trackEvent(CONFIG.EVENTS.SESSION_START);
         } else {
+          // tracking page view if it's not a new session, for new session the session-start event captures page view
+          this.trackPageView();
           this.session = {
             sessionId,
             expirationTime: parseInt(expirationTime),
@@ -528,9 +514,7 @@
           () => this.refreshSession(),
           CONFIG.SESSION_DURATION / 2
         );
-      } catch {
-        // console.error("Failed to initialize session:", error);
-      }
+      } catch {}
     }
 
     refreshSession() {
@@ -542,9 +526,7 @@
             newExpirationTime
           );
           this.session.expirationTime = newExpirationTime;
-        } catch {
-          // console.error("Failed to refresh session:", error);
-        }
+        } catch {}
       }
     }
 
@@ -553,7 +535,6 @@
 
       // Safety check for session
       if (!this.session?.sessionId) {
-        // console.warn("Tracking attempted before session initialization");
         await new Promise((resolve) => setTimeout(resolve, 100));
         if (!this.session?.sessionId) return;
       }
@@ -595,43 +576,15 @@
       return navigator.sendBeacon(CONFIG.ENDPOINT, blob);
     }
 
-    setupErrorTracking() {
-      this.errorHandler = (event) => {
-        this.trackEvent(CONFIG.EVENTS.ERROR, {
-          message: event.message,
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-          error: event.error?.stack,
-          type: "error",
-        });
-      };
-
-      this.rejectionHandler = (event) => {
-        this.trackEvent(CONFIG.EVENTS.ERROR, {
-          type: "unhandledrejection",
-          message: event.reason?.message,
-          stack: event.reason?.stack,
-        });
-      };
-
-      window.addEventListener("error", this.errorHandler);
-      window.addEventListener("unhandledrejection", this.rejectionHandler);
+    trackPageView() {
+      if (this.isDestroyed) return;
+      this.trackEvent(CONFIG.EVENTS.PAGE_VIEW);
+      this.initialPathname = window.location.pathname;
     }
 
     setupEventListeners() {
       // Generate unique ID for this page load
       this.pageLoadId = crypto.randomUUID();
-
-      // Track page views
-      this.trackPageView = (isInitial = false) => {
-        if (this.isDestroyed) return;
-        this.trackEvent(CONFIG.EVENTS.PAGE_VIEW, { isInitial });
-        this.initialPathname = window.location.pathname;
-      };
-
-      // Initial page view
-      this.trackPageView(true);
 
       // Handle navigation events
       window.addEventListener("hashchange", this.trackPageView);
@@ -664,21 +617,6 @@
       });
     }
 
-    processQueue() {
-      const queue = window.your_tracking?.q || [];
-      queue.forEach((args) => {
-        try {
-          if (Array.isArray(args)) {
-            this.trackEvent(...args);
-          } else {
-            // console.warn("Invalid queue item:", args);
-          }
-        } catch {
-          // console.error("Failed to process queue item:", error);
-        }
-      });
-    }
-
     destroy() {
       this.isDestroyed = true;
 
@@ -688,8 +626,6 @@
       }
 
       // Remove event listeners
-      window.removeEventListener("error", this.errorHandler);
-      window.removeEventListener("unhandledrejection", this.rejectionHandler);
       window.removeEventListener("hashchange", this.trackPageView);
 
       // Disconnect observers
