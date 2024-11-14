@@ -96,8 +96,16 @@ type AnalyticsData = {
   referrer: "Direct" | "Unknown" | string;
 };
 
+type SessionData = {
+  id: number;
+  created_at: string;
+  website_url: string;
+  session_id: string;
+};
+
 type AnalyticsDataWithCounts = {
   analyticsData: AnalyticsData[];
+  sessionData: SessionData[];
   views_count: number;
   visitors_count: number;
   average_session_duration: number;
@@ -111,3 +119,8 @@ type AnalyticsGroupBy =
   | "countries"
   | "browsers"
   | "referrers";
+
+interface ChartDataPoint {
+  date: string;
+  [views | sessions]: number;
+}

@@ -9,7 +9,7 @@ import SetupDialog from "./setup-dialog";
 import DataCard from "./data-card";
 import { ChartSpline, Eye, TimerIcon, User2, View } from "lucide-react";
 import ErrorAlert from "@/components/error";
-import { Component } from "./test";
+import { AnalyticsChart } from "./test";
 
 interface WebsiteDashboardProps {
   websiteName: string;
@@ -26,6 +26,7 @@ const WebsiteDashboard = ({
 }: WebsiteDashboardProps) => {
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
   const [error, setError] = useState<null | string>();
+  const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Today");
 
   async function getUpdatedAnalyticsData(pickedTimeFrame: DatePickerValues) {
     const { res: analyticsData, error: analyticsError } = await getAnalytics(
@@ -40,6 +41,7 @@ const WebsiteDashboard = ({
     }
 
     setAnalyticsData(analyticsData);
+    setTimeFrame(pickedTimeFrame);
   }
 
   if (error) {
@@ -91,7 +93,11 @@ const WebsiteDashboard = ({
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_580px] gap-2">
         <div className="w-full">
-          <Component />
+          <AnalyticsChart
+            analyticsData={analyticsData.analyticsData}
+            sessionData={analyticsData.sessionData}
+            selectedTimeFrame={timeFrame}
+          />
         </div>
         <AnalyticsDataViewer analyticsDataWithCount={analyticsData} />
       </div>

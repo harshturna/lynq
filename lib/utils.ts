@@ -1,5 +1,25 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import {
+  startOfToday,
+  endOfToday,
+  eachHourOfInterval,
+  parseISO,
+  format as dateFnsFormat,
+  startOfMonth,
+  subMonths,
+  startOfDay,
+  subDays,
+  eachDayOfInterval,
+  format,
+  eachWeekOfInterval,
+  startOfWeek,
+  endOfWeek,
+  eachMonthOfInterval,
+  addDays,
+  startOfHour,
+} from "date-fns";
+import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -220,4 +240,227 @@ export const calculateBounceRate = (
 
   // Calculate percentage
   return Number(((bounceCount / sessions.length) * 100).toFixed(2));
+};
+
+export const process24HourData = (
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[],
+  toProcess: "sessions" | "views"
+): ChartDataPoint[] => {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const data = toProcess === "sessions" ? sessionData : analyticsData;
+
+  const now = new Date();
+  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+  const localToday = startOfToday();
+
+  const dayStart = fromZonedTime(localToday, timezone);
+  const dayEnd = fromZonedTime(oneHourFromNow, timezone);
+
+  // Create hourly buckets
+  const hoursArray = eachHourOfInterval({
+    start: dayStart,
+    end: dayEnd,
+  });
+
+  // Initialize counts for each full hour
+  const hourCounts = hoursArray.reduce((acc, hour) => {
+    const localHour = toZonedTime(hour, timezone);
+    const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
+    acc[hourKey] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Count entries by rounding down to nearest hour
+  data.forEach((entry) => {
+    const utcDate = parseISO(entry.created_at);
+    const localDate = toZonedTime(utcDate, timezone);
+
+    if (localDate >= localToday && localDate <= oneHourFromNow) {
+      const hourKey = dateFnsFormat(startOfHour(localDate), "HH:mm");
+      hourCounts[hourKey] = (hourCounts[hourKey] || 0) + 1;
+    }
+  });
+
+  // Create final array including the hour containing current time
+  return hoursArray.map((hour) => {
+    const localHour = toZonedTime(hour, timezone);
+    const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
+    return {
+      date: formatInTimeZone(localHour, timezone, "yyyy-MM-dd HH:mm:ssXXX"),
+      [toProcess]: hourCounts[hourKey] || 0,
+    };
+  });
+};
+
+// Last 7 days processing
+export const process7DaysData = (
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[],
+  toProcess: "sessions" | "views"
+): ChartDataPoint[] => {
+  const now = new Date();
+  const start = startOfDay(subDays(now, 6)); // 6 days ago + today = 7 days
+  const data = toProcess === "sessions" ? sessionData : analyticsData;
+
+  const daysArray = eachDayOfInterval({ start, end: now });
+
+  const dayCounts = daysArray.reduce((acc, day) => {
+    acc[format(day, "yyyy-MM-dd")] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  data.forEach((entry) => {
+    const date = parseISO(entry.created_at);
+    if (date >= start && date <= now) {
+      const dayKey = format(date, "yyyy-MM-dd");
+      dayCounts[dayKey] = (dayCounts[dayKey] || 0) + 1;
+    }
+  });
+
+  return daysArray.map((day) => ({
+    date: format(day, "yyyy-MM-dd"),
+    [toProcess]: dayCounts[format(day, "yyyy-MM-dd")] || 0,
+  }));
+};
+
+// Last 30 days processing
+export const process30DaysData = (
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[],
+  toProcess: "sessions" | "views"
+): ChartDataPoint[] => {
+  const now = new Date();
+  const start = startOfDay(subDays(now, 29));
+  const data = toProcess === "sessions" ? sessionData : analyticsData;
+  const daysArray = eachDayOfInterval({ start, end: now });
+
+  const dayCounts = daysArray.reduce((acc, day) => {
+    acc[format(day, "yyyy-MM-dd")] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  data.forEach((entry) => {
+    const date = parseISO(entry.created_at);
+    if (date >= start && date <= now) {
+      const dayKey = format(date, "yyyy-MM-dd");
+      dayCounts[dayKey] = (dayCounts[dayKey] || 0) + 1;
+    }
+  });
+
+  return daysArray.map((day) => ({
+    date: format(day, "yyyy-MM-dd"),
+    [toProcess]: dayCounts[format(day, "yyyy-MM-dd")] || 0,
+  }));
+};
+
+// Last 3 months processing
+export const process3MonthsData = (
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[],
+  toProcess: "sessions" | "views"
+): ChartDataPoint[] => {
+  const now = new Date();
+  const start = startOfDay(subMonths(now, 3));
+  const data = toProcess === "sessions" ? sessionData : analyticsData;
+  const weeksArray = eachWeekOfInterval(
+    { start, end: now },
+    { weekStartsOn: 1 }
+  );
+
+  const weekCounts = weeksArray.reduce((acc, week) => {
+    acc[format(week, "yyyy-MM-dd")] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  data.forEach((entry) => {
+    const date = parseISO(entry.created_at);
+    if (date >= start && date <= now) {
+      const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+      const weekKey = format(weekStart, "yyyy-MM-dd");
+      weekCounts[weekKey] = (weekCounts[weekKey] || 0) + 1;
+    }
+  });
+
+  return weeksArray.map((week) => {
+    const weekEnd = endOfWeek(week, { weekStartsOn: 1 });
+    return {
+      date: format(week, "yyyy-MM-dd"),
+      [toProcess]: weekCounts[format(week, "yyyy-MM-dd")] || 0,
+      label: `${format(week, "MMM d")} - ${format(weekEnd, "MMM d")}`,
+    };
+  });
+};
+
+// Last 12 months processing
+export const process12MonthsData = (
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[],
+  toProcess: "sessions" | "views"
+): ChartDataPoint[] => {
+  const now = new Date();
+  const start = startOfMonth(subMonths(now, 11));
+  const data = toProcess === "sessions" ? sessionData : analyticsData;
+  const monthsArray = eachMonthOfInterval({ start, end: now });
+
+  const monthCounts = monthsArray.reduce((acc, month) => {
+    acc[format(month, "yyyy-MM")] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  data.forEach((entry) => {
+    const date = parseISO(entry.created_at);
+    if (date >= start && date <= now) {
+      const monthKey = format(date, "yyyy-MM");
+      monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+    }
+  });
+
+  return monthsArray.map((month) => ({
+    date: format(month, "yyyy-MM"),
+    [toProcess]: monthCounts[format(month, "yyyy-MM")] || 0,
+  }));
+};
+
+export const getFormatters = (selectedTimeFrame: DatePickerValues) => {
+  switch (selectedTimeFrame) {
+    case "Today":
+      return {
+        xAxis: (value: string) => format(parseISO(value), "h:mm a"),
+        tooltip: (value: string) => format(parseISO(value), "h:mm a"),
+      };
+    case "Last 7 days":
+    case "Last 30 days":
+      return {
+        xAxis: (value: string) => format(parseISO(value), "MMM d"),
+        tooltip: (value: string) => format(parseISO(value), "MMM d, yyyy"),
+      };
+    case "Last 3 months":
+      return {
+        xAxis: (value: string) => {
+          // Parse start date and add 6 days for week range
+          const startDate = parseISO(value);
+          const endDate = addDays(startDate, 6);
+          return `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`;
+        },
+        tooltip: (value: string) => {
+          const startDate = parseISO(value);
+          const endDate = addDays(startDate, 6);
+          return `${format(startDate, "MMM d")} - ${format(
+            endDate,
+            "MMM d, yyyy"
+          )}`;
+        },
+      };
+    case "Last 12 months":
+      return {
+        xAxis: (value: string) => format(parseISO(value), "MMM yyyy"),
+        tooltip: (value: string) => format(parseISO(value), "MMMM yyyy"),
+      };
+    default:
+      return {
+        xAxis: (value: string) => value,
+        tooltip: (value: string) => value,
+      };
+  }
 };

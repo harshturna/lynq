@@ -273,7 +273,7 @@ export async function getAnalytics(
         // Sessions query
         supabase
           .from("sessions")
-          .select("session_duration")
+          .select("*")
           .eq("website_url", website_url)
           .gte("created_at", timeFrame)
           .lte("created_at", currentDateTime),
@@ -281,9 +281,6 @@ export async function getAnalytics(
 
     // Check for errors in any of the queries
     if (analyticsResponse.error) throw analyticsResponse.error;
-    // if (visitorsResult.error) throw visitorsResult.error;
-    // if (viewsResult.error) throw viewsResult.error;
-    // if (sessionsResult.error) throw sessionsResult.error;
 
     // Calculate metrics
     const visitors_count = visitorsResult.count ?? 0;
@@ -295,17 +292,10 @@ export async function getAnalytics(
       ? calculateBounceRate(sessionsResult.data)
       : 0;
 
-    console.log({
-      analyticsData: analyticsResponse.data ?? [],
-      views_count,
-      visitors_count,
-      average_session_duration,
-      bounce_rate,
-    });
-
     // Prepare and return response
     return {
       res: {
+        sessionData: sessionsResult.data ?? [],
         analyticsData: analyticsResponse.data ?? [],
         views_count,
         visitors_count,
