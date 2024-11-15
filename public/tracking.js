@@ -123,26 +123,38 @@
       this.analyticsTracker = analyticsTracker;
       this.observers = new Map();
       this.metrics = {
-        dcl: 0,
-        load: 0,
-        fcp: 0,
-        lcp: 0,
-        cls: 0,
-        fid: 0,
-        tbt: 0,
-        tti: 0,
-        ttfb: 0,
+        // Core Web Vitals
+        lcp: 0, // Largest Contentful Paint
+        cls: 0, // Cumulative Layout Shift
+        inp: 0, // Interaction to Next Paint
+
+        // Additional Metrics
+        fcp: 0, // First Contentful Paint
+        ttfb: 0, // Time to First Byte
+        tbt: 0, // Total Blocking Time
+
+        // Page Load Metrics
+        dcl: 0, // DOM Content Loaded
+        load: 0, // Load Event
+        tti: 0, // Time to Interactive
+
+        // Resource Data
         resources: [],
+
+        // Additional Data
+        interactionCount: 0,
+        totalJSHeapSize: 0,
+        usedJSHeapSize: 0,
       };
 
-      // Track if final metrics were sent to avoid duplicates
+      this.interactionTimes = [];
       this.finalMetricsSent = false;
 
-      // Initialize tracking if the Performance API is available
       if (this.isPerformanceSupported()) {
         this.initializeTracking();
       }
     }
+
     isPerformanceSupported() {
       return (
         typeof window !== "undefined" &&
@@ -150,6 +162,7 @@
         window.PerformanceObserver
       );
     }
+
     initializeTracking() {
       try {
         this.setupPerformanceObservers();
@@ -160,14 +173,15 @@
         console.error("Failed to initialize performance tracking:", error);
       }
     }
+
     setupPerformanceObservers() {
-      // Store cleanup functions for each observer
       this.createObserver("paint", this.observePaint.bind(this));
       this.createObserver("lcp", this.observeLCP.bind(this));
       this.createObserver("cls", this.observeCLS.bind(this));
-      this.createObserver("fid", this.observeFID.bind(this));
+      this.createObserver("inp", this.observeINP.bind(this));
       this.createObserver("longtasks", this.observeLongTasks.bind(this));
     }
+
     createObserver(name, observerFn) {
       try {
         const observer = observerFn();
@@ -178,255 +192,196 @@
         console.error(`Failed to create ${name} observer:`, error);
       }
     }
+
     observePaint() {
       return new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            if (entry.name === "first-contentful-paint") {
-              this.metrics.fcp = entry.startTime;
-              this.sendPartialMetrics("FCP", entry.startTime);
-            }
-          });
-        } catch (error) {
-          console.error("Error processing paint entries:", error);
-        }
-      }).observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.PAINT,
-        buffered: true,
-      });
+        const entries = entryList.getEntries();
+        entries.forEach((entry) => {
+          if (entry.name === "first-contentful-paint") {
+            this.metrics.fcp = entry.startTime;
+          }
+        });
+      }).observe({ type: "paint", buffered: true });
     }
+
     observeLCP() {
-      let finalLCP = false;
       const observer = new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            if (entry.startTime > this.metrics.lcp) {
-              this.metrics.lcp = entry.startTime;
-              if (!finalLCP) {
-                this.sendPartialMetrics("LCP", entry.startTime);
-              }
-            }
-          });
-        } catch (error) {
-          console.error("Error processing LCP entries:", error);
-        }
+        const entries = entryList.getEntries();
+        entries.forEach((entry) => {
+          if (entry.startTime > this.metrics.lcp) {
+            this.metrics.lcp = entry.startTime;
+          }
+        });
       });
-      observer.observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.LARGEST_CONTENTFUL_PAINT,
-        buffered: true,
-      });
-
-      // Store timeout ID for cleanup
-      this.lcpTimeout = setTimeout(() => {
-        finalLCP = true;
-        this.sendPartialMetrics("Final LCP", this.metrics.lcp);
-      }, CONFIG.PERFORMANCE.MAX_LCP_TIME);
-
+      observer.observe({ type: "largest-contentful-paint", buffered: true });
       return observer;
     }
+
     observeCLS() {
       let sessionEntries = [];
       return new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            if (!entry.hadRecentInput) {
-              sessionEntries.push(entry);
-              this.calculateCLS(sessionEntries);
-            }
-          });
-        } catch (error) {
-          console.error("Error processing CLS entries:", error);
-        }
-      }).observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.LAYOUT_SHIFT,
-        buffered: true,
-      });
+        const entries = entryList.getEntries();
+        entries.forEach((entry) => {
+          if (!entry.hadRecentInput) {
+            sessionEntries = this.updateCLS(sessionEntries, entry);
+          }
+        });
+      }).observe({ type: "layout-shift", buffered: true });
     }
-    calculateCLS(sessionEntries) {
-      let windowCLS = 0;
-      let window = [];
-      let windowStart = 0;
 
-      sessionEntries.forEach((entry) => {
-        if (window.length === 0 || entry.startTime - windowStart < 1000) {
-          window.push(entry);
+    updateCLS(sessionEntries, entry) {
+      const updatedEntries = [...sessionEntries, entry];
+      this.metrics.cls = this.calculateMaxSessionGap(updatedEntries);
+      return updatedEntries;
+    }
+
+    calculateMaxSessionGap(entries) {
+      let maxSessionValue = 0;
+      let session = [];
+      let sessionStart = 0;
+
+      entries.forEach((entry) => {
+        if (!session.length || entry.startTime - sessionStart < 1000) {
+          session.push(entry);
         } else {
-          windowCLS = Math.max(windowCLS, this.calculateWindowCLS(window));
-          window = [entry];
-          windowStart = entry.startTime;
+          maxSessionValue = Math.max(
+            maxSessionValue,
+            session.reduce((sum, e) => sum + e.value, 0)
+          );
+          session = [entry];
+          sessionStart = entry.startTime;
         }
       });
 
-      this.metrics.cls = windowCLS;
-      this.sendPartialMetrics("CLS", windowCLS);
+      return Math.max(
+        maxSessionValue,
+        session.reduce((sum, e) => sum + e.value, 0)
+      );
     }
-    calculateWindowCLS(entries) {
-      return entries.reduce((sum, entry) => sum + entry.value, 0);
-    }
-    observeFID() {
+
+    observeINP() {
       return new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            this.metrics.fid = entry.processingStart - entry.startTime;
-            this.sendPartialMetrics("FID", this.metrics.fid);
-          });
-        } catch (error) {
-          console.error("Error processing FID entries:", error);
+        const entries = entryList.getEntries();
+        this.metrics.interactionCount += entries.length;
+
+        entries.forEach((entry) => {
+          this.interactionTimes.push(entry.duration);
+        });
+
+        if (this.interactionTimes.length > 0) {
+          const sortedTimes = [...this.interactionTimes].sort((a, b) => a - b);
+          const idx = Math.floor(sortedTimes.length * 0.75);
+          this.metrics.inp = sortedTimes[idx];
         }
       }).observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.FIRST_INPUT,
+        type: "event",
         buffered: true,
+        durationThreshold: 16,
       });
     }
+
     observeLongTasks() {
       let totalBlockingTime = 0;
       return new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            const blockingTime = entry.duration - 50;
-            if (blockingTime > 0) {
-              totalBlockingTime += blockingTime;
-              this.metrics.tbt = totalBlockingTime;
-              this.sendPartialMetrics("TBT", totalBlockingTime);
-            }
-          });
-        } catch (error) {
-          console.error("Error processing long task entries:", error);
-        }
-      }).observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.LONG_TASK,
-        buffered: true,
-      });
-    }
-    setupNavigationTracking() {
-      const onDocumentReady = (callback) => {
-        if (document.readyState === "complete") {
-          callback();
-        } else {
-          const handler = () => {
-            if (document.readyState === "complete") {
-              document.removeEventListener("readystatechange", handler);
-              callback();
-            }
-          };
-          document.addEventListener("readystatechange", handler);
-        }
-      };
-      onDocumentReady(() => {
-        this.navigationTimeout = setTimeout(() => {
-          try {
-            const navEntry = performance.getEntriesByType("navigation")[0];
-            if (navEntry) {
-              this.processNavigationTiming(navEntry);
-            }
-          } catch (error) {
-            console.error("Error processing navigation timing:", error);
+        const entries = entryList.getEntries();
+        entries.forEach((entry) => {
+          const blockingTime = entry.duration - 50;
+          if (blockingTime > 0) {
+            totalBlockingTime += blockingTime;
+            this.metrics.tbt = totalBlockingTime;
           }
-        }, 0);
-      });
-    }
-    processNavigationTiming(navEntry) {
-      this.metrics.dcl = navEntry.domContentLoadedEventStart;
-      this.metrics.load = navEntry.loadEventStart;
-      this.metrics.ttfb = navEntry.responseStart;
-      this.metrics.tti = navEntry.domInteractive;
-
-      this.sendPartialMetrics("Navigation", {
-        dcl: this.metrics.dcl,
-        load: this.metrics.load,
-        ttfb: this.metrics.ttfb,
-        tti: this.metrics.tti,
-      });
+        });
+      }).observe({ type: "longtask", buffered: true });
     }
 
-    isImportantResource(entry) {
-      return entry.transferSize > 0 && entry.duration > 100;
+    setupNavigationTracking() {
+      if (document.readyState === "complete") {
+        this.collectNavigationMetrics();
+      } else {
+        document.addEventListener("readystatechange", () => {
+          if (document.readyState === "complete") {
+            this.collectNavigationMetrics();
+          }
+        });
+      }
+    }
+
+    collectNavigationMetrics() {
+      const navEntry = performance.getEntriesByType("navigation")[0];
+      if (navEntry) {
+        this.metrics.dcl = navEntry.domContentLoadedEventStart;
+        this.metrics.load = navEntry.loadEventStart;
+        this.metrics.ttfb = navEntry.responseStart;
+        this.metrics.tti = navEntry.domInteractive;
+      }
     }
 
     setupResourceTracking() {
       this.resourceObserver = new PerformanceObserver((entryList) => {
-        try {
-          const entries = entryList.getEntries();
-          entries.forEach((entry) => {
-            if (this.isImportantResource(entry)) {
-              this.metrics.resources.push({
-                name: entry.name,
-                type: entry.initiatorType,
-                duration: entry.duration,
-                transferSize: entry.transferSize,
-                startTime: entry.startTime,
-              });
-            }
-          });
-        } catch (error) {
-          console.error("Error processing resource entries:", error);
+        const entries = entryList.getEntries();
+        entries.forEach((entry) => {
+          if (entry.transferSize > 0 && entry.duration > 100) {
+            this.metrics.resources.push({
+              name: entry.name,
+              type: entry.initiatorType,
+              duration: entry.duration,
+              transferSize: entry.transferSize,
+              startTime: entry.startTime,
+              protocol: entry.nextHopProtocol || "",
+            });
+          }
+        });
+      });
+      this.resourceObserver.observe({ type: "resource", buffered: true });
+    }
+
+    setupVisibilityTracking() {
+      window.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          this.sendFinalMetrics();
         }
       });
-      this.resourceObserver.observe({
-        type: CONFIG.PERFORMANCE.METRIC_TYPES.RESOURCE,
-        buffered: true,
+
+      window.addEventListener("beforeunload", () => {
+        this.sendFinalMetrics();
       });
     }
-    setupVisibilityTracking() {
-      this.unloadHandler = () => {
-        this.sendFinalMetrics();
-      };
 
-      window.addEventListener("beforeunload", this.unloadHandler);
-    }
-    sendPartialMetrics(metricName, value) {
-      if (!this.finalMetricsSent) {
-        this.analyticsTracker.trackEvent(CONFIG.EVENTS.CORE_VITAL, {
-          metricName,
-          value,
-          partial: true,
-        });
+    collectPerformanceMetrics() {
+      // Collect memory usage if available
+      if (performance.memory) {
+        this.metrics.totalJSHeapSize = performance.memory.totalJSHeapSize;
+        this.metrics.usedJSHeapSize = performance.memory.usedJSHeapSize;
       }
+
+      // Add resource timing data
+      this.metrics.resourceCount =
+        performance.getEntriesByType("resource").length;
     }
+
     sendFinalMetrics() {
       if (!this.finalMetricsSent) {
         this.finalMetricsSent = true;
+        this.collectPerformanceMetrics();
+
         this.analyticsTracker.trackEvent(
-          CONFIG.EVENTS.WEB_VITALS,
+          "web-vitals",
           {
             ...this.metrics,
-            partial: false,
-            timestamp: performance.now(),
           },
           { keepalive: true }
         );
       }
     }
+
     destroy() {
-      // Clear all observers
-      this.observers.forEach((observer) => {
-        try {
-          observer.disconnect();
-        } catch (error) {
-          console.error("Error disconnecting observer:", error);
-        }
-      });
+      this.observers.forEach((observer) => observer.disconnect());
       this.observers.clear();
 
-      // Clear resource observer
       if (this.resourceObserver) {
         this.resourceObserver.disconnect();
       }
-      // Remove event listeners
-      window.removeEventListener("beforeunload", this.unloadHandler);
-      // Clear timeouts
-      if (this.lcpTimeout) {
-        clearTimeout(this.lcpTimeout);
-      }
-      if (this.navigationTimeout) {
-        clearTimeout(this.navigationTimeout);
-      }
-      // Send final metrics if not already sent
+
       this.sendFinalMetrics();
     }
   }

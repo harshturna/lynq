@@ -16,6 +16,10 @@ export async function POST(req: Request) {
       return;
     }
 
+    if (body.event === "web-vitals") {
+      console.log(body.eventData.resources);
+    }
+
     const ip = headers().get("x-forwarded-for");
 
     if (body.event === "session-start") {
