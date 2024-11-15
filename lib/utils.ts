@@ -252,9 +252,9 @@ export const process24HourData = (
 
   const now = new Date();
   const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-  const localToday = startOfToday();
+  const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000);
 
-  const dayStart = fromZonedTime(localToday, timezone);
+  const dayStart = fromZonedTime(twentyThreeHoursAgo, timezone);
   const dayEnd = fromZonedTime(oneHourFromNow, timezone);
 
   // Create hourly buckets
@@ -276,7 +276,7 @@ export const process24HourData = (
     const utcDate = parseISO(entry.created_at);
     const localDate = toZonedTime(utcDate, timezone);
 
-    if (localDate >= localToday && localDate <= oneHourFromNow) {
+    if (localDate >= twentyThreeHoursAgo && localDate <= oneHourFromNow) {
       const hourKey = dateFnsFormat(startOfHour(localDate), "HH:mm");
       hourCounts[hourKey] = (hourCounts[hourKey] || 0) + 1;
     }

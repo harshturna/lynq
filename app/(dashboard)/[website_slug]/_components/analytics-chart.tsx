@@ -48,7 +48,7 @@ export function AnalyticsChart({
   selectedTimeFrame,
 }: AnalyticsChartProps) {
   const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("sessions");
+    React.useState<keyof typeof chartConfig>("views");
   const chartData = React.useMemo(() => {
     if (selectedTimeFrame === "Today") {
       return process24HourData(analyticsData, sessionData, activeChart);
@@ -125,7 +125,7 @@ export function AnalyticsChart({
               tickLine={false}
               axisLine={false}
               tickMargin={12}
-              minTickGap={selectedTimeFrame === "Last 12 months" ? 20 : 0}
+              minTickGap={selectedTimeFrame === "Last 12 months" ? 20 : 18}
               tickFormatter={xAxisFormatter}
             />
             <ChartTooltip

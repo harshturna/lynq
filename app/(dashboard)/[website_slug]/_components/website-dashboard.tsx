@@ -5,11 +5,10 @@ import AnalyticsDataViewer from "./analytics-data-viewer";
 import DatePicker from "./date-picker";
 import NavTabs from "./nav-tabs";
 import { useState } from "react";
-import SetupDialog from "./setup-dialog";
 import DataCard from "./data-card";
-import { ChartSpline, Eye, TimerIcon, User2, View } from "lucide-react";
+import { ChartSpline, Eye, TimerIcon, User2 } from "lucide-react";
 import ErrorAlert from "@/components/error";
-import { AnalyticsChart } from "./test";
+import { AnalyticsChart } from "./analytics-chart";
 
 interface WebsiteDashboardProps {
   websiteName: string;
