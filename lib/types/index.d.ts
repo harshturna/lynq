@@ -15,12 +15,7 @@ type DatePickerValues =
   | "Last 3 months"
   | "Last 12 months";
 
-type TTrackEvent =
-  | "session-start"
-  | "page-view"
-  | "session-end"
-  | "vital"
-  | "web-vitals";
+type TTrackEvent = "session-start" | "page-view" | "session-end" | "web-vitals";
 
 type SessionStartEventData = Record<never, never>;
 
@@ -29,6 +24,41 @@ type PageViewEventData = Record<never, never>;
 type SessionEndEventData = {
   sessionDuration: number;
 };
+
+type WebVitalsEventData = {
+  lcp: number;
+  cls: number;
+  inp: number;
+  fcp: number;
+  ttfb: number;
+  tbt: number;
+  dcl: number;
+  load: number;
+  tti: number;
+  interactionCount: number;
+  resourceCount: number;
+  totalJSHeapSize: number;
+  usedJSHeapSize: number;
+};
+
+type WebVitalsResponseData = {
+  id: number;
+  lcp: number;
+  cls: number;
+  inp: number;
+  fcp: number;
+  ttfb: number;
+  tbt: number;
+  load: number;
+  tti: number;
+  dcl: number;
+  interaction_count: number;
+  resource_count: number;
+  total_js_heap: number;
+  used_js_heap: number;
+};
+
+type WebVitalsMetrics = Omit<WebVitalsResponseData, "id">;
 
 type VitalEventData =
   | {
@@ -72,10 +102,6 @@ type TTrackedEvent =
   | (BaseTrackedEvent & {
       event: "session-end";
       eventData: SessionEndEventData;
-    })
-  | (BaseTrackedEvent & {
-      event: "vital";
-      eventData: VitalEventData;
     })
   | (BaseTrackedEvent & {
       event: "web-vitals";

@@ -5,6 +5,7 @@ import { createClient } from "./supabase/server";
 import { getUser } from "./user/server";
 import {
   calculateAverageSessionDuration,
+  calculateAverageVital,
   calculateBounceRate,
   getTimeFrame,
 } from "./utils";
@@ -311,4 +312,63 @@ export async function getAnalytics(
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
+}
+
+export async function addVitals(
+  session_id: string,
+  website_url: string,
+  vitals: WebVitalsEventData
+) {
+  const supabase = await createClient();
+  await supabase.from("vitals").insert({
+    website_url,
+    session_id,
+    lcp: vitals.lcp,
+    cls: vitals.cls,
+    inp: vitals.inp,
+    fcp: vitals.fcp,
+    ttfb: vitals.ttfb,
+    tbt: vitals.tbt,
+    dcl: vitals.dcl,
+    load: vitals.load,
+    tti: vitals.tti,
+    interaction_count: vitals.interactionCount,
+    resource_count: vitals.resourceCount,
+    total_js_heap: vitals.totalJSHeapSize,
+    used_js_heap: vitals.usedJSHeapSize,
+  });
+}
+
+export async function getVitals(
+  pickedTimeFrame: DatePickerValues,
+  website_url: string,
+  user_id: string
+): Promise<{
+  data: (WebVitalsMetrics & { size: number }) | null;
+  error: PostgrestError | null | string;
+}> {
+  const [supabase, user] = await Promise.all([createClient(), getUser()]);
+
+  if (!user?.id) {
+    return { data: null, error: "Unauthorized User" };
+  }
+  if (user_id !== user.id) {
+    return { data: null, error: "Unauthorized User" };
+  }
+
+  const timeFrame = getTimeFrame(pickedTimeFrame);
+  const currentDateTime = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("vitals")
+    .select("*")
+    .eq("website_url", website_url)
+    .gte("created_at", timeFrame)
+    .lte("created_at", currentDateTime);
+
+  if (!data) {
+    return { data: null, error: "No data" };
+  }
+
+  return { data: calculateAverageVital(data), error: null };
 }

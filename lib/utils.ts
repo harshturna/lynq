@@ -20,6 +20,7 @@ import {
   startOfHour,
 } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { EXCLUDED_KEYS } from "@/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -223,6 +224,56 @@ export const calculateAverageSessionDuration = (
   );
 };
 
+export const calculateAverageVital = (
+  vitals: Array<WebVitalsResponseData>
+): WebVitalsMetrics & { size: number } => {
+  if (!vitals.length) {
+    return {
+      lcp: 0,
+      cls: 0,
+      dcl: 0,
+      fcp: 0,
+      inp: 0,
+      interaction_count: 0,
+      load: 0,
+      resource_count: 0,
+      tbt: 0,
+      total_js_heap: 0,
+      ttfb: 0,
+      tti: 0,
+      used_js_heap: 0,
+      size: 0,
+    } as WebVitalsMetrics & { size: number };
+  }
+
+  const initialAccumulator = Object.keys(vitals[0]).reduce((acc, key) => {
+    if (!EXCLUDED_KEYS.includes(key as any)) {
+      acc[key] = 0;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sums = vitals.reduce((acc, vitalData) => {
+    for (const [key, value] of Object.entries(vitalData)) {
+      if (!EXCLUDED_KEYS.includes(key as any) && typeof value === "number") {
+        acc[key] = (acc[key] || 0) + value;
+      }
+    }
+    return acc;
+  }, initialAccumulator);
+
+  const size = vitals.length;
+  const averages = Object.entries(sums).reduce((acc, [key, sum]) => {
+    acc[key] = Number((sum / size).toFixed(2));
+    return acc;
+  }, {} as Record<string, number>);
+
+  return {
+    ...averages,
+    size,
+  } as WebVitalsMetrics & { size: number };
+};
+
 export const calculateBounceRate = (
   sessions: Array<{ session_duration: number }>
 ) => {
@@ -257,13 +308,11 @@ export const process24HourData = (
   const dayStart = fromZonedTime(twentyThreeHoursAgo, timezone);
   const dayEnd = fromZonedTime(oneHourFromNow, timezone);
 
-  // Create hourly buckets
   const hoursArray = eachHourOfInterval({
     start: dayStart,
     end: dayEnd,
   });
 
-  // Initialize counts for each full hour
   const hourCounts = hoursArray.reduce((acc, hour) => {
     const localHour = toZonedTime(hour, timezone);
     const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
@@ -271,7 +320,6 @@ export const process24HourData = (
     return acc;
   }, {} as Record<string, number>);
 
-  // Count entries by rounding down to nearest hour
   data.forEach((entry) => {
     const utcDate = parseISO(entry.created_at);
     const localDate = toZonedTime(utcDate, timezone);
@@ -282,7 +330,6 @@ export const process24HourData = (
     }
   });
 
-  // Create final array including the hour containing current time
   return hoursArray.map((hour) => {
     const localHour = toZonedTime(hour, timezone);
     const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
@@ -293,7 +340,6 @@ export const process24HourData = (
   });
 };
 
-// Last 7 days processing
 export const process7DaysData = (
   analyticsData: AnalyticsData[],
   sessionData: SessionData[],
@@ -324,7 +370,6 @@ export const process7DaysData = (
   }));
 };
 
-// Last 30 days processing
 export const process30DaysData = (
   analyticsData: AnalyticsData[],
   sessionData: SessionData[],
@@ -354,7 +399,6 @@ export const process30DaysData = (
   }));
 };
 
-// Last 3 months processing
 export const process3MonthsData = (
   analyticsData: AnalyticsData[],
   sessionData: SessionData[],
@@ -392,7 +436,6 @@ export const process3MonthsData = (
   });
 };
 
-// Last 12 months processing
 export const process12MonthsData = (
   analyticsData: AnalyticsData[],
   sessionData: SessionData[],

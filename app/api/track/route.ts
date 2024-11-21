@@ -3,6 +3,7 @@ import {
   addSession,
   addSessionDuration,
   addVisitor,
+  addVitals,
   getCountryFromIp,
 } from "@/lib/actions";
 import { NextResponse } from "next/server";
@@ -16,9 +17,7 @@ export async function POST(req: Request) {
       return;
     }
 
-    if (body.event === "web-vitals") {
-      console.log(body.eventData.resources);
-    }
+    console.log(body);
 
     const ip = headers().get("x-forwarded-for");
 
@@ -51,6 +50,8 @@ export async function POST(req: Request) {
         body.sessionId,
         body.eventData.sessionDuration
       );
+    } else if (body.event === "web-vitals") {
+      addVitals(body.sessionId, body.dataDomain, body.eventData);
     }
 
     return new NextResponse("Success", { status: 200 });
