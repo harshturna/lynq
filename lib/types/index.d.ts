@@ -151,10 +151,28 @@ interface ChartDataPoint {
   [views | sessions]: number;
 }
 
-type CoreVitalType = "cls" | "inp" | "lcp";
+type WebVitalType =
+  | "lcp"
+  | "cls"
+  | "inp"
+  | "fcp"
+  | "ttfb"
+  | "tbt"
+  | "load"
+  | "tti"
+  | "dcl";
 
-type CoreVitalScore = {
+type WebVitalScore = {
   score: string;
   range: "Good" | "Need improvement" | "Poor" | "Not enough data";
-  type: coreVitalType;
+  type: WebVitalType;
+};
+
+type WebVitalDetail = {
+  [key in WebVitalType]: {
+    type: string;
+    name: string;
+    link: string;
+    description: string;
+  };
 };

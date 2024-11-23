@@ -508,58 +508,126 @@ export const getFormatters = (selectedTimeFrame: DatePickerValues) => {
   }
 };
 
-export const calculateCoreVitalScore = (
+export const convertByteToMB = (bytes: number): number => {
+  console.log(bytes);
+  return Number((bytes / (1024 * 1024)).toFixed(2));
+};
+
+export const calculateWebVitalScore = (
   value: number,
-  type: CoreVitalType
-): CoreVitalScore => {
+  type: WebVitalType
+): WebVitalScore => {
   let range: "Good" | "Need improvement" | "Poor" | "Not enough data";
   let formattedScore: string;
 
   if (value <= -1) {
     formattedScore = "N/A";
     range = "Not enough data";
-  } else {
-    switch (type) {
-      case "cls":
-        formattedScore = value.toFixed(3);
-        break;
-      case "inp":
-      case "lcp":
-        formattedScore = `${value.toFixed(0)}ms`;
-        break;
-    }
-    switch (type) {
-      case "cls":
-        if (value <= 0.1) {
-          range = "Good";
-        } else if (value <= 0.25) {
-          range = "Need improvement";
-        } else {
-          range = "Poor";
-        }
-        break;
-
-      case "inp":
-        if (value <= 200) {
-          range = "Good";
-        } else if (value <= 500) {
-          range = "Need improvement";
-        } else {
-          range = "Poor";
-        }
-        break;
-
-      case "lcp":
-        if (value <= 2500) {
-          range = "Good";
-        } else if (value <= 4000) {
-          range = "Need improvement";
-        } else {
-          range = "Poor";
-        }
-        break;
-    }
+    return { score: formattedScore, range, type };
   }
+
+  // Format and determine range based on metric type
+  switch (type) {
+    case "cls":
+      formattedScore = value.toFixed(3);
+      if (value <= 0.1) {
+        range = "Good";
+      } else if (value <= 0.25) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "inp":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 200) {
+        range = "Good";
+      } else if (value <= 500) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "lcp":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 2500) {
+        range = "Good";
+      } else if (value <= 4000) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "fcp":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 1800) {
+        range = "Good";
+      } else if (value <= 3000) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "ttfb":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 800) {
+        range = "Good";
+      } else if (value <= 1800) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "tbt":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 200) {
+        range = "Good";
+      } else if (value <= 600) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "load":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 3000) {
+        range = "Good";
+      } else if (value <= 6000) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "tti":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 3800) {
+        range = "Good";
+      } else if (value <= 7300) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+
+    case "dcl":
+      formattedScore = `${value.toFixed(0)}ms`;
+      if (value <= 2500) {
+        range = "Good";
+      } else if (value <= 4000) {
+        range = "Need improvement";
+      } else {
+        range = "Poor";
+      }
+      break;
+  }
+
   return {
     score: formattedScore,
     range,

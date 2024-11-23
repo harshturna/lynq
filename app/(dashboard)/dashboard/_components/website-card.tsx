@@ -22,7 +22,7 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
     <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
       <Link href={`/${website.slug}`} className="group/card">
         <Card>
-          <CardHeader className="mb-4">
+          <CardHeader className="mb-8">
             <div>
               <CardTitle className="text-xl md:text-2xl">
                 {website.name}

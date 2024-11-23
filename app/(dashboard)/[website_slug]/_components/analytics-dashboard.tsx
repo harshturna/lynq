@@ -42,7 +42,7 @@ const AnalyticsDashboard = ({
           value={`${analyticsData.bounce_rate}%`}
         />
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_580px] gap-2">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_650px] gap-4 mt-4">
         <div className="w-full">
           <AnalyticsChart
             analyticsData={analyticsData.analyticsData}

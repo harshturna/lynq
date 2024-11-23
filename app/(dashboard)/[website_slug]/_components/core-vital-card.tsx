@@ -14,26 +14,32 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { coreVitalDetails } from "@/constants";
-import { calculateCoreVitalScore, cn } from "@/lib/utils";
+import { webVitalDetails } from "@/constants";
+import { calculateWebVitalScore, cn } from "@/lib/utils";
 import { ArrowUpRight, BadgeInfo } from "lucide-react";
 import React from "react";
 
 interface CoreVitalCardProps {
-  type: CoreVitalType;
+  type: WebVitalType;
   score: number;
+  isCore?: boolean;
 }
 
-const CoreVitalCard = ({ type, score }: CoreVitalCardProps) => {
-  const vitalDetails = coreVitalDetails[type];
-  const scoreDetails = calculateCoreVitalScore(score, type);
+const CoreVitalCard = ({ type, score, isCore = false }: CoreVitalCardProps) => {
+  const vitalDetails = webVitalDetails[type];
+  const scoreDetails = calculateWebVitalScore(score, type);
 
   return (
-    <div className="relative min-w-full sm:min-w-[350px] md:min-w-[450px]">
-      <Card>
+    <div
+      className={cn(
+        "relative min-w-full",
+        isCore ? "sm:min-w-[350px] md:w-[460px]" : "w-full"
+      )}
+    >
+      <Card className={cn(isCore ? "" : "border-none bg-transparent")}>
         <CardHeader className="mb-6 flex justify-between flex-row">
           <div>
-            <CardTitle className="text-xl md:text-2xl">
+            <CardTitle className="text-lg md:text-xl lg:text-2xl">
               {vitalDetails.type}
             </CardTitle>
             <CardDescription>{vitalDetails.name}</CardDescription>
@@ -48,7 +54,7 @@ const CoreVitalCard = ({ type, score }: CoreVitalCardProps) => {
                   <DialogTitle>{vitalDetails.type}</DialogTitle>
                   <DialogDescription>
                     {vitalDetails.description}
-                    <div className="my-2 text-white font-bold flex items-center gap-1">
+                    <div className="my-2 text-white font-bold flex items-center gap-1 justify-end">
                       <a href={vitalDetails.link} target="_blank">
                         Learn more
                       </a>
@@ -71,7 +77,7 @@ const CoreVitalCard = ({ type, score }: CoreVitalCardProps) => {
               : "text-muted-foreground"
           )}
         >
-          <div className="font-extrabold text-4xl mb-2">
+          <div className="font-extrabold text-xl md:text-4xl mb-2">
             {scoreDetails.range === "Not enough data"
               ? "-"
               : scoreDetails.score}
