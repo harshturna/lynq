@@ -229,20 +229,20 @@ export const calculateAverageVital = (
 ): WebVitalsMetrics & { size: number } => {
   if (!vitals.length) {
     return {
-      lcp: 0,
-      cls: 0,
-      dcl: 0,
-      fcp: 0,
-      inp: 0,
-      interaction_count: 0,
-      load: 0,
-      resource_count: 0,
-      tbt: 0,
-      total_js_heap: 0,
-      ttfb: 0,
-      tti: 0,
-      used_js_heap: 0,
-      size: 0,
+      lcp: -1,
+      cls: -1,
+      dcl: -1,
+      fcp: -1,
+      inp: -1,
+      interaction_count: -1,
+      load: -1,
+      resource_count: -1,
+      tbt: -1,
+      total_js_heap: -1,
+      ttfb: -1,
+      tti: -1,
+      used_js_heap: -1,
+      size: -1,
     } as WebVitalsMetrics & { size: number };
   }
 
@@ -506,4 +506,63 @@ export const getFormatters = (selectedTimeFrame: DatePickerValues) => {
         tooltip: (value: string) => value,
       };
   }
+};
+
+export const calculateCoreVitalScore = (
+  value: number,
+  type: CoreVitalType
+): CoreVitalScore => {
+  let range: "Good" | "Need improvement" | "Poor" | "Not enough data";
+  let formattedScore: string;
+
+  if (value <= -1) {
+    formattedScore = "N/A";
+    range = "Not enough data";
+  } else {
+    switch (type) {
+      case "cls":
+        formattedScore = value.toFixed(3);
+        break;
+      case "inp":
+      case "lcp":
+        formattedScore = `${value.toFixed(0)}ms`;
+        break;
+    }
+    switch (type) {
+      case "cls":
+        if (value <= 0.1) {
+          range = "Good";
+        } else if (value <= 0.25) {
+          range = "Need improvement";
+        } else {
+          range = "Poor";
+        }
+        break;
+
+      case "inp":
+        if (value <= 200) {
+          range = "Good";
+        } else if (value <= 500) {
+          range = "Need improvement";
+        } else {
+          range = "Poor";
+        }
+        break;
+
+      case "lcp":
+        if (value <= 2500) {
+          range = "Good";
+        } else if (value <= 4000) {
+          range = "Need improvement";
+        } else {
+          range = "Poor";
+        }
+        break;
+    }
+  }
+  return {
+    score: formattedScore,
+    range,
+    type,
+  };
 };

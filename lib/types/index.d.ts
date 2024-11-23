@@ -150,3 +150,11 @@ interface ChartDataPoint {
   date: string;
   [views | sessions]: number;
 }
+
+type CoreVitalType = "cls" | "inp" | "lcp";
+
+type CoreVitalScore = {
+  score: string;
+  range: "Good" | "Need improvement" | "Poor" | "Not enough data";
+  type: coreVitalType;
+};

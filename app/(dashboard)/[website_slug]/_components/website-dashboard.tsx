@@ -1,20 +1,20 @@
 "use client";
 
-import { getAnalytics } from "@/lib/actions";
-import AnalyticsDataViewer from "./analytics-data-viewer";
+import { getAnalytics, getVitals } from "@/lib/actions";
 import DatePicker from "./date-picker";
 import NavTabs from "./nav-tabs";
 import { useState } from "react";
-import DataCard from "./data-card";
-import { ChartSpline, Eye, TimerIcon, User2 } from "lucide-react";
 import ErrorAlert from "@/components/error";
-import { AnalyticsChart } from "./analytics-chart";
+import { useSearchParams } from "next/navigation";
+import AnalyticsDashboard from "./analytics-dashboard";
+import PerformanceDashboard from "./performance-dashboard";
 
 interface WebsiteDashboardProps {
   websiteName: string;
   websiteUrl: string;
   userId: string;
   initialAnalyticsData: AnalyticsDataWithCounts;
+  initialPerformanceData: WebVitalsMetrics & { size: number };
 }
 
 const WebsiteDashboard = ({
@@ -22,23 +22,34 @@ const WebsiteDashboard = ({
   websiteUrl,
   userId,
   initialAnalyticsData,
+  initialPerformanceData,
 }: WebsiteDashboardProps) => {
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
+  const [perfData, setPerfData] = useState(initialPerformanceData);
   const [error, setError] = useState<null | string>();
   const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Today");
+  const tab = useSearchParams().get("tab");
 
-  async function getUpdatedAnalyticsData(pickedTimeFrame: DatePickerValues) {
-    const { res: analyticsData, error: analyticsError } = await getAnalytics(
-      pickedTimeFrame,
-      websiteUrl,
-      userId
-    );
+  async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
+    setError(null);
+    const [analyticsResult, perfResult] = await Promise.all([
+      getAnalytics(pickedTimeFrame, websiteUrl, userId),
+      getVitals(pickedTimeFrame, websiteUrl, userId),
+    ]);
 
+    const { res: analyticsData, error: analyticsError } = analyticsResult;
     if (!analyticsData || analyticsError) {
-      setError("Unable to fetch data");
+      setError("Failed to get analytics data");
       return;
     }
 
+    const { data: perfData, error: perfError } = perfResult;
+    if (!perfData || perfError) {
+      setError("Failed to get performance data");
+      return;
+    }
+
+    setPerfData(perfData);
     setAnalyticsData(analyticsData);
     setTimeFrame(pickedTimeFrame);
   }
@@ -46,7 +57,7 @@ const WebsiteDashboard = ({
   if (error) {
     return (
       <ErrorAlert
-        title="Failed to get analytics"
+        title={error}
         description="Ran into an error while getting the data, try refreshing the page"
       />
     );
@@ -56,50 +67,24 @@ const WebsiteDashboard = ({
     <main className="mb-4">
       <div className="flex justify-between items-center">
         <NavTabs />
-        <DatePicker selectedTimeFrame={getUpdatedAnalyticsData} />
+        <DatePicker selectedTimeFrame={getUpdatedData} />
       </div>
       <div className="my-8">
         <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
         <p className="text-muted-foreground">{websiteUrl}</p>
       </div>
-      <div className="flex flex-wrap gap-4 my-4">
-        <DataCard
-          label="Visitors"
-          description="Total unique visitors to your website"
-          icon={User2}
-          value={`${analyticsData.visitors_count}`}
+      {(!tab || tab === "analytics") && (
+        <AnalyticsDashboard
+          analyticsData={analyticsData}
+          timeFrame={timeFrame}
         />
-        <DataCard
-          label="Views"
-          description="Total views on all pages"
-          icon={Eye}
-          value={`${analyticsData.views_count}`}
+      )}
+      {tab === "performance" && (
+        <PerformanceDashboard
+          performanceData={perfData}
+          timeFrame={timeFrame}
         />
-        <DataCard
-          label="Average Time"
-          description="Average time users spend on your website"
-          icon={TimerIcon}
-          value={`${analyticsData.average_session_duration} ${
-            analyticsData.average_session_duration < 1 ? "s" : "m"
-          }`}
-        />
-        <DataCard
-          label="Bounce Rate"
-          description="Percentage of users who quickly leave your site"
-          icon={ChartSpline}
-          value={`${analyticsData.bounce_rate}%`}
-        />
-      </div>
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_580px] gap-2">
-        <div className="w-full">
-          <AnalyticsChart
-            analyticsData={analyticsData.analyticsData}
-            sessionData={analyticsData.sessionData}
-            selectedTimeFrame={timeFrame}
-          />
-        </div>
-        <AnalyticsDataViewer analyticsDataWithCount={analyticsData} />
-      </div>
+      )}
     </main>
   );
 };

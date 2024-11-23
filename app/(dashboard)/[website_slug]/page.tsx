@@ -1,4 +1,9 @@
-import { getAnalytics, getWebsite, updateWebsiteOne } from "@/lib/actions";
+import {
+  getAnalytics,
+  getVitals,
+  getWebsite,
+  updateWebsiteOne,
+} from "@/lib/actions";
 import { redirect } from "next/navigation";
 import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
@@ -41,10 +46,25 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     user.id
   );
 
+  const { data: performanceData, error: performanceError } = await getVitals(
+    "Today",
+    website.url,
+    user.id
+  );
+
   if (!analyticsData || analyticsError) {
     return (
       <ErrorAlert
         title="Failed to get analytics"
+        description="Ran into an error while getting the data, try refreshing the page"
+      />
+    );
+  }
+
+  if (!performanceData || performanceError) {
+    return (
+      <ErrorAlert
+        title="Failed to get performance data"
         description="Ran into an error while getting the data, try refreshing the page"
       />
     );
@@ -63,6 +83,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
         websiteName={website.name}
         websiteUrl={website.url}
         initialAnalyticsData={analyticsData}
+        initialPerformanceData={performanceData}
       />
     </>
   );
