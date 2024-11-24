@@ -372,3 +372,82 @@ export async function getVitals(
 
   return { data: calculateAverageVital(data), error: null };
 }
+
+// Custom Events
+
+type ValidPropertyValue = string | number | boolean | undefined | null;
+
+type CustomEvent = {
+  name: string;
+  properties?: object | null | undefined;
+};
+
+export async function addCustomEvent(
+  websiteUrl: string,
+  sessionId: string,
+  event: CustomEvent
+) {
+  const supabase = await createClient();
+
+  if (!event.properties) {
+    const { data, error } = await supabase.from("custom_events").insert({
+      website_url: websiteUrl,
+      event_name: event.name,
+      session_id: sessionId,
+    });
+    return { data, error };
+  }
+
+  const events = Object.entries(event.properties)
+    .map(([key, value]) => ({
+      website_url: websiteUrl,
+      event_name: event.name,
+      property_name: key,
+      property_value: value,
+      session_id: sessionId,
+    }))
+    .filter(
+      (event): event is typeof event & { property_value: ValidPropertyValue } =>
+        typeof event.property_value === "boolean" ||
+        typeof event.property_value === "string" ||
+        typeof event.property_value === "number" ||
+        event.property_value === undefined ||
+        event.property_value === null
+    );
+
+  if (events.length > 0) {
+    const { data, error } = await supabase.from("custom_events").insert(events);
+    return { data, error };
+  }
+
+  return { data: null, error: null };
+}
+
+export async function getCustomEventData(
+  pickedTimeFrame: DatePickerValues,
+  website_url: string,
+  user_id: string
+) {
+  const [supabase, user] = await Promise.all([createClient(), getUser()]);
+
+  if (!user?.id) {
+    return { data: null, error: "Unauthorized User" };
+  }
+  if (user_id !== user.id) {
+    return { data: null, error: "Unauthorized User" };
+  }
+
+  const timeFrame = getTimeFrame(pickedTimeFrame);
+  const currentDateTime = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("custom_events")
+    .select("*")
+    .eq("website_url", website_url)
+    .gte("created_at", timeFrame)
+    .lte("created_at", currentDateTime);
+
+  if (!data || error) {
+    return { data: null, error: "No data" };
+  }
+}

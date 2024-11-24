@@ -15,7 +15,7 @@ const DataCard = ({ label, description, icon: Icon, value }: DataCardProps) => {
   return (
     <Hint label={description}>
       <div className="group/card relative">
-        <Card className="w-[340px] py-2">
+        <Card className="py-2">
           <CardHeader>
             <div className="flex justify-between text-sm mb-2">
               {label}

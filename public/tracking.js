@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const CONFIG = {
-    ENDPOINT: "http://localhost:3000/api/track",
+    ENDPOINT: "http://localhost:3000/api/lynq",
     SESSION_DURATION: 10 * 60 * 1000,
     STORAGE_KEYS: {
       SESSION_ID: "au_si",
@@ -16,6 +16,7 @@
       PERFORMANCE: "performance",
       CORE_VITAL: "vital",
       WEB_VITALS: "web-vitals",
+      CUSTOM_EVENT: "custom-event",
     },
     PERFORMANCE: {
       MAX_LCP_TIME: 5000, // Maximum time to wait for LCP
@@ -598,6 +599,36 @@
   // Initialize the tracker
   const tracker = new AnalyticsTracker();
 
-  // Expose tracking function globally
+  const queuedEvents = window.lynqQueue || [];
+  if (queuedEvents.length > 0) {
+    queuedEvents.forEach(([eventType, data]) => {
+      tracker.trackEvent(eventType, data);
+    });
+  }
+  delete window.lynqQueue;
+
+  window.lynq = {
+    track: (name, properties) =>
+      tracker.trackEvent(CONFIG.EVENTS.CUSTOM_EVENT, {
+        name,
+        properties,
+      }),
+  };
+
   window.your_tracking = (...args) => tracker.trackEvent(...args);
 })();
+
+/*
+INITIAL STUB
+
+<script>
+    window.lynq = window.lynq || {
+        track: function(name, properties) {
+            (window.lynqQueue = window.lynqQueue || []).push([
+                'custom-event',
+                { name, properties }
+            ]);
+        }
+    };
+</script>
+*/

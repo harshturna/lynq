@@ -65,7 +65,7 @@ const WebsiteDashboard = ({
 
   return (
     <main className="mb-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
         <NavTabs />
         <DatePicker selectedTimeFrame={getUpdatedData} />
       </div>

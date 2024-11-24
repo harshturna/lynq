@@ -1,4 +1,5 @@
 import {
+  addCustomEvent,
   addPageView,
   addSession,
   addSessionDuration,
@@ -16,8 +17,6 @@ export async function POST(req: Request) {
     if (!body) {
       return;
     }
-
-    console.log(body);
 
     const ip = headers().get("x-forwarded-for");
 
@@ -52,6 +51,8 @@ export async function POST(req: Request) {
       );
     } else if (body.event === "web-vitals") {
       addVitals(body.sessionId, body.dataDomain, body.eventData);
+    } else if (body.event === "custom-event") {
+      addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
     }
 
     return new NextResponse("Success", { status: 200 });

@@ -30,12 +30,7 @@ const CoreVitalCard = ({ type, score, isCore = false }: CoreVitalCardProps) => {
   const scoreDetails = calculateWebVitalScore(score, type);
 
   return (
-    <div
-      className={cn(
-        "relative min-w-full",
-        isCore ? "sm:min-w-[350px] md:w-[460px]" : "w-full"
-      )}
-    >
+    <div className={cn("relative")}>
       <Card className={cn(isCore ? "" : "border-none bg-transparent")}>
         <CardHeader className="mb-6 flex justify-between flex-row">
           <div>

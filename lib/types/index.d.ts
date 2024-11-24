@@ -72,6 +72,11 @@ type VitalEventData =
       partial: boolean;
     };
 
+type CustomEventData = {
+  name: string;
+  properties: object | null | undefined;
+};
+
 type Browser = "Edge" | "Chrome" | "Opera" | "Firefox" | "Safari" | "Unknown";
 type Os = "Windows" | "Mac" | "Ios" | "Android" | "Linux" | "Unknown";
 type Device = "Desktop" | "Mobile" | "Unknown";
@@ -106,6 +111,10 @@ type TTrackedEvent =
   | (BaseTrackedEvent & {
       event: "web-vitals";
       eventData: WebVitalsEventData;
+    })
+  | (BaseTrackedEvent & {
+      event: "custom-event";
+      eventData: CustomEventData;
     });
 
 type AnalyticsData = {

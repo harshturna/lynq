@@ -116,7 +116,7 @@ const JsHeapChart = ({ total, used }: JsHeapChartProps) => {
       )}
       <CardFooter className="flex-col gap-2 text-sm">
         <div className="flex items-center gap-2 font-medium leading-none">
-          Used {usedMb} MB out of {totalMB} MB
+          {usedMb} MB of {totalMB} MB used
         </div>
       </CardFooter>
     </Card>

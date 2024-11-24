@@ -36,7 +36,7 @@ const PerformanceDashboard = ({
 
   return (
     <>
-      <div className="flex gap-4 flex-wrap">
+      <div className="md:grid grid-cols-3 gap-4 flex-wrap">
         <CoreVitalCard type="lcp" score={performanceData.lcp} isCore />
         <CoreVitalCard type="inp" score={performanceData.inp} isCore />
         <CoreVitalCard type="cls" score={performanceData.cls} isCore />
