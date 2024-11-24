@@ -665,3 +665,38 @@ export const calculateWebVitalScore = (
     type,
   };
 };
+
+export function groupEventsByEventId(
+  events: CustomEventWithSessionData[]
+): GroupedCustomEventWithSessionData[] {
+  return Object.values(
+    events.reduce<GroupedCustomEventWithSessionDataAccumulatorType>(
+      (acc, event) => {
+        const {
+          event_id,
+          property_name,
+          property_value,
+          ...eventWithoutProperties
+        } = event;
+
+        if (!acc[event_id]) {
+          acc[event_id] = {
+            ...eventWithoutProperties,
+            event_id,
+            properties: [],
+          };
+        }
+
+        if (property_name !== null && property_value !== null) {
+          acc[event_id].properties.push({
+            property_name,
+            property_value,
+          });
+        }
+
+        return acc;
+      },
+      {}
+    )
+  );
+}

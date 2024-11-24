@@ -48,7 +48,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
   ] = await Promise.all([
     getAnalytics("Today", website.url, user.id),
     getVitals("Today", website.url, user.id),
-    getVitals("Today", website.url, user.id),
+    getCustomEventData("Today", website.url, user.id),
   ]);
 
   if (!analyticsData || analyticsError) {
@@ -92,6 +92,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
         websiteUrl={website.url}
         initialAnalyticsData={analyticsData}
         initialPerformanceData={performanceData}
+        initialCustomEventData={customEventData}
       />
     </>
   );

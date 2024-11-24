@@ -611,6 +611,7 @@
     track: (name, properties) =>
       tracker.trackEvent(CONFIG.EVENTS.CUSTOM_EVENT, {
         name,
+        eventId: crypto.randomUUID(),
         properties,
       }),
   };

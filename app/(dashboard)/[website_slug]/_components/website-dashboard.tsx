@@ -1,6 +1,6 @@
 "use client";
 
-import { getAnalytics, getVitals } from "@/lib/actions";
+import { getAnalytics, getCustomEventData, getVitals } from "@/lib/actions";
 import DatePicker from "./date-picker";
 import NavTabs from "./nav-tabs";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import ErrorAlert from "@/components/error";
 import { useSearchParams } from "next/navigation";
 import AnalyticsDashboard from "./analytics-dashboard";
 import PerformanceDashboard from "./performance-dashboard";
+import EventDashboard from "./event-dashboard";
 
 interface WebsiteDashboardProps {
   websiteName: string;
@@ -15,6 +16,7 @@ interface WebsiteDashboardProps {
   userId: string;
   initialAnalyticsData: AnalyticsDataWithCounts;
   initialPerformanceData: WebVitalsMetrics & { size: number };
+  initialCustomEventData: GroupedCustomEventWithSessionData[];
 }
 
 const WebsiteDashboard = ({
@@ -23,18 +25,21 @@ const WebsiteDashboard = ({
   userId,
   initialAnalyticsData,
   initialPerformanceData,
+  initialCustomEventData,
 }: WebsiteDashboardProps) => {
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
   const [perfData, setPerfData] = useState(initialPerformanceData);
+  const [eventData, setEventData] = useState(initialCustomEventData);
   const [error, setError] = useState<null | string>();
   const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Today");
   const tab = useSearchParams().get("tab");
 
   async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
     setError(null);
-    const [analyticsResult, perfResult] = await Promise.all([
+    const [analyticsResult, perfResult, eventResult] = await Promise.all([
       getAnalytics(pickedTimeFrame, websiteUrl, userId),
       getVitals(pickedTimeFrame, websiteUrl, userId),
+      getCustomEventData(pickedTimeFrame, websiteUrl, userId),
     ]);
 
     const { res: analyticsData, error: analyticsError } = analyticsResult;
@@ -49,8 +54,16 @@ const WebsiteDashboard = ({
       return;
     }
 
+    const { data: eventData, error: eventError } = eventResult;
+
+    if (!eventData || eventError) {
+      setError("Failed to get custom events");
+      return;
+    }
+
     setPerfData(perfData);
     setAnalyticsData(analyticsData);
+    setEventData(eventData);
     setTimeFrame(pickedTimeFrame);
   }
 
@@ -85,6 +98,7 @@ const WebsiteDashboard = ({
           timeFrame={timeFrame}
         />
       )}
+      {tab === "events" && <EventDashboard events={eventData} />}
     </main>
   );
 };

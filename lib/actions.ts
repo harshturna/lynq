@@ -9,6 +9,7 @@ import {
   calculateAverageVital,
   calculateBounceRate,
   getTimeFrame,
+  groupEventsByEventId,
 } from "./utils";
 
 export async function addWebsite(name: string, url: string, user_id: string) {
@@ -386,6 +387,7 @@ type ValidPropertyValue = string | number | boolean | undefined | null;
 type CustomEvent = {
   name: string;
   properties?: object | null | undefined;
+  eventId: string;
 };
 
 export async function addCustomEvent(
@@ -399,6 +401,7 @@ export async function addCustomEvent(
     const { data, error } = await supabase.from("custom_events").insert({
       website_url: websiteUrl,
       event_name: event.name,
+      event_id: event.eventId,
       session_id: sessionId,
     });
     return { data, error };
@@ -411,6 +414,7 @@ export async function addCustomEvent(
       property_name: key,
       property_value: value,
       session_id: sessionId,
+      event_id: event.eventId,
     }))
     .filter(
       (event): event is typeof event & { property_value: ValidPropertyValue } =>
@@ -434,7 +438,7 @@ export async function getCustomEventData(
   website_url: string,
   user_id: string
 ): Promise<{
-  data: CustomEventWithSessionData[] | null;
+  data: GroupedCustomEventWithSessionData[] | null;
   error: PostgrestError | null | string;
 }> {
   const [supabase, user] = await Promise.all([createClient(), getUser()]);
@@ -459,5 +463,8 @@ export async function getCustomEventData(
   if (!data || error) {
     return { data: null, error: "No data" };
   }
-  return { data, error };
+
+  const groupedData = groupEventsByEventId(data);
+
+  return { data: groupedData, error };
 }

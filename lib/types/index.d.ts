@@ -74,6 +74,7 @@ type VitalEventData =
 
 type CustomEventData = {
   name: string;
+  eventId: string;
   properties: object | null | undefined;
 };
 
@@ -154,8 +155,9 @@ type SessionData = {
   city: string;
 };
 
-type CustomEventData = {
+type FetchedCustomEventData = {
   id: number;
+  event_id: string;
   created_at: string;
   event_name: string;
   property_name: string | null;
@@ -165,8 +167,22 @@ type CustomEventData = {
   page_url: string;
 };
 
-type CustomEventWithSessionData = CustomEventData & {
+type CustomEventWithSessionData = FetchedCustomEventData & {
   sessions: SessionData;
+};
+
+type GroupedCustomEventWithSessionData = Omit<
+  CustomEventWithSessionData,
+  "property_name" | "property_value"
+> & {
+  properties: {
+    property_name: string;
+    property_value: string;
+  }[];
+};
+
+type GroupedCustomEventWithSessionDataAccumulatorType = {
+  [key: string]: GroupedCustomEventWithSessionData;
 };
 
 type AnalyticsDataWithCounts = {
