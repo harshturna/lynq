@@ -1,7 +1,7 @@
 import { groupByAnalytics } from "@/lib/utils";
 
 interface AnalyticsDataListProps {
-  data: AnalyticsData[];
+  data: AnalyticsDataWithSessionData[];
   groupBy: AnalyticsGroupBy;
 }
 

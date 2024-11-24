@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnalyticsDataList from "./analytics-data-list";
 
 interface DevicesDataViewer {
-  analyticsData: AnalyticsData[];
+  analyticsData: AnalyticsDataWithSessionData[] | [];
 }
 
 const tabs = ["Devices", "Browsers", "OS"];

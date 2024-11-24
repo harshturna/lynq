@@ -37,7 +37,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 interface AnalyticsChartProps {
-  analyticsData: AnalyticsData[];
+  analyticsData: AnalyticsDataWithSessionData[];
   sessionData: SessionData[];
   selectedTimeFrame: DatePickerValues;
 }

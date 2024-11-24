@@ -1,5 +1,6 @@
 import {
   getAnalytics,
+  getCustomEventData,
   getVitals,
   getWebsite,
   updateWebsiteOne,
@@ -40,17 +41,15 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     redirect("/dashboard");
   }
 
-  const { res: analyticsData, error: analyticsError } = await getAnalytics(
-    "Today",
-    website.url,
-    user.id
-  );
-
-  const { data: performanceData, error: performanceError } = await getVitals(
-    "Today",
-    website.url,
-    user.id
-  );
+  const [
+    { res: analyticsData, error: analyticsError },
+    { data: performanceData, error: performanceError },
+    { data: customEventData, error: customEventError },
+  ] = await Promise.all([
+    getAnalytics("Today", website.url, user.id),
+    getVitals("Today", website.url, user.id),
+    getVitals("Today", website.url, user.id),
+  ]);
 
   if (!analyticsData || analyticsError) {
     return (
@@ -65,6 +64,15 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     return (
       <ErrorAlert
         title="Failed to get performance data"
+        description="Ran into an error while getting the data, try refreshing the page"
+      />
+    );
+  }
+
+  if (!customEventData || customEventError) {
+    return (
+      <ErrorAlert
+        title="Failed to get custom event data"
         description="Ran into an error while getting the data, try refreshing the page"
       />
     );

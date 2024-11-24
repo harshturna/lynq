@@ -4,6 +4,7 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 import { getUser } from "./user/server";
 import {
+  addSessionDataToAnalytics,
   calculateAverageSessionDuration,
   calculateAverageVital,
   calculateBounceRate,
@@ -95,19 +96,24 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
   return error;
 }
 
-export async function getCountryFromIp(ip: string | null) {
-  if (!ip || ip === "::1") return "Unknown";
+export async function getCountryAndCityFromIp(ip: string | null) {
+  if (!ip || ip === "::1") return { country: "Unknown", city: "Unknown" };
   try {
     const response = await fetch(
-      `http://ip-api.com/json/${ip}?fields=status,country`
+      `http://ip-api.com/json/${ip}?fields=status,country,city`
     );
+
+    const res = { country: "Unknown", city: "Unknown" };
     const ipInfo = await response.json();
     if (ipInfo.country) {
-      return ipInfo.country;
+      res.country = ipInfo.country;
     }
-    return "Unknown";
+    if (ipInfo.city) {
+      res.city = ipInfo.city;
+    }
+    return res;
   } catch {
-    return "Unknown";
+    return { country: "Unknown", city: "Unknown" };
   }
 }
 
@@ -155,52 +161,49 @@ export async function addPageView(
   page: string,
   session_id: string,
   pathname: string,
-  referrer: string | null,
-  userAgentData: {
-    browser: Browser;
-    os: Os;
-  }
+  referrer: string | null
 ) {
   const supabase = await createClient();
-
-  const device =
-    userAgentData.os === "Ios" || userAgentData.os === "Android"
-      ? "Mobile"
-      : userAgentData.os === "Unknown"
-      ? "Unknown"
-      : "Desktop";
-
-  const { data: countryData } = await supabase
-    .from("sessions")
-    .select("country")
-    .eq("session_id", session_id)
-    .single();
-
-  const country = countryData?.country || "Unknown";
 
   await supabase.from("page_views").insert({
     website_url,
     page,
-    device,
     session_id,
     pathname,
     referrer,
-    browser: userAgentData.browser,
-    operating_system: userAgentData.os,
-    country,
   });
 }
 
 export async function addSession(
   session_id: string,
   client_id: string,
-  country: string,
-  website_url: string
+  geoData: {
+    country: string;
+    city: string;
+  },
+  website_url: string,
+  userAgentData: {
+    browser: Browser;
+    os: Os;
+  }
 ) {
   const supabase = await createClient();
-  await supabase
-    .from("sessions")
-    .insert({ website_url, session_id, client_id, country });
+  const device =
+    userAgentData.os === "Ios" || userAgentData.os === "Android"
+      ? "Mobile"
+      : userAgentData.os === "Unknown"
+      ? "Unknown"
+      : "Desktop";
+  await supabase.from("sessions").insert({
+    website_url,
+    session_id,
+    client_id,
+    country: geoData.country,
+    city: geoData.city,
+    device,
+    browser: userAgentData.browser,
+    operating_system: userAgentData.os,
+  });
 }
 
 export async function addSessionDuration(
@@ -297,7 +300,10 @@ export async function getAnalytics(
     return {
       res: {
         sessionData: sessionsResult.data ?? [],
-        analyticsData: analyticsResponse.data ?? [],
+        analyticsData: addSessionDataToAnalytics(
+          analyticsResponse.data,
+          sessionsResult.data || []
+        ),
         views_count,
         visitors_count,
         average_session_duration,
@@ -427,7 +433,10 @@ export async function getCustomEventData(
   pickedTimeFrame: DatePickerValues,
   website_url: string,
   user_id: string
-) {
+): Promise<{
+  data: CustomEventWithSessionData[] | null;
+  error: PostgrestError | null | string;
+}> {
   const [supabase, user] = await Promise.all([createClient(), getUser()]);
 
   if (!user?.id) {
@@ -442,7 +451,7 @@ export async function getCustomEventData(
 
   const { data, error } = await supabase
     .from("custom_events")
-    .select("*")
+    .select("*, sessions (*)")
     .eq("website_url", website_url)
     .gte("created_at", timeFrame)
     .lte("created_at", currentDateTime);
@@ -450,4 +459,5 @@ export async function getCustomEventData(
   if (!data || error) {
     return { data: null, error: "No data" };
   }
+  return { data, error };
 }

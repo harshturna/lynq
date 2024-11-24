@@ -32,8 +32,6 @@ const PerformanceDashboard = ({
     return acc;
   }, {});
 
-  console.log(allExceptCoreVitals);
-
   return (
     <>
       <div className="md:grid grid-cols-3 gap-4 flex-wrap">

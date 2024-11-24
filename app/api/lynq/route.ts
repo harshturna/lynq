@@ -5,7 +5,7 @@ import {
   addSessionDuration,
   addVisitor,
   addVitals,
-  getCountryFromIp,
+  getCountryAndCityFromIp,
 } from "@/lib/actions";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
@@ -21,18 +21,23 @@ export async function POST(req: Request) {
     const ip = headers().get("x-forwarded-for");
 
     if (body.event === "session-start") {
-      const country = await getCountryFromIp(ip);
+      const geoData = await getCountryAndCityFromIp(ip);
 
       await addVisitor(body.clientId, body.dataDomain);
-      await addSession(body.sessionId, body.clientId, country, body.dataDomain);
+      await addSession(
+        body.sessionId,
+        body.clientId,
+        geoData,
+        body.dataDomain,
+        body.userAgentData
+      );
       // capture the page view from initial session
       addPageView(
         body.dataDomain,
         body.url,
         body.sessionId,
         body.pathname,
-        body.referrer,
-        body.userAgentData
+        body.referrer
       );
     } else if (body.event === "page-view") {
       addPageView(
@@ -40,8 +45,7 @@ export async function POST(req: Request) {
         body.url,
         body.sessionId,
         body.pathname,
-        body.referrer,
-        body.userAgentData
+        body.referrer
       );
     } else if (body.event === "session-end") {
       addSessionDuration(

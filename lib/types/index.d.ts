@@ -122,13 +122,24 @@ type AnalyticsData = {
   created_at: string;
   website_url: string;
   page: string;
-  country: string | null;
-  device: Device;
-  operating_system: Os;
-  browser: Browser;
   session_id: string;
   pathname: string;
   referrer: "Direct" | "Unknown" | string;
+};
+
+type AnalyticsDataWithSessionData = {
+  id: number;
+  created_at: string;
+  website_url: string;
+  page: string;
+  session_id: string;
+  pathname: string;
+  referrer: "Direct" | "Unknown" | string;
+  country: string;
+  device: Device;
+  operating_system: Os;
+  browser: Browser;
+  city: string;
 };
 
 type SessionData = {
@@ -136,11 +147,31 @@ type SessionData = {
   created_at: string;
   website_url: string;
   session_id: string;
+  country: string;
+  device: Device;
+  operating_system: Os;
+  browser: Browser;
+  city: string;
+};
+
+type CustomEventData = {
+  id: number;
+  created_at: string;
+  event_name: string;
+  property_name: string | null;
+  property_value: string | null;
+  website_url: string;
+  session_id: string;
+  page_url: string;
+};
+
+type CustomEventWithSessionData = CustomEventData & {
+  sessions: SessionData;
 };
 
 type AnalyticsDataWithCounts = {
-  analyticsData: AnalyticsData[];
-  sessionData: SessionData[];
+  analyticsData: AnalyticsDataWithSessionData[] | [];
+  sessionData: SessionData[] | [];
   views_count: number;
   visitors_count: number;
   average_session_duration: number;

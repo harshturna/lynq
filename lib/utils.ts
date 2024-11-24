@@ -1,8 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
-  startOfToday,
-  endOfToday,
   eachHourOfInterval,
   parseISO,
   format as dateFnsFormat,
@@ -69,7 +67,7 @@ export function getTimeFrame(timeFrame: DatePickerValues): string {
 
 export function groupByAnalytics(
   groupBy: AnalyticsGroupBy,
-  data: AnalyticsData[]
+  data: AnalyticsDataWithSessionData[] | []
 ) {
   switch (groupBy) {
     // pathname
@@ -205,6 +203,39 @@ export function groupByAnalytics(
       return res;
     }
   }
+}
+
+export function addSessionDataToAnalytics(
+  analyticsData: AnalyticsData[],
+  sessionData: SessionData[]
+): AnalyticsDataWithSessionData[] | [] {
+  if (!analyticsData.length || !sessionData.length) {
+    return [];
+  }
+
+  const res = analyticsData.map((data) => {
+    const session = sessionData.find(
+      (session) => data.session_id === session.session_id
+    );
+    if (!session)
+      return {
+        ...data,
+        country: "Unknown",
+        device: "Unknown" as Device,
+        operating_system: "Unknown" as Os,
+        browser: "Unknown" as Browser,
+        city: "Unknown",
+      };
+    return {
+      ...data,
+      country: session.country,
+      device: session.device,
+      operating_system: session.operating_system,
+      browser: session.browser,
+      city: session.city,
+    };
+  });
+  return res;
 }
 
 export const calculateAverageSessionDuration = (
