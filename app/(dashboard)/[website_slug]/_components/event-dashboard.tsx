@@ -16,20 +16,16 @@ interface EventDashboardProps {
 }
 
 const EventDashboard = ({ events }: EventDashboardProps) => {
-  const [filteredEvents, setFilteredEvents] = useState(events);
   const [inputValue, setInputValue] = useState("");
 
+  const filteredEvents = events.filter((event) =>
+    inputValue === ""
+      ? true
+      : event.event_name.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
   const handleFilterChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-
-    const newFilteredEvents = events.filter((event) =>
-      newValue === ""
-        ? true
-        : event.event_name.toLowerCase().includes(newValue.toLowerCase())
-    );
-
-    setFilteredEvents(newFilteredEvents);
+    setInputValue(e.target.value);
   };
 
   return (

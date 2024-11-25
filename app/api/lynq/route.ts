@@ -23,8 +23,6 @@ export async function OPTIONS(req: Request) {
 }
 
 export async function POST(req: Request) {
-  //TODO make sure the request is coming from the domain in data-domain
-
   const origin = req.headers.get("origin");
   const corsHeaders = {
     "Access-Control-Allow-Origin": origin || "*",
@@ -37,6 +35,26 @@ export async function POST(req: Request) {
     const body: TTrackedEvent = await req.json();
     if (!body) {
       return;
+    }
+
+    const host = origin?.startsWith("https://")
+      ? origin.split("https://")[1]
+      : origin?.startsWith("http://")
+      ? origin.split("http://")[1]
+      : origin;
+
+    if (process.env.NEXT_PUBLIC_ENV === "dev") {
+      body.dataDomain = process.env.NEXT_PUBLIC_DEV_DATA_DOMAIN || "";
+    }
+
+    if (!host || host !== body.dataDomain) {
+      return NextResponse.json(
+        { success: false },
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
     }
 
     const ip = headers().get("x-forwarded-for");

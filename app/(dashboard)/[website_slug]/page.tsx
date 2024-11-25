@@ -85,7 +85,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
 
   return (
     <>
-      {!website.is_first_visit && (
+      {website.is_first_visit && (
         <SetupDialog siteUrl={website.url} title="Add script" />
       )}
       <WebsiteDashboard

@@ -458,7 +458,8 @@ export async function getCustomEventData(
     .select("*, sessions (*)")
     .eq("website_url", website_url)
     .gte("created_at", timeFrame)
-    .lte("created_at", currentDateTime);
+    .lte("created_at", currentDateTime)
+    .order("created_at", { ascending: false });
 
   if (!data || error) {
     return { data: null, error: "No data" };

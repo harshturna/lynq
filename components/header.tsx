@@ -10,18 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/user/client";
 
 const Header = () => {
-  const router = useRouter();
-
   const handleSignOut = async () => {
     const { error } = await signOut();
 
-    // todo: show toast if error
     if (!error) {
-      router.push("/");
+      window.location.href = "/";
     }
   };
 
