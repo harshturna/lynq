@@ -33,7 +33,7 @@ const EventDashboard = ({ events }: EventDashboardProps) => {
   };
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 min-h-[80vh]">
       <div className="flex flex-col md:flex-row justify-between gap-2">
         <div>
           <Input

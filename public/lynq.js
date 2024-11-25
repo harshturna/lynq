@@ -17,6 +17,7 @@
       CORE_VITAL: "vital",
       WEB_VITALS: "web-vitals",
       CUSTOM_EVENT: "custom-event",
+      INITIAL_CUSTOM_EVENT: "initial-custom-event",
     },
     PERFORMANCE: {
       MAX_LCP_TIME: 5000, // Maximum time to wait for LCP
@@ -455,14 +456,16 @@
             startTime: Date.now(),
           };
           this.trackEvent(CONFIG.EVENTS.SESSION_START);
+          this.initializeLynq("initial-custom-event");
         } else {
-          // tracking page view if it's not a new session, for new session the session-start event captures page view
-          this.trackPageView();
           this.session = {
             sessionId,
             expirationTime: parseInt(expirationTime),
             startTime: Date.now(),
           };
+          // tracking page view if it's not a new session, for new session the session-start event captures page view
+          this.trackPageView();
+          this.initializeLynq("custom-event");
         }
 
         // Set up session refresh interval
@@ -471,6 +474,27 @@
           CONFIG.SESSION_DURATION / 2
         );
       } catch {}
+    }
+
+    initializeLynq(eventType) {
+      // flush queued events
+      const queuedEvents = window.lynqQueue || [];
+      if (queuedEvents.length > 0) {
+        queuedEvents.forEach((data) => {
+          this.trackEvent(eventType, data);
+        });
+      }
+      delete window.lynqQueue;
+
+      // initialize lynq
+      window.lynq = {
+        track: (name, properties) =>
+          this.trackEvent(CONFIG.EVENTS.CUSTOM_EVENT, {
+            name,
+            eventId: crypto.randomUUID(),
+            properties,
+          }),
+      };
     }
 
     refreshSession() {
@@ -599,37 +623,5 @@
   // Initialize the tracker
   const tracker = new AnalyticsTracker();
 
-  const queuedEvents = window.lynqQueue || [];
-  if (queuedEvents.length > 0) {
-    queuedEvents.forEach(([eventType, data]) => {
-      tracker.trackEvent(eventType, data);
-    });
-  }
-  delete window.lynqQueue;
-
-  window.lynq = {
-    track: (name, properties) =>
-      tracker.trackEvent(CONFIG.EVENTS.CUSTOM_EVENT, {
-        name,
-        eventId: crypto.randomUUID(),
-        properties,
-      }),
-  };
-
   window.your_tracking = (...args) => tracker.trackEvent(...args);
 })();
-
-/*
-INITIAL STUB
-
-<script>
-    window.lynq = window.lynq || {
-        track: function(name, properties) {
-            (window.lynqQueue = window.lynqQueue || []).push([
-                'custom-event',
-                { name, properties }
-            ]);
-        }
-    };
-</script>
-*/

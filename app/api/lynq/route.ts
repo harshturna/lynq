@@ -20,25 +20,40 @@ export async function POST(req: Request) {
 
     const ip = headers().get("x-forwarded-for");
 
-    if (body.event === "session-start") {
+    if (
+      body.event === "session-start" ||
+      body.event === "initial-custom-event"
+    ) {
       const geoData = await getCountryAndCityFromIp(ip);
 
-      await addVisitor(body.clientId, body.dataDomain);
-      await addSession(
-        body.sessionId,
-        body.clientId,
-        geoData,
-        body.dataDomain,
-        body.userAgentData
-      );
-      // capture the page view from initial session
-      addPageView(
-        body.dataDomain,
-        body.url,
-        body.sessionId,
-        body.pathname,
-        body.referrer
-      );
+      if (body.event === "session-start") {
+        await addVisitor(body.clientId, body.dataDomain);
+        await addSession(
+          body.sessionId,
+          body.clientId,
+          geoData,
+          body.dataDomain,
+          body.userAgentData
+        );
+        // capture the page view from initial session
+        addPageView(
+          body.dataDomain,
+          body.url,
+          body.sessionId,
+          body.pathname,
+          body.referrer
+        );
+      } else {
+        await addVisitor(body.clientId, body.dataDomain);
+        await addSession(
+          body.sessionId,
+          body.clientId,
+          geoData,
+          body.dataDomain,
+          body.userAgentData
+        );
+        addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
+      }
     } else if (body.event === "page-view") {
       addPageView(
         body.dataDomain,
@@ -56,6 +71,7 @@ export async function POST(req: Request) {
     } else if (body.event === "web-vitals") {
       addVitals(body.sessionId, body.dataDomain, body.eventData);
     } else if (body.event === "custom-event") {
+      console.log(body);
       addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
     }
 

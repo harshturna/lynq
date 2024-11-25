@@ -116,6 +116,10 @@ type TTrackedEvent =
   | (BaseTrackedEvent & {
       event: "custom-event";
       eventData: CustomEventData;
+    })
+  | (BaseTrackedEvent & {
+      event: "initial-custom-event";
+      eventData: CustomEventData;
     });
 
 type AnalyticsData = {
