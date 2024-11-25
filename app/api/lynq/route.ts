@@ -10,8 +10,29 @@ import {
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
-  // make sure the request is coming from the domain in data-domain
+  //TODO make sure the request is coming from the domain in data-domain
+
+  const origin = req.headers.get("origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
   try {
     const body: TTrackedEvent = await req.json();
     if (!body) {
@@ -75,9 +96,21 @@ export async function POST(req: Request) {
       addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
     }
 
-    return new NextResponse("Success", { status: 200 });
+    return NextResponse.json(
+      { success: true },
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
     console.log("[TRACK_ERROR]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return NextResponse.json(
+      { success: false },
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
+    );
   }
 }

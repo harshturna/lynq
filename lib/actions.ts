@@ -195,7 +195,7 @@ export async function addSession(
       : userAgentData.os === "Unknown"
       ? "Unknown"
       : "Desktop";
-  const res = await supabase.from("sessions").insert({
+  await supabase.from("sessions").insert({
     website_url,
     session_id,
     client_id,
@@ -205,7 +205,6 @@ export async function addSession(
     browser: userAgentData.browser,
     operating_system: userAgentData.os,
   });
-  return res;
 }
 
 export async function addSessionDuration(
@@ -405,7 +404,6 @@ export async function addCustomEvent(
       event_id: event.eventId,
       session_id: sessionId,
     });
-    console.log(data, error);
     return { data, error };
   }
 
@@ -429,7 +427,6 @@ export async function addCustomEvent(
 
   if (events.length > 0) {
     const { data, error } = await supabase.from("custom_events").insert(events);
-    console.log(data, error);
     return { data, error };
   }
 

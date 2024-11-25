@@ -17,12 +17,25 @@ import { useEffect, useState } from "react";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
-const SetupDialog = ({ title }: { title: string }) => {
+const SetupDialog = ({
+  title,
+  siteUrl,
+}: {
+  title: string;
+  siteUrl: string;
+}) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isCopy, setIsCopy] = useState(false);
+  const lynqScriptVersion = process.env.NEXT_PUBLIC_LYNQ_SCRIPT_VERSION;
+  const lynqScriptSrc = `https://cdn.jsdelivr.net/gh/harshturna/lynq-js${
+    lynqScriptVersion || ""
+  }/dist/lynq.min.js`;
+  const stubScript = `!function(){"use strict";window.lynq=window.lynq||{track:function(n,e){(window.lynqQueue=window.lynqQueue||[]).push({name:n,properties:e,eventId:crypto.randomUUID()})}}}();`;
+
+  const constructedScript = `<script>${stubScript}</script>\n<script async src="${lynqScriptSrc}" data-id="${siteUrl}"></script>`;
 
   const copyContentHandler = () => {
-    copyContent("test");
+    copyContent(constructedScript);
     setIsCopy(true);
     setTimeout(() => {
       setIsCopy(false);
@@ -37,13 +50,13 @@ const SetupDialog = ({ title }: { title: string }) => {
 
   return (
     <AlertDialog defaultOpen>
-      <AlertDialogContent className="min-w-[300px] max-w-[600px] w-full">
+      <AlertDialogContent className="min-w-[300px] max-w-[900px] w-full">
         <AlertDialogHeader className="flex flex-row justify-between gap-20 mb-6">
           <div>
             <AlertDialogTitle className="font-light">{title}</AlertDialogTitle>
             <AlertDialogDescription>
               {
-                "Add the script tag to the `<head>` of your HTML file for us to start tracking your website"
+                "Add the following snippet to the `<head>` of your HTML file for us to start tracking your website"
               }
             </AlertDialogDescription>
           </div>
@@ -60,25 +73,40 @@ const SetupDialog = ({ title }: { title: string }) => {
             )}
           >
             <div className="cursor-pointer">
-              <span className="text-gray-500">{`<`}</span>
-              <span className="text-[rgb(244_114_182)]">{`script`}</span>
-              <br />
-              <span className="text-slate-300 ml-6">{` src`}</span>
-              <span className="text-[rgb(125_211_252)]">{`=`}</span>
-              <span className="text-[rgb(125_211_252)]">
-                {`https://data.jsdelivr.com/v1/packages/"`}
-              </span>
-              <br />
-              <span className="text-slate-300 ml-6">{` data-id`}</span>
-              <span className="text-[rgb(125_211_252)]">{`=`}</span>
-              <span className="text-[rgb(125_211_252)]">{`"clair-byharsh-com"`}</span>
-              <span className="text-gray-500">{`>`}</span>
-              <br />
-              <span className="text-gray-500">{`</`}</span>
-              <span className="text-[rgb(244_114_182)]">{`script`}</span>
-              <span className="text-gray-500">{`>`}</span>
+              <div>
+                <span className="text-gray-500">{`<`}</span>
+                <span className="text-[rgb(244_114_182)]">{`script`}</span>
+                <span className="text-gray-500">{`>`}</span>
+                <br />
+                <span>{stubScript}</span>
+                <br />
+                <span className="text-gray-500">{`</`}</span>
+                <span className="text-[rgb(244_114_182)]">{`script`}</span>
+                <span className="text-gray-500">{`>`}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">{`<`}</span>
+                <span className="text-[rgb(244_114_182)]">{`script`}</span>
+                <br />
+                <span className="text-slate-300 ml-6">{` async`}</span>
+                <br />
+                <span className="text-slate-300 ml-6">{` src`}</span>
+                <span className="text-[rgb(125_211_252)]">{`=`}</span>
+                <span className="text-[rgb(125_211_252)]">
+                  "{lynqScriptSrc}"
+                </span>
+                <br />
+                <span className="text-slate-300 ml-6">{` data-id`}</span>
+                <span className="text-[rgb(125_211_252)]">{`=`}</span>
+                <span className="text-[rgb(125_211_252)]">"{siteUrl}"</span>
+                <span className="text-gray-500">{`>`}</span>
+                <br />
+                <span className="text-gray-500">{`</`}</span>
+                <span className="text-[rgb(244_114_182)]">{`script`}</span>
+                <span className="text-gray-500">{`>`}</span>
+              </div>
             </div>
-            <Button variant="secondary" size="icon">
+            <Button variant="link" size="icon">
               {isCopy ? (
                 <Check width={10} height={10} />
               ) : (
