@@ -6,7 +6,12 @@ body {
   font-family: var(--font-satoshi);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
 }
 
@@ -67,7 +72,7 @@ h1, h2, h3, h4, h5, h6 {
     --chart-3: 240 1% 58%;
 
     --chart-4: 240 1% 42%;
-    
+
     --chart-5: 240 2% 26%;
 
     --radius: 0.5rem;
@@ -130,18 +135,55 @@ h1, h2, h3, h4, h5, h6 {
   body {
     @apply text-foreground;
   }
-    ::-webkit-scrollbar {
-      width: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: hsl(var(--border));
-      border-radius: 5px;
-    }
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: hsl(var(--border)) transparent;
-    }
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+    scroll-behavior: smooth;
+  }
+  .blue__gradient {
+    background: linear-gradient(
+      180deg,
+      rgba(188, 165, 255, 0) 0%,
+      #214d76 100%
+    );
+    filter: blur(123px);
+  }
+  .bg-blue-gradient {
+    background: linear-gradient(
+      157.81deg,
+      #7dd3fc 0.89%,
+      #38bdf8 71.54%,
+      #0ea5e9 100%
+    );
+  }
+  .text-gradient {
+    background: radial-gradient(
+      64.18% 64.18% at 71.16% 35.69%,
+      #7dd3fc 0.89%,
+      #38bdf8 71.54%,
+      #0ea5e9 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+  }
+  .bg-black-gradient {
+    background: linear-gradient(
+      144.39deg,
+      #ffffff -278.56%,
+      #6d6d6d -78.47%,
+      #11101d 91.61%
+    );
+  }
 }

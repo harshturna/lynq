@@ -1,4 +1,14 @@
-import { AppWindowMac, KeyRound, Settings } from "lucide-react";
+import {
+  Activity,
+  AlignVerticalDistributeCenter,
+  AppWindowMac,
+  ChartNoAxesColumnIncreasing,
+  KeyRound,
+  Send,
+  Settings,
+  Shield,
+  Star,
+} from "lucide-react";
 
 export const sidePanelItems = [
   {
@@ -95,3 +105,51 @@ export const webVitalDetails: WebVitalDetail = {
       "Page load time is the amount of time it takes for a web page to fully load. Measured in seconds, it’s one of the indicators of a web page’s performance, and a slow one can hurt user engagement and, consequently, business performance.",
   },
 };
+
+export const navLinks = [
+  {
+    id: "features",
+    title: "Features",
+  },
+];
+
+export const feats = [
+  {
+    id: "insights",
+    title: "Insights",
+    value: "Users, locations, devices and more",
+  },
+  {
+    id: "events",
+    title: "Events",
+    value: "Default and Custom properties",
+  },
+  {
+    id: "performance",
+    title: "Performance",
+    value: "Web Core Vitals and beyond",
+  },
+];
+
+export const features = [
+  {
+    id: "analytics",
+    icon: ChartNoAxesColumnIncreasing,
+    title: "Analytics That Matter",
+    content: "Focus on data that actually helps you grow, without the noise.",
+  },
+  {
+    id: "custom-events",
+    icon: AlignVerticalDistributeCenter,
+    title: "Custom Events",
+    content:
+      "Monitor and capture the moments that matter most to your business with fully customizable event tracking.",
+  },
+  {
+    id: "performance-metrics",
+    icon: Activity,
+    title: "Performance Metrics",
+    content:
+      "Get a crystal-clear view of all your key performance metrics right in your dashboard.",
+  },
+];

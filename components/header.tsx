@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { signOut } from "@/lib/user/client";
+import { usePathname } from "next/navigation";
 
 const Header = () => {
+  const pathname = usePathname();
   const handleSignOut = async () => {
     const { error } = await signOut();
 
@@ -23,7 +25,9 @@ const Header = () => {
 
   return (
     <div className="w-full px-4 md:px-10 mb-6 border-b border-stone-900/80 sticky top-0 bg-black z-50 bg-opacity-20 filter backdrop-blur-lg flex justify-between py-4 items-center">
-      <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
+      <Link href={pathname === "/dashboard" ? "/" : "/dashboard"}>
+        <img src="/assets/logo.png" alt="Lynq Logo" width={120} height={300} />
+      </Link>
       <div className="flex space-x-6">
         <DropdownMenu>
           <DropdownMenuTrigger className="text-muted-foreground outline-none p-0 m-0 border-none">

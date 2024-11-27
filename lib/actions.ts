@@ -71,6 +71,9 @@ export async function updateWebsiteOne(
   if (!user || !user.id) return "Unauthorized User";
   if (user_id !== user.id) return "Unauthorized user";
 
+  if (user_id === process.env.GUEST_USER_ID)
+    return "You cannot perform this action as guest";
+
   const { error } = await supabase
     .from("websites")
     .update({ [column]: value })
@@ -86,7 +89,10 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
   // check if the user making the request is the resource owner
   const user = await getUser();
   if (!user || !user.id) return "Unauthorized User";
-  if (user_id !== user.id) return new Error("Unauthorized user");
+  if (user_id !== user.id) return "Unauthorized user";
+
+  if (user_id === process.env.GUEST_USER_ID)
+    return "You cannot perform this action as guest";
 
   const { error } = await supabase
     .from("websites")
