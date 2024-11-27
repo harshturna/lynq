@@ -9,8 +9,8 @@ import Performance from "./components/performance";
 
 const LadingPage = () => {
   return (
-    <>
-      <div className="sm:px-16 px-6 flex justify-center items-center">
+    <div className="max-w-[1480px] mx-auto">
+      <div className="sm:px-12 px-4 flex justify-center items-center">
         <Navbar />
       </div>
       <div className="flex justify-center items-start">
@@ -28,7 +28,7 @@ const LadingPage = () => {
           <Footer />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

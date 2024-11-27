@@ -18,6 +18,9 @@ export async function addWebsite(name: string, url: string, user_id: string) {
   if (!user || !user.id) return "Unauthorized User";
   if (user_id !== user.id) return "Unauthorized User";
 
+  if (user_id === process.env.GUEST_USER_ID)
+    return "You cannot perform this action as guest";
+
   const slug = url.replaceAll(".", "-");
   const supabase = await createClient();
   const response = await supabase
