@@ -278,7 +278,11 @@ export const calculateAverageVital = (
   }
 
   const initialAccumulator = Object.keys(vitals[0]).reduce((acc, key) => {
-    if (!EXCLUDED_KEYS.includes(key as any)) {
+    if (
+      !EXCLUDED_KEYS.includes(
+        key as "id" | "created_at" | "session_id" | "website_url"
+      )
+    ) {
       acc[key] = 0;
     }
     return acc;
@@ -286,7 +290,12 @@ export const calculateAverageVital = (
 
   const sums = vitals.reduce((acc, vitalData) => {
     for (const [key, value] of Object.entries(vitalData)) {
-      if (!EXCLUDED_KEYS.includes(key as any) && typeof value === "number") {
+      if (
+        !EXCLUDED_KEYS.includes(
+          key as "id" | "created_at" | "session_id" | "website_url"
+        ) &&
+        typeof value === "number"
+      ) {
         acc[key] = (acc[key] || 0) + value;
       }
     }

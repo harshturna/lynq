@@ -16,8 +16,8 @@ const Hero = () => {
           </div>
         </div>
         <p className="font-normal text-muted-foreground text-md md:text-xl leading-[30.8px] max-w-[470px] mt-5">
-          See your site's story unfold. Every click, journey, and conversion
-          beautifully visualized
+          See your site&apos;s story unfold. Every click, journey, and
+          conversion beautifully visualized
         </p>
         <CtaButton styles="mt-4" />
       </div>

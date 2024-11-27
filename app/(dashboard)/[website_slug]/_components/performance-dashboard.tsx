@@ -1,6 +1,4 @@
 import CoreVitalCard from "./core-vital-card";
-import { getVitals } from "@/lib/actions";
-import ErrorAlert from "@/components/error";
 import { Card } from "@/components/ui/card";
 import JsHeapChart from "./js-heap-chart";
 
@@ -11,27 +9,7 @@ interface PerformanceDashboardProps {
 
 const PerformanceDashboard = ({
   performanceData,
-  timeFrame,
 }: PerformanceDashboardProps) => {
-  const allExceptCoreVitals = Object.keys(performanceData).reduce<
-    Partial<WebVitalsMetrics>
-  >((acc, key) => {
-    if (
-      key !== "lcp" &&
-      key !== "inp" &&
-      key !== "cls" &&
-      key !== "size" &&
-      key !== "resource_count" &&
-      key !== "interaction_count" &&
-      key !== "total_js_heap" &&
-      key !== "used_js_heap"
-    ) {
-      acc[key as keyof WebVitalsMetrics & "size"] =
-        performanceData[key as keyof WebVitalsMetrics & "size"];
-    }
-    return acc;
-  }, {});
-
   return (
     <>
       <div className="md:grid grid-cols-3 gap-4 flex-wrap">

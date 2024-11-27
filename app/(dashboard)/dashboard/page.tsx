@@ -1,7 +1,7 @@
 import Sidebar from "./_components/sidebar";
 import AddWebsite from "./_components/add-website";
 import WebsiteCard from "./_components/website-card";
-import { getAllWebsites, getAnalytics, getVitals } from "@/lib/actions";
+import { getAllWebsites } from "@/lib/actions";
 import { getUser } from "@/lib/user/server";
 import { redirect } from "next/navigation";
 import NoWebsitePrompt from "./_components/no-website-prompt";
@@ -15,7 +15,6 @@ const DashboardPage = async () => {
   }
 
   const { data: websites, error } = await getAllWebsites(user.id);
-  await getAnalytics("Last 12 months", "clair.byharsh.com", user.id);
 
   if (error) {
     return (

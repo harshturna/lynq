@@ -1,4 +1,3 @@
-import BottomGradient from "@/components/bottom-gradient";
 import { Hint } from "@/components/hint";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";

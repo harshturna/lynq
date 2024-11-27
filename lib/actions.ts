@@ -382,8 +382,8 @@ export async function getVitals(
     .gte("created_at", timeFrame)
     .lte("created_at", currentDateTime);
 
-  if (!data) {
-    return { data: null, error: "No data" };
+  if (!data || error) {
+    return { data: null, error: error.message };
   }
 
   return { data: calculateAverageVital(data), error: null };

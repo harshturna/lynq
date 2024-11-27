@@ -93,12 +93,12 @@ const SetupDialog = ({
                 <span className="text-slate-300 ml-6">{` src`}</span>
                 <span className="text-[rgb(125_211_252)]">{`=`}</span>
                 <span className="text-[rgb(125_211_252)]">
-                  "{lynqScriptSrc}"
+                  {`"${lynqScriptSrc}"`}
                 </span>
                 <br />
                 <span className="text-slate-300 ml-6">{` data-id`}</span>
                 <span className="text-[rgb(125_211_252)]">{`=`}</span>
-                <span className="text-[rgb(125_211_252)]">"{siteUrl}"</span>
+                <span className="text-[rgb(125_211_252)]">{`"${siteUrl}"`}</span>
                 <span className="text-gray-500">{`>`}</span>
                 <br />
                 <span className="text-gray-500">{`</`}</span>
