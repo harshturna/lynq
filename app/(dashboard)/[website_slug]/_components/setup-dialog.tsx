@@ -32,7 +32,7 @@ const SetupDialog = ({
   }/dist/lynq.min.js`;
   const stubScript = `!function(){"use strict";window.lynq=window.lynq||{track:function(n,e){(window.lynqQueue=window.lynqQueue||[]).push({name:n,properties:e,eventId:crypto.randomUUID()})}}}();`;
 
-  const constructedScript = `<script>${stubScript}</script>\n<script async src="${lynqScriptSrc}" data-id="${siteUrl}" data-script-id="lynq"></script>`;
+  const constructedScript = `<script>${stubScript}</script>\n<script async src="${lynqScriptSrc}" data-domain="${siteUrl}" data-script-id="lynq"></script>`;
 
   const copyContentHandler = () => {
     copyContent(constructedScript);
@@ -100,7 +100,7 @@ const SetupDialog = ({
                 <span className="text-[rgb(125_211_252)]">{`=`}</span>
                 <span className="text-[rgb(125_211_252)]">{`"lynq"`}</span>
                 <br />
-                <span className="text-slate-300 ml-6">{` data-id`}</span>
+                <span className="text-slate-300 ml-6">{` data-domain`}</span>
                 <span className="text-[rgb(125_211_252)]">{`=`}</span>
                 <span className="text-[rgb(125_211_252)]">{`"${siteUrl}"`}</span>
                 <span className="text-gray-500">{`>`}</span>
