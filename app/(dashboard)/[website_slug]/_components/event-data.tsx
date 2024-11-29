@@ -19,7 +19,7 @@ const EventData = ({ event }: EventDataProps) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="default">
-          <div className="grid grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
             <DescriptionList term="Browser" detail={event.sessions.browser} />
             <DescriptionList term="Country" detail={event.sessions.country} />
             <DescriptionList term="City" detail={event.sessions.city} />
@@ -34,12 +34,12 @@ const EventData = ({ event }: EventDataProps) => {
                 addSuffix: true,
               })}
             />
-            <DescriptionList term="URL" detail={event.page_url} />
+            <DescriptionList term="Path Name" detail={event.page_url} />
           </div>
         </TabsContent>
         <TabsContent value="custom">
           {event.properties.length ? (
-            <div className="grid grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
               {event.properties.map((prop) => (
                 <DescriptionList
                   key={prop.property_name}

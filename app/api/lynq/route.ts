@@ -91,7 +91,12 @@ export async function POST(req: Request) {
           body.dataDomain,
           body.userAgentData
         );
-        addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
+        addCustomEvent(
+          body.dataDomain,
+          body.sessionId,
+          body.eventData,
+          body.pathname
+        );
       }
     } else if (body.event === "page-view") {
       addPageView(
@@ -110,8 +115,12 @@ export async function POST(req: Request) {
     } else if (body.event === "web-vitals") {
       addVitals(body.sessionId, body.dataDomain, body.eventData);
     } else if (body.event === "custom-event") {
-      console.log(body);
-      addCustomEvent(body.dataDomain, body.sessionId, body.eventData);
+      addCustomEvent(
+        body.dataDomain,
+        body.sessionId,
+        body.eventData,
+        body.pathname
+      );
     }
 
     return NextResponse.json(

@@ -402,7 +402,8 @@ type CustomEvent = {
 export async function addCustomEvent(
   websiteUrl: string,
   sessionId: string,
-  event: CustomEvent
+  event: CustomEvent,
+  pathName: string
 ) {
   const supabase = await createClient();
 
@@ -412,6 +413,7 @@ export async function addCustomEvent(
       event_name: event.name,
       event_id: event.eventId,
       session_id: sessionId,
+      page_url: pathName,
     });
     return { data, error };
   }
