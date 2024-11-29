@@ -47,7 +47,10 @@ export async function POST(req: Request) {
       body.dataDomain = process.env.NEXT_PUBLIC_DEV_DATA_DOMAIN || "";
     }
 
-    if (!host || host !== body.dataDomain) {
+    if (
+      (!host || host !== body.dataDomain) &&
+      process.env.NEXT_PUBLIC_ENV !== "dev"
+    ) {
       return NextResponse.json(
         { success: false },
         {
@@ -107,13 +110,13 @@ export async function POST(req: Request) {
         body.referrer
       );
     } else if (body.event === "session-end") {
+      console.log(body);
       addSessionDuration(
         body.dataDomain,
         body.sessionId,
         body.eventData.sessionDuration
       );
-    } else if (body.event === "web-vitals") {
-      addVitals(body.sessionId, body.dataDomain, body.eventData);
+      addVitals(body.sessionId, body.dataDomain, body.eventData.metrics);
     } else if (body.event === "custom-event") {
       addCustomEvent(
         body.dataDomain,

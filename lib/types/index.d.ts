@@ -23,6 +23,7 @@ type PageViewEventData = Record<never, never>;
 
 type SessionEndEventData = {
   sessionDuration: number;
+  metrics: WebVitalsEventData;
 };
 
 type WebVitalsEventData = {
@@ -108,10 +109,6 @@ type TTrackedEvent =
   | (BaseTrackedEvent & {
       event: "session-end";
       eventData: SessionEndEventData;
-    })
-  | (BaseTrackedEvent & {
-      event: "web-vitals";
-      eventData: WebVitalsEventData;
     })
   | (BaseTrackedEvent & {
       event: "custom-event";
