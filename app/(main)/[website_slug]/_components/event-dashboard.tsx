@@ -53,6 +53,11 @@ const EventDashboard = ({ events }: EventDashboardProps) => {
         </AccordionItem>
       </Accordion>
       <Accordion type="multiple" className="max-h-[400px] overflow-y-auto">
+        {!filteredEvents.length ? (
+          <p className="text-center my-8 text-muted-foreground text-sm">
+            No events found for this period
+          </p>
+        ) : null}
         {filteredEvents.map((event) => (
           <AccordionItem value={`${event.id}`} key={event.id}>
             <AccordionTrigger>

@@ -46,9 +46,9 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     { data: performanceData, error: performanceError },
     { data: customEventData, error: customEventError },
   ] = await Promise.all([
-    getAnalytics("Today", website.url, user.id),
-    getVitals("Today", website.url, user.id),
-    getCustomEventData("Today", website.url, user.id),
+    getAnalytics("Last 30 days", website.url, user.id),
+    getVitals("Last 30 days", website.url, user.id),
+    getCustomEventData("Last 30 days", website.url, user.id),
   ]);
 
   if (!analyticsData || analyticsError) {
@@ -85,10 +85,8 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
 
   return (
     <>
-      {website.is_first_visit && (
-        <SetupDialog siteUrl={website.url} title="Add script" />
-      )}
       <WebsiteDashboard
+        isFirstVisit={website.is_first_visit}
         userId={user.id}
         websiteName={website.name}
         websiteUrl={website.url}

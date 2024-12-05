@@ -20,9 +20,13 @@ const firaCode = Fira_Code({ subsets: ["latin"] });
 const SetupDialog = ({
   title,
   siteUrl,
+  open,
+  setOpen,
 }: {
   title: string;
   siteUrl: string;
+  open: boolean;
+  setOpen: (flag: boolean) => void;
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isCopy, setIsCopy] = useState(false);
@@ -49,7 +53,7 @@ const SetupDialog = ({
   if (!isMounted) return;
 
   return (
-    <AlertDialog defaultOpen>
+    <AlertDialog open={open}>
       <AlertDialogContent className="min-w-[300px] max-w-[900px] w-full">
         <AlertDialogHeader className="flex flex-row justify-between gap-20 mb-6">
           <div>
@@ -60,7 +64,7 @@ const SetupDialog = ({
               }
             </AlertDialogDescription>
           </div>
-          <AlertDialogCancel className="!mt-0">
+          <AlertDialogCancel className="!mt-0" onClick={() => setOpen(false)}>
             <X />
           </AlertDialogCancel>
         </AlertDialogHeader>

@@ -9,8 +9,11 @@ import { useSearchParams } from "next/navigation";
 import AnalyticsDashboard from "./analytics-dashboard";
 import PerformanceDashboard from "./performance-dashboard";
 import EventDashboard from "./event-dashboard";
+import { Button } from "@/components/ui/button";
+import SetupDialog from "./setup-dialog";
 
 interface WebsiteDashboardProps {
+  isFirstVisit: boolean;
   websiteName: string;
   websiteUrl: string;
   userId: string;
@@ -20,6 +23,7 @@ interface WebsiteDashboardProps {
 }
 
 const WebsiteDashboard = ({
+  isFirstVisit,
   websiteName,
   websiteUrl,
   userId,
@@ -30,8 +34,9 @@ const WebsiteDashboard = ({
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
   const [perfData, setPerfData] = useState(initialPerformanceData);
   const [eventData, setEventData] = useState(initialCustomEventData);
+  const [openSetupModal, setOpenSetupModal] = useState(false);
   const [error, setError] = useState<null | string>();
-  const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Today");
+  const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Last 30 days");
   const tab = useSearchParams().get("tab");
 
   async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
@@ -82,9 +87,16 @@ const WebsiteDashboard = ({
         <NavTabs />
         <DatePicker selectedTimeFrame={getUpdatedData} />
       </div>
-      <div className="my-8">
-        <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
-        <p className="text-muted-foreground">{websiteUrl}</p>
+      <div className="my-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
+          <p className="text-muted-foreground">{websiteUrl}</p>
+        </div>
+        <div>
+          <Button variant="outline" onClick={() => setOpenSetupModal(true)}>
+            Configuration
+          </Button>
+        </div>
       </div>
       {(!tab || tab === "analytics") && (
         <AnalyticsDashboard
@@ -99,6 +111,12 @@ const WebsiteDashboard = ({
         />
       )}
       {tab === "events" && <EventDashboard events={eventData} />}
+      <SetupDialog
+        title="Add Script"
+        siteUrl={websiteUrl}
+        open={isFirstVisit || openSetupModal}
+        setOpen={setOpenSetupModal}
+      />
     </main>
   );
 };

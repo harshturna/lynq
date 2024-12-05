@@ -17,7 +17,7 @@ interface DatePickerProps {
 }
 
 const DatePicker = ({ selectedTimeFrame }: DatePickerProps) => {
-  const [selected, setSelected] = useState(datePickerValues[0]);
+  const [selected, setSelected] = useState(datePickerValues[2]);
 
   const [datePickerStartingValues, datePickerEndValues] = [
     datePickerValues.slice(0, 2),
