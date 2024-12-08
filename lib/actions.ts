@@ -222,7 +222,7 @@ export async function addSessionDuration(
   session_duration: number
 ) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("sessions")
     .select("session_duration")
     .eq("website_url", website_url)
@@ -230,15 +230,13 @@ export async function addSessionDuration(
     .single();
   const updatedDuration = (data?.session_duration || 0) + session_duration;
 
-  console.log("GET: Session ", { response: data, error });
-
   const { data: updateData, error: updateError } = await supabase
     .from("sessions")
     .update({ session_duration: updatedDuration })
     .eq("website_url", website_url)
     .eq("session_id", session_id);
 
-  console.log("UPDATE: Session ", { response: updateData, error: updateError });
+  return { updateData, updateError };
 }
 
 export async function getAnalytics(
@@ -358,7 +356,7 @@ export async function addVitals(
     used_js_heap: vitals.usedJSHeapSize,
   });
 
-  console.log("INSERT: Vitals ", { response: data, error });
+  return { data, error };
 }
 
 export async function getVitals(
