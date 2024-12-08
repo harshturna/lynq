@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const tabs: { name: string; tab: string }[] = [
   {
@@ -20,10 +20,13 @@ const tabs: { name: string; tab: string }[] = [
 
 const NavTabs = () => {
   const router = useRouter();
+  const navTab = useSearchParams().get("tab");
+
+  // console.log(tab);
 
   return (
     <Tabs
-      defaultValue={tabs[0].tab}
+      defaultValue={navTab || tabs[0].tab}
       className="w-[max-content]"
       onValueChange={(val) => {
         router.push(`?tab=${val}`);
@@ -34,7 +37,7 @@ const NavTabs = () => {
           <TabsTrigger
             value={tab.tab}
             key={tab.tab}
-            className="data-[state=active]:text-sky-500 py-2 rounded-[4px] text-sm"
+            className="py-2 rounded-[4px] text-sm"
           >
             {tab.name}
           </TabsTrigger>

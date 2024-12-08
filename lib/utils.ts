@@ -72,8 +72,8 @@ export function groupByAnalytics(
   switch (groupBy) {
     // pathname
     case "pages":
-      const res = data.reduce<{ group: string; count: number }[]>(
-        (res, site) => {
+      const res = data
+        .reduce<{ group: string; count: number }[]>((res, site) => {
           const existingIndex = res.findIndex(
             (obj) => obj.group === site.pathname
           );
@@ -88,14 +88,13 @@ export function groupByAnalytics(
           }
 
           return res;
-        },
-        []
-      );
+        }, [])
+        .sort((a, b) => b.count - a.count);
       return res;
 
     case "browsers": {
-      const res = data.reduce<{ group: Browser; count: number }[]>(
-        (res, site) => {
+      const res = data
+        .reduce<{ group: Browser; count: number }[]>((res, site) => {
           const existingIndex = res.findIndex(
             (obj) => obj.group === site.browser
           );
@@ -110,14 +109,13 @@ export function groupByAnalytics(
           }
 
           return res;
-        },
-        []
-      );
+        }, [])
+        .sort((a, b) => b.count - a.count);
       return res;
     }
     case "devices": {
-      const res = data.reduce<{ group: Device; count: number }[]>(
-        (res, site) => {
+      const res = data
+        .reduce<{ group: Device; count: number }[]>((res, site) => {
           const existingIndex = res.findIndex(
             (obj) => obj.group === site.device
           );
@@ -132,35 +130,36 @@ export function groupByAnalytics(
           }
 
           return res;
-        },
-        []
-      );
+        }, [])
+        .sort((a, b) => b.count - a.count);
       return res;
     }
 
     case "operating_systems": {
-      const res = data.reduce<{ group: Os; count: number }[]>((res, site) => {
-        const existingIndex = res.findIndex(
-          (obj) => obj.group === site.operating_system
-        );
+      const res = data
+        .reduce<{ group: Os; count: number }[]>((res, site) => {
+          const existingIndex = res.findIndex(
+            (obj) => obj.group === site.operating_system
+          );
 
-        if (existingIndex !== -1) {
-          res[existingIndex].count += 1;
-        } else {
-          res.push({
-            group: site.operating_system,
-            count: 1,
-          });
-        }
+          if (existingIndex !== -1) {
+            res[existingIndex].count += 1;
+          } else {
+            res.push({
+              group: site.operating_system,
+              count: 1,
+            });
+          }
 
-        return res;
-      }, []);
+          return res;
+        }, [])
+        .sort((a, b) => b.count - a.count);
       return res;
     }
 
     case "countries": {
-      const res = data.reduce<{ group: string; count: number }[]>(
-        (res, site) => {
+      const res = data
+        .reduce<{ group: string; count: number }[]>((res, site) => {
           const existingIndex = res.findIndex(
             (obj) => obj.group === site.country
           );
@@ -175,31 +174,33 @@ export function groupByAnalytics(
           }
 
           return res;
-        },
-        []
-      );
+        }, [])
+        .sort((a, b) => b.count - a.count);
       return res;
     }
 
     case "referrers": {
-      const res = data.reduce<
-        { group: "Direct" | "Unknown" | string; count: number }[]
-      >((res, site) => {
-        const existingIndex = res.findIndex(
-          (obj) => obj.group === site.referrer
-        );
+      const res = data
+        .reduce<{ group: "Direct" | "Unknown" | string; count: number }[]>(
+          (res, site) => {
+            const existingIndex = res.findIndex(
+              (obj) => obj.group === site.referrer
+            );
 
-        if (existingIndex !== -1) {
-          res[existingIndex].count += 1;
-        } else {
-          res.push({
-            group: site.referrer,
-            count: 1,
-          });
-        }
+            if (existingIndex !== -1) {
+              res[existingIndex].count += 1;
+            } else {
+              res.push({
+                group: site.referrer,
+                count: 1,
+              });
+            }
 
-        return res;
-      }, []);
+            return res;
+          },
+          []
+        )
+        .sort((a, b) => b.count - a.count);
       return res;
     }
   }

@@ -25,7 +25,7 @@ const AnalyticsDataList = ({ data, groupBy }: AnalyticsDataListProps) => {
               key={item.group}
               className="flex justify-between items-center mt-4 text-xs md:text-sm text-muted-foreground"
             >
-              <span>{item.group}</span>
+              <span>{item.group === "Ios" ? "iOS" : item.group}</span>
               <span>{item.count}</span>
             </div>
           ))}
