@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         body.referrer
       );
     } else if (body.event === "session-end") {
-      console.log(body);
+      console.log("SESSION_END: ", body);
       addSessionDuration(
         body.dataDomain,
         body.sessionId,
