@@ -110,23 +110,12 @@ export async function POST(req: Request) {
         body.referrer
       );
     } else if (body.event === "session-end") {
-      console.log("SESSION_END: ", body);
-      const { updateData, updateError } = await addSessionDuration(
+      await addSessionDuration(
         body.dataDomain,
         body.sessionId,
         body.eventData.sessionDuration
       );
-      console.log("UPDATE: Session ", {
-        response: updateData,
-        error: updateError,
-      });
-      const { data: vitalResp, error: vitalError } = await addVitals(
-        body.sessionId,
-        body.dataDomain,
-        body.eventData.metrics
-      );
-
-      console.log("INSERT: Vitals ", { response: vitalResp, vitalError });
+      await addVitals(body.sessionId, body.dataDomain, body.eventData.metrics);
     } else if (body.event === "custom-event") {
       addCustomEvent(
         body.dataDomain,

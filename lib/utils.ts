@@ -549,7 +549,6 @@ export const getFormatters = (selectedTimeFrame: DatePickerValues) => {
 };
 
 export const convertByteToMB = (bytes: number): number => {
-  console.log(bytes);
   return Number((bytes / (1024 * 1024)).toFixed(2));
 };
 
