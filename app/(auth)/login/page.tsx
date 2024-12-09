@@ -58,7 +58,7 @@ function Login() {
               required
               id="email"
               name="email"
-              placeholder="user@lynx.byharsh.com"
+              placeholder="user@lynq.byharsh.com"
               type="email"
               className="border-gray-900"
             />
