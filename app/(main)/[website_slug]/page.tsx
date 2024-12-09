@@ -80,7 +80,13 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
 
   // setting the is_first_visit flag to false after visiting the dashboard for the first time
   if (website.is_first_visit) {
-    updateWebsiteOne(params.website_slug, "is_first_visit", "false", user.id);
+    const error = await updateWebsiteOne(
+      params.website_slug,
+      "is_first_visit",
+      "false",
+      user.id
+    );
+    if (!error) website.is_first_visit = false;
   }
 
   return (
