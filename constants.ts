@@ -2,12 +2,8 @@ import {
   Activity,
   AlignVerticalDistributeCenter,
   AppWindowMac,
+  BookText,
   ChartNoAxesColumnIncreasing,
-  KeyRound,
-  Send,
-  Settings,
-  Shield,
-  Star,
 } from "lucide-react";
 
 export const sidePanelItems = [
@@ -15,16 +11,13 @@ export const sidePanelItems = [
     title: "Dashboard",
     href: "/dashboard",
     icon: AppWindowMac,
+    isExternal: false,
   },
   {
-    title: "Api Keys",
-    href: "/settings/api",
-    icon: KeyRound,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
+    title: "Docs",
+    href: "https://docs-lynq.byharsh.com",
+    icon: BookText,
+    isExternal: true,
   },
 ];
 

@@ -29,6 +29,11 @@ const Navbar = () => {
         <li className="font-normal cursor-pointer text-[16px] text-muted-foreground ml-4">
           <Link href="/dashboard">Dashboard</Link>
         </li>
+        <li className="font-normal cursor-pointer text-[16px] text-muted-foreground ml-4">
+          <Link href="https://docs-lynq.byharsh.com" target="_blank">
+            Docs
+          </Link>
+        </li>
       </ul>
 
       <div className="sm:hidden flex flex-1 justify-end items-center">

@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { signOut } from "@/lib/user/client";
 import { usePathname } from "next/navigation";
 
-const Header = () => {
+const Header = ({ userEmail }: { userEmail: string }) => {
   const pathname = usePathname();
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -44,14 +44,11 @@ const Header = () => {
             alignOffset={10}
             align="end"
           >
-            <DropdownMenuLabel className="mb-2">Guest User</DropdownMenuLabel>
+            <DropdownMenuLabel className="mb-2 text-sm">
+              {userEmail === "guest@email.com" ? "Guest User" : userEmail}
+            </DropdownMenuLabel>
 
-            <Link href="/settings" prefetch>
-              <DropdownMenuItem className="text-muted-foreground hover:text-white py-0 mb-2">
-                <DropdownMenuLabel>Api</DropdownMenuLabel>
-              </DropdownMenuItem>
-            </Link>
-            <Link href="/settings" prefetch>
+            <Link href="https://docs-lynq.byharsh.com" target="_blank">
               <DropdownMenuItem className="text-muted-foreground hover:text-white py-0 mb-2">
                 <DropdownMenuLabel>Docs</DropdownMenuLabel>
               </DropdownMenuItem>
