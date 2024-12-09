@@ -21,12 +21,12 @@ const SetupDialog = ({
   title,
   siteUrl,
   open,
-  setOpen,
+  setClose,
 }: {
   title: string;
   siteUrl: string;
   open: boolean;
-  setOpen: (flag: boolean) => void;
+  setClose: () => void;
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isCopy, setIsCopy] = useState(false);
@@ -64,7 +64,7 @@ const SetupDialog = ({
               }
             </AlertDialogDescription>
           </div>
-          <AlertDialogCancel className="!mt-0" onClick={() => setOpen(false)}>
+          <AlertDialogCancel className="!mt-0" onClick={() => setClose()}>
             <X />
           </AlertDialogCancel>
         </AlertDialogHeader>

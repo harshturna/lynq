@@ -38,6 +38,12 @@ const WebsiteDashboard = ({
   const [error, setError] = useState<null | string>();
   const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Last 30 days");
   const tab = useSearchParams().get("tab");
+  const [isUserFirstVisit, setIsUserFirstVisit] = useState(isFirstVisit);
+
+  const handleSetupModalClose = () => {
+    setIsUserFirstVisit(false);
+    setOpenSetupModal(false);
+  };
 
   async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
     setError(null);
@@ -114,8 +120,8 @@ const WebsiteDashboard = ({
       <SetupDialog
         title="Add Script"
         siteUrl={websiteUrl}
-        open={isFirstVisit || openSetupModal}
-        setOpen={setOpenSetupModal}
+        open={isUserFirstVisit || openSetupModal}
+        setClose={handleSetupModalClose}
       />
     </main>
   );
