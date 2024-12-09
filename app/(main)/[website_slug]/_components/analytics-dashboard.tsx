@@ -31,9 +31,7 @@ const AnalyticsDashboard = ({
           label="Average Time"
           description="Average time users spend on your website"
           icon={TimerIcon}
-          value={`${analyticsData.average_session_duration} ${
-            analyticsData.average_session_duration < 1 ? "s" : "m"
-          }`}
+          value={`${analyticsData.average_session_duration} mins`}
         />
         <DataCard
           label="Bounce Rate"
