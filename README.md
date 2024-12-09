@@ -1,6 +1,6 @@
 # Lynq
 
-Lynq is a powerful open-source web analytics platform that provides deep insights into your website's performance and user behavior. With privacy-first design and comprehensive tracking capabilities, Lynq empowers developers and businesses to make data-driven decisions without compromising user trust. Learn how to get started with lynq at https://docs-lynq.byharsh.com/
+Lynq is a powerful open-source web analytics platform that provides deep insights into your website's performance and user behavior. With privacy-first design and comprehensive tracking capabilities, Lynq empowers developers and businesses to make data-driven decisions without compromising user trust. Get started with Lynq at https://lynq.byharsh.com
 
 ## 🚀 Key Features
 
