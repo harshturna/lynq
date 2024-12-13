@@ -268,7 +268,8 @@ export async function getAnalytics(
           .select("*")
           .eq("website_url", website_url)
           .gte("created_at", timeFrame)
-          .lte("created_at", currentDateTime),
+          .lte("created_at", currentDateTime)
+          .limit(5000),
 
         // Visitors count query
         supabase
@@ -292,7 +293,8 @@ export async function getAnalytics(
           .select("*")
           .eq("website_url", website_url)
           .gte("created_at", timeFrame)
-          .lte("created_at", currentDateTime),
+          .lte("created_at", currentDateTime)
+          .limit(5000),
       ]);
 
     // Check for errors in any of the queries
