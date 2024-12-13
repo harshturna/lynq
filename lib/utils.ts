@@ -635,7 +635,7 @@ export const calculateWebVitalScore = (
       break;
 
     case "load":
-      formattedScore = `${value.toFixed(0)}ms`;
+      formattedScore = `${value.toFixed(2)}s`;
       if (value <= 3000) {
         range = "Good";
       } else if (value <= 6000) {
