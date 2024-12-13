@@ -26,6 +26,8 @@ const Hero = () => {
         <img
           src="/assets/hero.png"
           alt="hero"
+          width="700"
+          height="420"
           className="w-[100%] h-[100%] relative z-[5]"
         />
         <div className="absolute z-[0] w-[50%] h-[50%] right-[16rem] bottom-[8rem] blue__gradient" />
