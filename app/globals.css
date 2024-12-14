@@ -186,7 +186,7 @@ h6 {
     background: linear-gradient(
       180deg,
       rgba(188, 165, 255, 0) 0%,
-      #2a87de 100%
+      #2a87deb6 100%
     );
     filter: blur(123px);
   }

@@ -17,7 +17,7 @@ const Performance = () => (
         alt="Feat 2"
         className="w-[100%] h-[100%] z-[1]"
       />
-      <div className="absolute z-[0] w-[30%] h-[30%] right-[14rem] bottom-[13rem] blue__gradient" />
+      <div className="absolute z-[0] w-[15%] h-[15%] md:w-[30%] md:h-[30%] right-[14rem] bottom-[13rem] blue__gradient" />
     </div>
   </section>
 );
