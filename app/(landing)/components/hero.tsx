@@ -22,7 +22,7 @@ const Hero = () => {
         <CtaButton styles="mt-4" />
       </div>
 
-      <div className="flex-1 flex justify-center items-center md:my-0 my-10 relative">
+      <div className="flex-1 flex justify-center items-center md:my-0 my-10 relative min-w-[300px] md:min-w-[500px] lg:min-w-[700px]">
         <img
           src="/assets/hero.png"
           alt="hero"
@@ -30,7 +30,7 @@ const Hero = () => {
           height="420"
           className="w-[100%] h-[100%] relative z-[5]"
         />
-        <div className="absolute z-[0] w-[50%] h-[50%] right-[16rem] bottom-[8rem] blue__gradient" />
+        <div className="absolute z-[0] w-[40%] h-[40%] right-[15rem] bottom-[12rem] blue__gradient" />
       </div>
     </section>
   );

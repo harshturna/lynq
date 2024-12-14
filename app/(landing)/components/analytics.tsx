@@ -9,6 +9,7 @@ const Analytics = () => (
         alt="feature 1"
         className="w-[100%] h-[100%] relative z-[5]"
       />
+      <div className="absolute z-[0] w-[40%] h-[40%] right-[12rem] bottom-[13rem] blue__gradient" />
     </div>
 
     <div className="flex-1 flex justify-center items-start flex-col">

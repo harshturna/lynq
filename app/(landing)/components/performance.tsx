@@ -12,7 +12,12 @@ const Performance = () => (
     </div>
 
     <div className="flex-1 flex justify-center items-center md:ml-10 ml-0 md:mt-0 mt-10 relative">
-      <img src="/assets/feat2.png" alt="Feat 2" className="w-[100%] h-[100%]" />
+      <img
+        src="/assets/feat2.png"
+        alt="Feat 2"
+        className="w-[100%] h-[100%] z-[1]"
+      />
+      <div className="absolute z-[0] w-[30%] h-[30%] right-[14rem] bottom-[13rem] blue__gradient" />
     </div>
   </section>
 );
