@@ -30,7 +30,7 @@ const Hero = () => {
           height="420"
           className="w-[100%] h-[100%] relative z-[5]"
         />
-        <div className="absolute z-[0] w-[50%] h-[50%] right-[12rem] bottom-[13rem] blue__gradient" />
+        <div className="absolute z-[0] w-[60%] h-[60%] right-[6rem] bottom-[4rem] md:w-[50%] md:h-[50%] md:right-[12rem] md:bottom-[13rem] blue__gradient" />
       </div>
     </section>
   );
