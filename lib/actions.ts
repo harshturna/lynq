@@ -19,7 +19,7 @@ export async function addWebsite(name: string, url: string, user_id: string) {
   if (user_id !== user.id) return "Unauthorized User";
 
   if (user_id === process.env.GUEST_USER_ID)
-    return "You cannot perform this action as guest";
+    return "Guest user cannot perform this action";
 
   const slug = url.replaceAll(".", "-");
   const supabase = await createClient();
@@ -75,7 +75,7 @@ export async function updateWebsiteOne(
   if (user_id !== user.id) return "Unauthorized user";
 
   if (user_id === process.env.GUEST_USER_ID)
-    return "You cannot perform this action as guest";
+    return "Guest user cannot perform this action";
 
   const { error } = await supabase
     .from("websites")
@@ -95,7 +95,7 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
   if (user_id !== user.id) return "Unauthorized user";
 
   if (user_id === process.env.GUEST_USER_ID)
-    return "You cannot perform this action as guest";
+    return "Guest user cannot perform this action";
 
   const { error } = await supabase
     .from("websites")
