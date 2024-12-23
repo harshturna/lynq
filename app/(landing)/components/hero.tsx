@@ -6,7 +6,7 @@ const Hero = () => {
       <div className="flex-1 flex justify-center items-start flex-col xl:px-0 sm:px-16 px-6">
         <div className="flex flex-row justify-between items-center w-full">
           <div className="flex-1 font-semibold text-white">
-            <h3 className="text-2xl md:text-4xl leading-[5px]">
+            <h3 className="text-2xl md:text-4xl !leading-[0px]">
               Beyond Simple
             </h3>
             <br />
