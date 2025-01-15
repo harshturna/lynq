@@ -10,7 +10,7 @@ const Hero = () => {
               Beyond Simple
             </h3>
             <br />
-            <h1 className="text-gradient text-5xl md:text-7xl">
+            <h1 className="text-gradient text-5xl md:text-7xl !leading-[95px]">
               Web Analytics
             </h1>
           </div>
