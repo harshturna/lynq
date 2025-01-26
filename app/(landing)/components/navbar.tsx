@@ -27,9 +27,6 @@ const Navbar = () => {
           </li>
         ))}
         <li className="font-normal cursor-pointer text-[16px] text-muted-foreground ml-4">
-          <Link href="/dashboard">Dashboard</Link>
-        </li>
-        <li className="font-normal cursor-pointer text-[16px] text-muted-foreground ml-4">
           <Link href="https://docs-lynq.byharsh.com" target="_blank">
             Docs
           </Link>
