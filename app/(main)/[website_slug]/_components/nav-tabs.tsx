@@ -22,8 +22,6 @@ const NavTabs = () => {
   const router = useRouter();
   const navTab = useSearchParams().get("tab");
 
-  // console.log(tab);
-
   return (
     <Tabs
       defaultValue={navTab || tabs[0].tab}

@@ -47,7 +47,6 @@ const CtaButton = ({
   }
 
   function handleGuestLogin() {
-    console.log(isLoggedIn);
     if (isLoggedIn) {
       router.push("/dashboard");
       return;
@@ -58,8 +57,6 @@ const CtaButton = ({
     formData.append("password", "guest@password");
     loginAction(formData);
   }
-
-  console.log(open);
 
   return (
     <AlertDialog open={open}>
