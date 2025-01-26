@@ -1,49 +1,86 @@
 "use client";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import Link from "next/link";
 import { useFormState } from "react-dom";
 import { login } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const initialState = {
   error: null,
   success: false,
 };
 
-const CtaButton = ({ styles }: { styles?: string }) => {
+const CtaButton = ({
+  styles,
+  isLoggedIn,
+}: {
+  styles?: string;
+  isLoggedIn: boolean;
+}) => {
   const [loginState, loginAction] = useFormState(login, initialState);
+  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   if (loginState.success) {
     router.push("/dashboard");
+    return;
+  }
+
+  function handleModal() {
+    if (isLoggedIn) {
+      router.push("/dashboard");
+    } else {
+      setOpen(true);
+    }
   }
 
   function handleGuestLogin() {
+    console.log(isLoggedIn);
+    if (isLoggedIn) {
+      router.push("/dashboard");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("email", "guest@email.com");
     formData.append("password", "guest@password");
     loginAction(formData);
   }
+
+  console.log(open);
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <AlertDialog open={open}>
+      <AlertDialogTrigger asChild>
         <button
           type="button"
           className={`py-4 px-4 md:py-4 md:px-6 font-poppins font-medium text-md md:text-lg text-primary bg-blue-gradient rounded-[10px] outline-none ${styles}`}
+          onClick={handleModal}
         >
           Get Started
         </button>
-      </DialogTrigger>
-      <DialogContent className="py-12">
-        <DialogHeader>
-          <DialogTitle>
+      </AlertDialogTrigger>
+
+      <AlertDialogContent className="pt-4 pb-12">
+        <div className="flex justify-end">
+          <AlertDialogCancel onClick={() => setOpen(false)}>
+            X
+          </AlertDialogCancel>
+        </div>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
             <div>
               <img
                 src="/assets/logo.png"
@@ -53,9 +90,9 @@ const CtaButton = ({ styles }: { styles?: string }) => {
                 className="mx-auto"
               />
             </div>
-          </DialogTitle>
-          <DialogDescription>
-            <p className="font-medium text-white text-center text-xl mb-4 ml-6">
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            <p className="font-medium text-white text-center text-xl mb-4 ml-4">
               Welcome to Lynq
             </p>
             <button
@@ -72,10 +109,10 @@ const CtaButton = ({ styles }: { styles?: string }) => {
                 Login
               </Link>
             </p>
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

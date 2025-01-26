@@ -54,10 +54,11 @@ const Header = ({ userEmail }: { userEmail: string }) => {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator className="mx-1 bg-stone-900/80" />
-            <DropdownMenuItem className="text-muted-foreground hover:text-white py-0">
-              <DropdownMenuLabel onClick={handleSignOut}>
-                Logout
-              </DropdownMenuLabel>
+            <DropdownMenuItem
+              className="text-muted-foreground hover:text-white py-0"
+              onClick={handleSignOut}
+            >
+              <DropdownMenuLabel>Logout</DropdownMenuLabel>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

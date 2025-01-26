@@ -1,6 +1,9 @@
+import { getUser } from "@/lib/user/server";
 import CtaButton from "./cta-button";
 
-const Hero = () => {
+const Hero = async () => {
+  const user = await getUser();
+
   return (
     <section id="home" className="flex md:flex-row flex-col sm:py-16 py-6">
       <div className="flex-1 flex justify-center items-start flex-col xl:px-0 sm:px-16 px-6">
@@ -19,7 +22,7 @@ const Hero = () => {
           See your site&apos;s story unfold. Every click, journey, and
           conversion beautifully visualized
         </p>
-        <CtaButton styles="mt-4" />
+        <CtaButton styles="mt-4" isLoggedIn={user ? true : false} />
       </div>
 
       <div className="flex-1 flex justify-center items-center md:my-0 my-10 relative min-w-[300px] md:min-w-[500px] lg:min-w-[700px]">
