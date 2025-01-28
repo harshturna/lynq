@@ -23,6 +23,7 @@ const initialState = {
 
 const CtaButton = ({ styles }: { styles?: string }) => {
   const [loginState, loginAction] = useFormState(login, initialState);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -58,6 +59,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
       router.push("/dashboard");
     }
 
+    setLoading(true);
     const formData = new FormData();
     formData.append("email", "guest@email.com");
     formData.append("password", "guest@password");
@@ -102,9 +104,14 @@ const CtaButton = ({ styles }: { styles?: string }) => {
               className="bg-gradient-to-br relative group/btn  from-stone-900/10 to-zinc-900/90  block bg-stone-800/10 w-full text-white rounded-md h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 mt-8"
               onClick={handleGuestLogin}
             >
-              Explore the app as guest &rarr;
+              {loading ? "Logging in as guest..." : "Explore the app as guest"}
               <BottomGradient />
             </button>
+            {loginState.error ? (
+              <p className="text-sm text-center text-red-600 my-2">
+                Error when logging in as guest
+              </p>
+            ) : null}
             <div className="bg-gradient-to-r from-transparent via-neutral-800 dark:via-neutral-700 to-transparent mt-8 h-[1px] w-full" />
             <p className="w-full mt-4 text-center">
               Have an account?{" "}
