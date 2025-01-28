@@ -1,9 +1,6 @@
-import { getUser } from "@/lib/user/server";
 import CtaButton from "./cta-button";
 
 const CTA = async () => {
-  const user = await getUser();
-
   return (
     <section
       className={`flex justify-center items-center sm:my-16 my-6 sm:px-16 px-6 sm:py-12 py-4 sm:flex-row flex-col rounded-[20px]`}
@@ -23,7 +20,7 @@ const CTA = async () => {
       <div
         className={`flex justify-center items-center sm:ml-10 ml-0 sm:mt-0 mt-10`}
       >
-        <CtaButton isLoggedIn={user ? true : false} />
+        <CtaButton />
       </div>
     </section>
   );

@@ -1,11 +1,9 @@
 "use client";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
@@ -15,27 +13,36 @@ import Link from "next/link";
 import { useFormState } from "react-dom";
 import { login } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUser } from "@/lib/user/client";
 
 const initialState = {
   error: null,
   success: false,
 };
 
-const CtaButton = ({
-  styles,
-  isLoggedIn,
-}: {
-  styles?: string;
-  isLoggedIn: boolean;
-}) => {
+const CtaButton = ({ styles }: { styles?: string }) => {
   const [loginState, loginAction] = useFormState(login, initialState);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const isLoggedIn = async () => {
+      try {
+        const user = await getUser();
+        if (user) {
+          setIsLoggedIn(true);
+        }
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    isLoggedIn();
+  }, []);
 
   if (loginState.success) {
     router.push("/dashboard");
-    return;
   }
 
   function handleModal() {
@@ -49,7 +56,6 @@ const CtaButton = ({
   function handleGuestLogin() {
     if (isLoggedIn) {
       router.push("/dashboard");
-      return;
     }
 
     const formData = new FormData();
