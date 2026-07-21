@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 const tabs: { name: string; tab: string }[] = [
   {
@@ -19,15 +19,17 @@ const tabs: { name: string; tab: string }[] = [
 ];
 
 const NavTabs = () => {
-  const router = useRouter();
   const navTab = useSearchParams().get("tab");
 
   return (
     <Tabs
-      defaultValue={navTab || tabs[0].tab}
+      value={navTab || tabs[0].tab}
       className="w-[max-content]"
       onValueChange={(val) => {
-        router.push(`?tab=${val}`);
+        // Shallow URL update via the native History API. router.push would
+        // trigger a full RSC round-trip and re-run every analytics query,
+        // even though all three tabs' data already lives in client state.
+        window.history.pushState(null, "", `?tab=${val}`);
       }}
     >
       <TabsList className="bg-stone-900 rounded-[4px] h-[44px]">

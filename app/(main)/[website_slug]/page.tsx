@@ -37,10 +37,6 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     );
   }
 
-  if (website.user_id !== user.id) {
-    redirect("/dashboard");
-  }
-
   const [
     { res: analyticsData, error: analyticsError },
     { data: performanceData, error: performanceError },
@@ -78,8 +74,11 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     );
   }
 
-  // setting the is_first_visit flag to false after visiting the dashboard for the first time
-  if (website.is_first_visit) {
+  // Setting the is_first_visit flag to false after visiting the dashboard for
+  // the first time. Skipped for the guest user, whose writes are always
+  // rejected — awaiting it just added a blocking round-trip to every load.
+  const isGuest = user.id === process.env.GUEST_USER_ID;
+  if (website.is_first_visit && !isGuest) {
     await updateWebsiteOne(
       params.website_slug,
       "is_first_visit",
