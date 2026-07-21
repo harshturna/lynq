@@ -7,9 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UserRound } from "lucide-react";
+import { LoaderCircle, UserRound } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useTransition } from "react";
 import Settings from "./settings";
 import BottomGradient from "@/components/bottom-gradient";
 
@@ -18,21 +19,48 @@ interface WebsiteCardProps {
 }
 
 const WebsiteCard = ({ website }: WebsiteCardProps) => {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  // Navigate through a transition so the card can show a pending state
+  // immediately, instead of looking frozen while the RSC payload streams in
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Let modified clicks (new tab, etc.) behave natively
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    startTransition(() => {
+      router.push(`/${website.slug}`);
+    });
+  };
+
   return (
     <div className="relative min-w-full sm:min-w-[350px] md:min-w-[350px]">
-      <Link href={`/${website.slug}`} className="group/card">
-        <Card>
+      <Link
+        href={`/${website.slug}`}
+        prefetch
+        onClick={handleClick}
+        aria-busy={isPending}
+        className="group/card"
+      >
+        <Card className={isPending ? "opacity-60 transition-opacity" : undefined}>
           <CardHeader className="mb-8">
-            <div>
+            {/* Keep this clear of the settings ellipsis, which is absolutely
+                positioned at top-7 right-5 */}
+            <div className="pr-8">
               <CardTitle className="text-xl md:text-2xl">
                 {website.name}
               </CardTitle>
               <CardDescription>{website.url}</CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
-            <UserRound />
-            <span>{website.visitors} Visitors</span>
+          <CardContent className="flex items-center justify-between gap-2">
+            <div className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
+              <UserRound />
+              <span>{website.visitors} Visitors</span>
+            </div>
+            {isPending && (
+              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-muted-foreground" />
+            )}
           </CardContent>
         </Card>
         <BottomGradient />

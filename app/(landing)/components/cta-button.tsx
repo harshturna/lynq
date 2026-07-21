@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import Link from "next/link";
+import { LoaderCircle } from "lucide-react";
 import { useFormState } from "react-dom";
 import { login } from "@/app/(auth)/actions";
 import { useRouter } from "next/navigation";
@@ -34,17 +35,25 @@ const CtaButton = ({ styles }: { styles?: string }) => {
         const user = await getUser();
         if (user) {
           setIsLoggedIn(true);
+          // Warm up the dashboard route so the redirect after login is fast
+          router.prefetch("/dashboard");
         }
       } catch {
         setIsLoggedIn(false);
       }
     };
     isLoggedIn();
-  }, []);
+  }, [router]);
 
-  if (loginState.success) {
-    router.push("/dashboard");
-  }
+  useEffect(() => {
+    if (loginState.success) {
+      // Keep `loading` true — the button stays in its pending state until
+      // the dashboard's loading skeleton takes over
+      router.push("/dashboard");
+    } else if (loginState.error) {
+      setLoading(false);
+    }
+  }, [loginState, router]);
 
   function handleModal() {
     if (isLoggedIn) {
@@ -57,6 +66,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
   function handleGuestLogin() {
     if (isLoggedIn) {
       router.push("/dashboard");
+      return;
     }
 
     setLoading(true);
@@ -101,10 +111,18 @@ const CtaButton = ({ styles }: { styles?: string }) => {
               Welcome to Lynq
             </p>
             <button
-              className="bg-gradient-to-br relative group/btn  from-stone-900/10 to-zinc-900/90  block bg-stone-800/10 w-full text-white rounded-md h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 mt-8"
+              className="bg-gradient-to-br relative group/btn from-stone-900/10 to-zinc-900/90 flex items-center justify-center gap-2 bg-stone-800/10 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
               onClick={handleGuestLogin}
+              disabled={loading}
             >
-              {loading ? "Logging in as guest..." : "Explore the app as guest"}
+              {loading ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Setting up your demo...
+                </>
+              ) : (
+                "Explore the app as guest"
+              )}
               <BottomGradient />
             </button>
             {loginState.error ? (

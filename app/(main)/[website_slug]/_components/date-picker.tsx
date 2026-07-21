@@ -9,14 +9,15 @@ import {
   SelectGroup,
 } from "@/components/ui/select";
 import { datePickerValues } from "@/constants";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 
 interface DatePickerProps {
   selectedTimeFrame: (timeFrame: DatePickerValues) => void;
+  isLoading?: boolean;
 }
 
-const DatePicker = ({ selectedTimeFrame }: DatePickerProps) => {
+const DatePicker = ({ selectedTimeFrame, isLoading }: DatePickerProps) => {
   const [selected, setSelected] = useState(datePickerValues[2]);
 
   const [datePickerStartingValues, datePickerEndValues] = [
@@ -36,9 +37,13 @@ const DatePicker = ({ selectedTimeFrame }: DatePickerProps) => {
         onValueChangeHandler(newValue)
       }
     >
-      <SelectTrigger className="w-[180px] h-[44px]">
+      <SelectTrigger className="w-[180px] h-[44px]" disabled={isLoading}>
         <div className="justify-start gap-3 flex items-center">
-          <CalendarDays className="text-white/80" />
+          {isLoading ? (
+            <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-white/80" />
+          ) : (
+            <CalendarDays className="text-white/80" />
+          )}
           <SelectValue />
         </div>
       </SelectTrigger>

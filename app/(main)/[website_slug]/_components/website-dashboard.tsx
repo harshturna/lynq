@@ -36,6 +36,7 @@ const WebsiteDashboard = ({
   const [eventData, setEventData] = useState(initialCustomEventData);
   const [openSetupModal, setOpenSetupModal] = useState(false);
   const [error, setError] = useState<null | string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Last 30 days");
   const tab = useSearchParams().get("tab");
   const [isUserFirstVisit, setIsUserFirstVisit] = useState(isFirstVisit);
@@ -47,52 +48,61 @@ const WebsiteDashboard = ({
 
   async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
     setError(null);
-    const [analyticsResult, perfResult, eventResult] = await Promise.all([
-      getAnalytics(pickedTimeFrame, websiteUrl, userId),
-      getVitals(pickedTimeFrame, websiteUrl, userId),
-      getCustomEventData(pickedTimeFrame, websiteUrl, userId),
-    ]);
+    setIsLoading(true);
 
-    const { res: analyticsData, error: analyticsError } = analyticsResult;
-    if (!analyticsData || analyticsError) {
-      setError("Failed to get analytics data");
-      return;
+    try {
+      const [analyticsResult, perfResult, eventResult] = await Promise.all([
+        getAnalytics(pickedTimeFrame, websiteUrl, userId),
+        getVitals(pickedTimeFrame, websiteUrl, userId),
+        getCustomEventData(pickedTimeFrame, websiteUrl, userId),
+      ]);
+
+      const { res: analyticsData, error: analyticsError } = analyticsResult;
+      if (!analyticsData || analyticsError) {
+        setError("Failed to get analytics data");
+        return;
+      }
+
+      const { data: perfData, error: perfError } = perfResult;
+      if (!perfData || perfError) {
+        setError("Failed to get performance data");
+        return;
+      }
+
+      const { data: eventData, error: eventError } = eventResult;
+
+      if (!eventData || eventError) {
+        setError("Failed to get custom events");
+        return;
+      }
+
+      setPerfData(perfData);
+      setAnalyticsData(analyticsData);
+      setEventData(eventData);
+      setTimeFrame(pickedTimeFrame);
+    } catch {
+      setError("Failed to get the data");
+    } finally {
+      setIsLoading(false);
     }
-
-    const { data: perfData, error: perfError } = perfResult;
-    if (!perfData || perfError) {
-      setError("Failed to get performance data");
-      return;
-    }
-
-    const { data: eventData, error: eventError } = eventResult;
-
-    if (!eventData || eventError) {
-      setError("Failed to get custom events");
-      return;
-    }
-
-    setPerfData(perfData);
-    setAnalyticsData(analyticsData);
-    setEventData(eventData);
-    setTimeFrame(pickedTimeFrame);
-  }
-
-  if (error) {
-    return (
-      <ErrorAlert
-        title={error}
-        description="Ran into an error while getting the data, try refreshing the page"
-      />
-    );
   }
 
   return (
     <main className="mb-4">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
         <NavTabs />
-        <DatePicker selectedTimeFrame={getUpdatedData} />
+        <DatePicker selectedTimeFrame={getUpdatedData} isLoading={isLoading} />
       </div>
+      {/* Rendered inline rather than replacing the dashboard, so the date
+          picker stays mounted and the user can retry another range */}
+      {error && (
+        <div className="mt-4">
+          <ErrorAlert
+            title={error}
+            description="Ran into an error while getting the data, try another range or refresh the page"
+          />
+        </div>
+      )}
       <div className="my-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
@@ -104,19 +114,28 @@ const WebsiteDashboard = ({
           </Button>
         </div>
       </div>
-      {(!tab || tab === "analytics") && (
-        <AnalyticsDashboard
-          analyticsData={analyticsData}
-          timeFrame={timeFrame}
-        />
-      )}
-      {tab === "performance" && (
-        <PerformanceDashboard
-          performanceData={perfData}
-          timeFrame={timeFrame}
-        />
-      )}
-      {tab === "events" && <EventDashboard events={eventData} />}
+      <div
+        className={
+          isLoading
+            ? "pointer-events-none opacity-50 transition-opacity duration-200"
+            : "transition-opacity duration-200"
+        }
+        aria-busy={isLoading}
+      >
+        {(!tab || tab === "analytics") && (
+          <AnalyticsDashboard
+            analyticsData={analyticsData}
+            timeFrame={timeFrame}
+          />
+        )}
+        {tab === "performance" && (
+          <PerformanceDashboard
+            performanceData={perfData}
+            timeFrame={timeFrame}
+          />
+        )}
+        {tab === "events" && <EventDashboard events={eventData} />}
+      </div>
       <SetupDialog
         title="Add Script"
         siteUrl={websiteUrl}

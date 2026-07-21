@@ -1,10 +1,12 @@
 "use client";
-import { useFormState } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
+import { useEffect } from "react";
 import { signUp } from "../actions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const initialState = {
@@ -16,9 +18,11 @@ function SignUp() {
   const [signupState, signupAction] = useFormState(signUp, initialState);
   const router = useRouter();
 
-  if (signupState.success) {
-    router.push("/dashboard");
-  }
+  useEffect(() => {
+    if (signupState.success) {
+      router.push("/dashboard");
+    }
+  }, [signupState, router]);
 
   return (
     <div className="h-screen w-screen bg-black/80 flex justify-center items-center relative">
@@ -43,7 +47,7 @@ function SignUp() {
           </div>
         </div>
 
-        <form className="mt-8 mb-2">
+        <form className="mt-8 mb-2" action={signupAction}>
           <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -67,14 +71,7 @@ function SignUp() {
             />
           </LabelInputContainer>
 
-          <button
-            className="bg-gradient-to-br relative group/btn  from-stone-900/10 to-zinc-900/90  block bg-stone-800/10 w-full text-white rounded-md h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4"
-            type="submit"
-            formAction={signupAction}
-          >
-            Sign up &rarr;
-            <BottomGradient />
-          </button>
+          <SubmitButton />
           <div className="text-white text-center">
             <span className="text-muted-foreground">
               Already have an account?{" "}
@@ -92,6 +89,25 @@ function SignUp() {
     </div>
   );
 }
+
+const SubmitButton = () => {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      className="bg-gradient-to-br relative group/btn from-stone-900/10 to-zinc-900/90 flex items-center justify-center bg-stone-800/10 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
+      type="submit"
+      disabled={pending}
+    >
+      {pending ? (
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+      ) : (
+        <>Sign up &rarr;</>
+      )}
+      <BottomGradient />
+    </button>
+  );
+};
 
 const BottomGradient = () => {
   return (

@@ -1,10 +1,12 @@
 "use client";
-import { useFormState } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useState } from "react";
 import { login } from "../actions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -15,13 +17,19 @@ const initialState = {
 
 function Login() {
   const [loginState, loginAction] = useFormState(login, initialState);
+  const [guestLoading, setGuestLoading] = useState(false);
   const router = useRouter();
 
-  if (loginState.success) {
-    router.push("/dashboard");
-  }
+  useEffect(() => {
+    if (loginState.success) {
+      router.push("/dashboard");
+    } else if (loginState.error) {
+      setGuestLoading(false);
+    }
+  }, [loginState, router]);
 
   function handleGuestLogin() {
+    setGuestLoading(true);
     const formData = new FormData();
     formData.append("email", "guest@email.com");
     formData.append("password", "guest@password");
@@ -51,7 +59,7 @@ function Login() {
           </div>
         </div>
 
-        <form className="mt-8 mb-2">
+        <form className="mt-8 mb-2" action={loginAction}>
           <LabelInputContainer className="mb-4">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -75,14 +83,8 @@ function Login() {
             />
           </LabelInputContainer>
 
-          <button
-            className="bg-gradient-to-br relative group/btn  from-stone-900/10 to-zinc-900/90  block bg-stone-800/10 w-full text-white rounded-md h-10 font-medium  shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4"
-            type="submit"
-            formAction={loginAction}
-          >
-            Login &rarr;
-            <BottomGradient />
-          </button>
+          <SubmitButton />
+
           <div className="text-white text-center">
             <span className="text-muted-foreground">
               Don&apos;t have an account?{" "}
@@ -98,8 +100,16 @@ function Login() {
             variant="ghost"
             className="w-full hover:bg-stone-900/60"
             onClick={handleGuestLogin}
+            disabled={guestLoading}
           >
-            Explore app as guest &rarr;
+            {guestLoading ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                Setting up your demo...
+              </>
+            ) : (
+              <>Explore app as guest &rarr;</>
+            )}
           </Button>
         </div>
         <div className="mt-4 text-red-900 text-center">
@@ -109,6 +119,25 @@ function Login() {
     </div>
   );
 }
+
+const SubmitButton = () => {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      className="bg-gradient-to-br relative group/btn from-stone-900/10 to-zinc-900/90 flex items-center justify-center bg-stone-800/10 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
+      type="submit"
+      disabled={pending}
+    >
+      {pending ? (
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+      ) : (
+        <>Login &rarr;</>
+      )}
+      <BottomGradient />
+    </button>
+  );
+};
 
 const BottomGradient = () => {
   return (
