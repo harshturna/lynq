@@ -8,6 +8,7 @@ import {
   calculateAverageSessionDuration,
   calculateAverageVital,
   calculateBounceRate,
+  getPreviousPeriodBounds,
   getTimeFrame,
   groupEventsByEventId,
 } from "./utils";
@@ -328,6 +329,58 @@ export async function getAnalytics(
   } catch (error) {
     return {
       res: null,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+/**
+ * Summary stats for the period immediately before the selected one, used for
+ * the "vs previous period" deltas on the stat cards.
+ *
+ * Deliberately soft-fails: if the get_period_summary migration hasn't been
+ * applied yet, the dashboard should still render, just without deltas.
+ */
+export async function getPeriodComparison(
+  pickedTimeFrame: DatePickerValues,
+  website_url: string,
+  user_id: string
+): Promise<{ data: PeriodSummary | null; error: string | null }> {
+  try {
+    const [supabase, user] = await Promise.all([createClient(), getUser()]);
+
+    if (!user?.id || user_id !== user.id) {
+      return { data: null, error: "Unauthorized User" };
+    }
+
+    const { from, to } = getPreviousPeriodBounds(pickedTimeFrame);
+
+    const { data, error } = await supabase.rpc("get_period_summary", {
+      p_website_url: website_url,
+      p_from: from,
+      p_to: to,
+    });
+
+    if (error) return { data: null, error: error.message };
+
+    // The function returns a single row
+    const summary = Array.isArray(data) ? data[0] : data;
+    if (!summary) return { data: null, error: null };
+
+    return {
+      data: {
+        views_count: Number(summary.views_count) || 0,
+        visitors_count: Number(summary.visitors_count) || 0,
+        average_session_duration:
+          Number(summary.average_session_duration) || 0,
+        bounce_rate: Number(summary.bounce_rate) || 0,
+      },
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",
     };

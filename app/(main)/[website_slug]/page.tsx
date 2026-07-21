@@ -1,12 +1,12 @@
 import {
   getAnalytics,
   getCustomEventData,
+  getPeriodComparison,
   getVitals,
   getWebsite,
   updateWebsiteOne,
 } from "@/lib/actions";
 import { redirect } from "next/navigation";
-import SetupDialog from "./_components/setup-dialog";
 import { getUser } from "@/lib/user/server";
 import WebsiteDashboard from "./_components/website-dashboard";
 import ErrorAlert from "@/components/error";
@@ -41,10 +41,12 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
     { res: analyticsData, error: analyticsError },
     { data: performanceData, error: performanceError },
     { data: customEventData, error: customEventError },
+    { data: comparisonData },
   ] = await Promise.all([
     getAnalytics("Last 30 days", website.url, user.id),
     getVitals("Last 30 days", website.url, user.id),
     getCustomEventData("Last 30 days", website.url, user.id),
+    getPeriodComparison("Last 30 days", website.url, user.id),
   ]);
 
   if (!analyticsData || analyticsError) {
@@ -97,6 +99,7 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
         initialAnalyticsData={analyticsData}
         initialPerformanceData={performanceData}
         initialCustomEventData={customEventData}
+        initialComparison={comparisonData}
       />
     </>
   );

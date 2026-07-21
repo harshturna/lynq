@@ -142,6 +142,9 @@ type AnalyticsDataWithSessionData = {
   operating_system: Os;
   browser: Browser;
   city: string;
+  // Carried through from the joined session so filtered visitor counts can be
+  // computed as distinct clients (page_views rows only carry session_id)
+  client_id: string;
 };
 
 type SessionData = {
@@ -149,11 +152,13 @@ type SessionData = {
   created_at: string;
   website_url: string;
   session_id: string;
+  client_id: string;
   country: string;
   device: Device;
   operating_system: Os;
   browser: Browser;
   city: string;
+  session_duration: number;
 };
 
 type FetchedCustomEventData = {
@@ -202,6 +207,19 @@ type AnalyticsGroupBy =
   | "countries"
   | "browsers"
   | "referrers";
+
+/** A single active segment, e.g. { dimension: "countries", value: "India" } */
+type Filter = {
+  dimension: AnalyticsGroupBy;
+  value: string;
+};
+
+type PeriodSummary = {
+  views_count: number;
+  visitors_count: number;
+  average_session_duration: number;
+  bounce_rate: number;
+};
 
 interface ChartDataPoint {
   date: string;

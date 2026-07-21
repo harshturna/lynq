@@ -1,6 +1,11 @@
 "use client";
 
-import { getAnalytics, getCustomEventData, getVitals } from "@/lib/actions";
+import {
+  getAnalytics,
+  getCustomEventData,
+  getPeriodComparison,
+  getVitals,
+} from "@/lib/actions";
 import DatePicker from "./date-picker";
 import NavTabs from "./nav-tabs";
 import { useState } from "react";
@@ -11,6 +16,7 @@ import PerformanceDashboard from "./performance-dashboard";
 import EventDashboard from "./event-dashboard";
 import { Button } from "@/components/ui/button";
 import SetupDialog from "./setup-dialog";
+import { FilterProvider } from "./filter-context";
 
 interface WebsiteDashboardProps {
   isFirstVisit: boolean;
@@ -20,6 +26,7 @@ interface WebsiteDashboardProps {
   initialAnalyticsData: AnalyticsDataWithCounts;
   initialPerformanceData: WebVitalsMetrics & { size: number };
   initialCustomEventData: GroupedCustomEventWithSessionData[];
+  initialComparison: PeriodSummary | null;
 }
 
 const WebsiteDashboard = ({
@@ -30,10 +37,12 @@ const WebsiteDashboard = ({
   initialAnalyticsData,
   initialPerformanceData,
   initialCustomEventData,
+  initialComparison,
 }: WebsiteDashboardProps) => {
   const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
   const [perfData, setPerfData] = useState(initialPerformanceData);
   const [eventData, setEventData] = useState(initialCustomEventData);
+  const [comparison, setComparison] = useState(initialComparison);
   const [openSetupModal, setOpenSetupModal] = useState(false);
   const [error, setError] = useState<null | string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,11 +60,13 @@ const WebsiteDashboard = ({
     setIsLoading(true);
 
     try {
-      const [analyticsResult, perfResult, eventResult] = await Promise.all([
-        getAnalytics(pickedTimeFrame, websiteUrl, userId),
-        getVitals(pickedTimeFrame, websiteUrl, userId),
-        getCustomEventData(pickedTimeFrame, websiteUrl, userId),
-      ]);
+      const [analyticsResult, perfResult, eventResult, comparisonResult] =
+        await Promise.all([
+          getAnalytics(pickedTimeFrame, websiteUrl, userId),
+          getVitals(pickedTimeFrame, websiteUrl, userId),
+          getCustomEventData(pickedTimeFrame, websiteUrl, userId),
+          getPeriodComparison(pickedTimeFrame, websiteUrl, userId),
+        ]);
 
       const { res: analyticsData, error: analyticsError } = analyticsResult;
       if (!analyticsData || analyticsError) {
@@ -79,6 +90,9 @@ const WebsiteDashboard = ({
       setPerfData(perfData);
       setAnalyticsData(analyticsData);
       setEventData(eventData);
+      // Comparison is a nice-to-have: if the RPC is missing or errors, the
+      // dashboard still renders, just without deltas
+      setComparison(comparisonResult.data ?? null);
       setTimeFrame(pickedTimeFrame);
     } catch {
       setError("Failed to get the data");
@@ -88,6 +102,7 @@ const WebsiteDashboard = ({
   }
 
   return (
+    <FilterProvider>
     <main className="mb-4">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
         <NavTabs />
@@ -126,6 +141,7 @@ const WebsiteDashboard = ({
           <AnalyticsDashboard
             analyticsData={analyticsData}
             timeFrame={timeFrame}
+            comparison={comparison}
           />
         )}
         {tab === "performance" && (
@@ -143,6 +159,7 @@ const WebsiteDashboard = ({
         setClose={handleSetupModalClose}
       />
     </main>
+    </FilterProvider>
   );
 };
 

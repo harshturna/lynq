@@ -65,6 +65,31 @@ export function getTimeFrame(timeFrame: DatePickerValues): string {
   }
 }
 
+/**
+ * getTimeFrame only yields a lower bound, which is all the existing queries
+ * need. Comparisons need both ends, plus the equivalent window shifted back.
+ */
+export function getPeriodBounds(timeFrame: DatePickerValues): {
+  from: string;
+  to: string;
+} {
+  return { from: getTimeFrame(timeFrame), to: new Date().toISOString() };
+}
+
+export function getPreviousPeriodBounds(timeFrame: DatePickerValues): {
+  from: string;
+  to: string;
+} {
+  const { from, to } = getPeriodBounds(timeFrame);
+  const fromMs = new Date(from).getTime();
+  const duration = new Date(to).getTime() - fromMs;
+
+  return {
+    from: new Date(fromMs - duration).toISOString(),
+    to: from,
+  };
+}
+
 export function groupByAnalytics(
   groupBy: AnalyticsGroupBy,
   data: AnalyticsDataWithSessionData[] | []
@@ -214,10 +239,12 @@ export function addSessionDataToAnalytics(
     return [];
   }
 
+  // Index by session_id so the join is O(n) rather than O(n*m) — this runs
+  // over up to 5000 page views on every render of the dashboard
+  const sessionsById = new Map(sessionData.map((s) => [s.session_id, s]));
+
   const res = analyticsData.map((data) => {
-    const session = sessionData.find(
-      (session) => data.session_id === session.session_id
-    );
+    const session = sessionsById.get(data.session_id);
     if (!session)
       return {
         ...data,
@@ -226,6 +253,7 @@ export function addSessionDataToAnalytics(
         operating_system: "Unknown" as Os,
         browser: "Unknown" as Browser,
         city: "Unknown",
+        client_id: "",
       };
     return {
       ...data,
@@ -234,9 +262,69 @@ export function addSessionDataToAnalytics(
       operating_system: session.operating_system,
       browser: session.browser,
       city: session.city,
+      client_id: session.client_id,
     };
   });
   return res;
+}
+
+/**
+ * Maps a filter dimension onto the field it reads on a joined analytics row.
+ * Mirrors the grouping keys used by groupByAnalytics.
+ */
+const FILTER_FIELD: Record<
+  AnalyticsGroupBy,
+  keyof AnalyticsDataWithSessionData
+> = {
+  pages: "pathname",
+  countries: "country",
+  devices: "device",
+  browsers: "browser",
+  operating_systems: "operating_system",
+  referrers: "referrer",
+};
+
+/**
+ * AND across dimensions, OR within a dimension — so "India + Mobile" narrows,
+ * but "India + Germany" widens. This is the behaviour people expect from
+ * analytics segmentation.
+ */
+export function applyFilters(
+  rows: AnalyticsDataWithSessionData[],
+  filters: Filter[]
+): AnalyticsDataWithSessionData[] {
+  if (!filters.length) return rows;
+
+  const byDimension = new Map<AnalyticsGroupBy, Set<string>>();
+  filters.forEach((filter) => {
+    const existing = byDimension.get(filter.dimension);
+    if (existing) {
+      existing.add(filter.value);
+    } else {
+      byDimension.set(filter.dimension, new Set([filter.value]));
+    }
+  });
+
+  const entries = Array.from(byDimension.entries());
+
+  return rows.filter((row) =>
+    entries.every(([dimension, values]) =>
+      values.has(String(row[FILTER_FIELD[dimension]]))
+    )
+  );
+}
+
+/** Distinct visitors in a set of joined rows, falling back to sessions. */
+export function countDistinctVisitors(
+  rows: AnalyticsDataWithSessionData[]
+): number {
+  const clients = new Set<string>();
+  const sessionsWithoutClient = new Set<string>();
+  for (const row of rows) {
+    if (row.client_id) clients.add(row.client_id);
+    else sessionsWithoutClient.add(row.session_id);
+  }
+  return clients.size + sessionsWithoutClient.size;
 }
 
 export const calculateAverageSessionDuration = (
