@@ -81,7 +81,8 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
   Agent call; never rely on the default.
 - **A subagent may never spawn its own subagents.** Every brief must say so explicitly, in these
   words: "Do not spawn subagents or use the Agent tool; do this work yourself."
-- One agent at a time. Prefer doing moderate work inline where each step is visible.
+- Independent work (review passes, parallel research) runs as parallel agents launched in one
+  turn; sequential only when one depends on another's output. Moderate work stays inline.
 
 ## Project references
 
