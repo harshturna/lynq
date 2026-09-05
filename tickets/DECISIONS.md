@@ -120,3 +120,21 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   columnar compression, so the Supabase plan and the retention default matter earlier than
   they would have. The design document is revised to v5 for Postgres; the wide row, the client
   session id, the envelope, the ingest pipeline, the tracker and the backfill are unchanged.
+
+## D-007 — Retire v1 immediately, once the dashboard reads the new store
+- **Status:** Accepted
+- **Date:** 2026-09-05
+- **Context:** D-005 kept the v1 adapter and script for 30 quiet days after the last v1 row.
+  With Phase 0 complete the owner sees no value in the wait. The one dependency is that the
+  current dashboard still reads the old tables; removing the v1 route before the dashboard is
+  rewired would freeze what it shows.
+- **Decision:** Phase 1 opens with the dashboard rewired to `lib/query` with no visual change
+  (TICKET-023), then v1 is removed in full (TICKET-024): the snippet on Lynq's site, `/api/lynq`,
+  the adapter, the old-table write path, and the old tables themselves after an export. The
+  30-day clause of D-005 is superseded; its other defaults stand. The landing-page privacy copy
+  changes when TICKET-024 lands. Any site still carrying the v1 script (aivia.byharsh.com
+  today) stops being tracked until it installs the v2 snippet.
+- **Rejected alternatives:** Keeping `/api/lynq` alive for stragglers, rejected as ceremony for
+  a portfolio project with one external install the owner controls.
+- **Consequences:** Two small tickets before the UI overhaul proper. The demo dashboard shows
+  Lynq's own traffic as soon as TICKET-023 ships.
