@@ -112,7 +112,7 @@ export function SelectedGoalPanel({
       >
         <KpiStrip tiles={tiles} label="Goal" />
       </Section>
-      <div className="grid gap-8 min-[1000px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Section title="Funnel" qualifier="sessions" strong>
           <Funnel title={`${goal.name} funnel`} steps={s.funnel} />
         </Section>

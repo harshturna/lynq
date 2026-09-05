@@ -134,7 +134,7 @@ export function LocationsTables({
           </span>
         )}
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         <Region
           region="countries"
           title="Countries"
@@ -166,7 +166,7 @@ export function LocationsTables({
           withBounce
         />
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Region
           region="languages"
           title="Languages"

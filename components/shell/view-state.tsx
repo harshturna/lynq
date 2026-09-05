@@ -30,7 +30,11 @@ export { searchParamsToInput };
  */
 type Update = (
   next: ViewState | ((current: ViewState) => ViewState),
-  opts?: { replace?: boolean }
+  opts?: {
+    replace?: boolean;
+    /** An element id to focus once the transition settles; the server render replaces the header, so focus set before it is lost. */
+    focus?: string;
+  }
 ) => void;
 
 type ViewStateValue = { state: ViewState; update: Update; pending: boolean };
@@ -51,11 +55,13 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef(state);
   stateRef.current = state;
 
+  const focusAfter = useRef<string | null>(null);
   const update = useCallback<Update>(
     (next, opts) => {
       const resolved =
         typeof next === "function" ? next(stateRef.current) : next;
       const url = `${pathname}${toQuery(resolved)}`;
+      if (opts?.focus) focusAfter.current = opts.focus;
       startTransition(() => {
         if (opts?.replace) router.replace(url);
         else router.push(url);
@@ -71,7 +77,12 @@ export function ShellProvider({ children }: { children: ReactNode }) {
     queued.current = text;
   }, []);
   useEffect(() => {
-    if (pending || queued.current === null) return;
+    if (pending) return;
+    if (focusAfter.current) {
+      document.getElementById(focusAfter.current)?.focus();
+      focusAfter.current = null;
+    }
+    if (queued.current === null) return;
     const text = queued.current;
     queued.current = null;
     // Clear first so an identical message is announced again.

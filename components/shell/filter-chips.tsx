@@ -45,15 +45,16 @@ export function FilterChips({ addButtonId }: { addButtonId?: string }) {
     const next = withoutFilter(state, f.dimension, value);
     const count = next.filters.reduce((n, x) => n + x.values.length, 0);
     focusIndex.current = index;
-    update(next);
+    // The last chip's removal re-renders the header from the server, so the
+    // shell focuses + Filter once the transition settles (design §6).
+    update(next, count === 0 ? { focus: addButtonId } : undefined);
     announce(
       `Removed ${filterSentence(f.dimension, f.op, [value])}. ${count} ${count === 1 ? "filter" : "filters"}.`
     );
   };
   const clear = () => {
-    update({ ...state, filters: [] });
+    update({ ...state, filters: [] }, { focus: addButtonId });
     announce("Cleared all filters.");
-    if (addButtonId) document.getElementById(addButtonId)?.focus();
   };
 
   return (

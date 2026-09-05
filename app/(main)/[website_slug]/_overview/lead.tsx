@@ -94,7 +94,7 @@ export function Lead({
         <SectionError title="Summary" strong />
       )}
 
-      <div className="mt-7 grid gap-8 min-[1000px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <div className="mt-7 grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         {series.ok ? (
           <Section title={series.data.label} qualifier={GRAIN[granularity]}>
             <LineChart
@@ -335,7 +335,7 @@ function DevicesPanel({
       {segments.length ? (
         <SplitBar title="Devices" segments={segments} compare={compare} />
       ) : (
-        <p className="text-[12.5px] text-faint">No data for this period.</p>
+        <p className="text-[12.5px] text-mute">No data for this period.</p>
       )}
     </Section>
   );

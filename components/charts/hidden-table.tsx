@@ -8,34 +8,38 @@ export function HiddenTable({
   columns: string[];
   rows: (string | number)[][];
 }) {
+  // The wrapper is what is visually hidden: a table cannot shrink below its
+  // min-content width, so a 1 px table still widened the page (TICKET-047).
   return (
-    <table className="sr-only">
-      <caption>{caption}</caption>
-      <thead>
-        <tr>
-          {columns.map((c) => (
-            <th key={c} scope="col">
-              {c}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: bucket labels repeat (blank ticks), rows never reorder
-          <tr key={`${i}-${String(r[0] ?? "")}`}>
-            {r.map((cell, j) =>
-              j === 0 ? (
-                <th key={String(j)} scope="row">
-                  {cell}
-                </th>
-              ) : (
-                <td key={String(j)}>{cell}</td>
-              )
-            )}
+    <div className="sr-only">
+      <table>
+        <caption>{caption}</caption>
+        <thead>
+          <tr>
+            {columns.map((c) => (
+              <th key={c} scope="col">
+                {c}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: bucket labels repeat (blank ticks), rows never reorder
+            <tr key={`${i}-${String(r[0] ?? "")}`}>
+              {r.map((cell, j) =>
+                j === 0 ? (
+                  <th key={String(j)} scope="row">
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={String(j)}>{cell}</td>
+                )
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

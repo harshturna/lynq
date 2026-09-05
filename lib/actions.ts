@@ -1,6 +1,7 @@
 "use server";
 
 import type { PostgrestError } from "@supabase/supabase-js";
+import { sql } from "./db";
 import { createClient } from "./supabase/server";
 import { getUser } from "./user/server";
 
@@ -17,8 +18,22 @@ export async function addWebsite(name: string, url: string, user_id: string) {
   const supabase = await createClient();
   const response = await supabase
     .from("websites")
-    .insert({ name, url, user_id: user_id, slug });
+    .insert({ name, url, user_id: user_id, slug })
+    .select("id")
+    .single();
+  if (response.error) return response;
 
+  // Ingest resolves a batch's origin through analytics.site_hostnames, so a
+  // site with no hostname row never receives an event (found by the
+  // onboarding e2e, TICKET-047). Settings › General manages the list later.
+  try {
+    await sql`insert into analytics.site_hostnames (site_id, hostname)
+      values (${Number(response.data.id)}, analytics.normalise_hostname(${url}))`;
+  } catch {
+    // The hostname belongs to another site: undo the row so the slug is free again.
+    await supabase.from("websites").delete().eq("id", response.data.id);
+    return "This hostname is already tracked by another site";
+  }
   return response;
 }
 

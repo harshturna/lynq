@@ -49,7 +49,7 @@ export function SettingsPage({
   isGuest: boolean;
 }) {
   return (
-    <div className="grid gap-8 min-[1000px]:grid-cols-[200px_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[200px_minmax(0,1fr)]">
       <nav
         aria-label="Settings sections"
         className="min-[1000px]:sticky min-[1000px]:top-4 min-[1000px]:self-start"
@@ -61,7 +61,7 @@ export function SettingsPage({
                 href={`#${s.id}`}
                 className={cn(
                   "block rounded-control px-[10px] py-[6px] text-[13px] text-ink-2 hover:bg-soft hover:text-ink",
-                  s.id === "team" && "text-faint"
+                  s.id === "team" && "text-mute"
                 )}
               >
                 {s.label}
@@ -307,9 +307,14 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
       lede="The snippet, what it reports, and what the ingest saw in the last 24 hours."
     >
       <div className="flex flex-col gap-2">
-        <pre className="max-w-[720px] overflow-x-auto rounded-control bg-soft p-3 text-[12px]">
-          {snippet}
-        </pre>
+        <section
+          aria-label="Tracking snippet"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+          tabIndex={0}
+          className="max-w-[720px] overflow-x-auto rounded-control bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        >
+          <pre className="p-3 text-[12px]">{snippet}</pre>
+        </section>
         <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
           <button
             type="button"
@@ -669,7 +674,7 @@ function Team() {
       title="Team"
       lede="Invite people to see this site. Coming in Phase 2."
     >
-      <p className="text-[12.5px] text-faint">Not available yet.</p>
+      <p className="text-[12.5px] text-mute">Not available yet.</p>
     </Block>
   );
 }

@@ -17,6 +17,40 @@ import postgres from "postgres";
 // migration applied before it was taken; bump this whenever it is re-exported.
 export const DUMP_INCLUDES_MIGRATIONS_THROUGH = "20260905050000";
 
+const PRODUCTION_AUTH_FUNCTIONS = `
+create or replace function auth.uid() returns uuid language sql stable as $$
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+  )::uuid
+$$;
+create or replace function auth.role() returns text language sql stable as $$
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.role', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')
+  )::text
+$$;
+create or replace function auth.jwt() returns jsonb language sql stable as $$
+  select coalesce(
+    nullif(current_setting('request.jwt.claim', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')
+  )::jsonb
+$$;`;
+
+async function asSupabaseAdmin<T>(
+  url: string,
+  fn: (admin: postgres.Sql) => Promise<T>
+): Promise<T> {
+  const adminUrl = new URL(url);
+  adminUrl.username = "supabase_admin";
+  const admin = postgres(adminUrl.toString(), { max: 1, prepare: false });
+  try {
+    return await fn(admin);
+  } finally {
+    await admin.end();
+  }
+}
+
 export default async function setup() {
   const url = process.env.TEST_DATABASE_URL;
   if (!url) throw new Error("TEST_DATABASE_URL is not set");
@@ -40,6 +74,15 @@ export default async function setup() {
       // creates the table. Re-apply those revokes here; production has them.
       await sql.unsafe("revoke all on public.goals from anon, authenticated");
     }
+    // The image's auth.uid()/role()/jwt() predate PostgREST 10 and read only
+    // request.jwt.claim.*; PostgREST 12 sets request.jwt.claims, so every
+    // policy would fail under the e2e suite's PostgREST. These are
+    // production's definitions (read 2026-09-05, TICKET-047). The auth schema
+    // belongs to supabase_admin, the image's superuser, which shares the
+    // postgres role's password.
+    await asSupabaseAdmin(url, (admin) =>
+      admin.unsafe(PRODUCTION_AUTH_FUNCTIONS)
+    );
     const [{ ledger }] = await sql`
       select exists(select 1 from pg_tables where schemaname = 'analytics' and tablename = 'schema_migrations') as ledger`;
     if (!ledger) {

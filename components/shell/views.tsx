@@ -43,7 +43,7 @@ export function FlowPanel({
         {heading}
       </h4>
       {rows.length === 0 ? (
-        <p className="py-1 text-[12.5px] text-faint">Nothing yet.</p>
+        <p className="py-1 text-[12.5px] text-mute">Nothing yet.</p>
       ) : (
         <ol className="flex flex-col gap-0.5">
           {rows.map((r) => (
@@ -116,7 +116,7 @@ export function Funnel({
             className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1"
           >
             <span className="flex items-baseline gap-2 text-[13px]">
-              <span className="text-[11px] tabular text-faint">{i + 1}</span>
+              <span className="text-[11px] tabular text-mute">{i + 1}</span>
               <span className="truncate">{s.label}</span>
             </span>
             <span className="text-[13px] tabular">
@@ -162,7 +162,7 @@ export function PathList({
 }) {
   const max = Math.max(1, ...paths.map((p) => p.count));
   if (paths.length === 0)
-    return <p className="py-2 text-[12.5px] text-faint">No paths yet.</p>;
+    return <p className="py-2 text-[12.5px] text-mute">No paths yet.</p>;
   return (
     <ol className="flex flex-col gap-1">
       {paths.map((p) => {
@@ -245,7 +245,12 @@ export function Matrix({
 }) {
   const max = Math.max(1, ...data.cells.flat().map((v) => v ?? 0));
   return (
-    <div className="overflow-x-auto">
+    <section
+      aria-label={title}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+      tabIndex={0}
+      className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+    >
       <table className="w-full border-collapse text-[12.5px]">
         <caption className="sr-only">{title}</caption>
         <thead>
@@ -303,7 +308,7 @@ export function Matrix({
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }
 

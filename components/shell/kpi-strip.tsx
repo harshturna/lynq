@@ -42,9 +42,11 @@ export function KpiStrip({
 
   return (
     <div
-      {...(interactive ? { role: "radiogroup", "aria-label": label } : {})}
+      {...(interactive
+        ? { role: "radiogroup", "aria-label": label }
+        : { role: "region", "aria-label": label, tabIndex: 0 })}
       className={cn(
-        "grid border-t border-rule-strong",
+        "relative grid border-t border-rule-strong",
         "max-[479px]:flex max-[479px]:snap-x max-[479px]:snap-mandatory max-[479px]:overflow-x-auto",
         "min-[480px]:grid-cols-2 min-[1000px]:grid-cols-[repeat(var(--tiles),minmax(0,1fr))]"
       )}
@@ -96,10 +98,10 @@ export function KpiStrip({
                   onChange={() => onChange?.(t.key)}
                   className="sr-only"
                 />
+                <span className="sr-only">{t.label}: </span>
                 <span className="block text-[30px] font-medium leading-none tracking-[-0.02em] text-ink tabular max-[479px]:text-[24px]">
                   {t.value}
                 </span>
-                <span className="sr-only">, {t.label}</span>
               </label>
             )}
             {(t.delta || t.note) && (

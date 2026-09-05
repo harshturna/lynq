@@ -87,7 +87,7 @@ export function SelectedEventPanel({
         />
       </Section>
       {s.properties.length > 0 && (
-        <div className="grid gap-8 min-[1000px]:grid-cols-3">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
           {s.properties.map((p) => {
             const max = Math.max(1, ...p.values.map((v) => v.count));
             return (
@@ -121,7 +121,7 @@ export function SelectedEventPanel({
           })}
         </div>
       )}
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Section title="Recent occurrences" qualifier="newest first" strong>
           {s.recent.length ? (
             <ol className="flex flex-col">

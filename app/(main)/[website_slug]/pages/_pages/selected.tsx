@@ -126,7 +126,7 @@ export function SelectedPagePanel({
           </p>
         )}
       </Section>
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         <Section title="Web Vitals" qualifier="p75 on this page" strong>
           {s.vitals.samples ? (
             <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">

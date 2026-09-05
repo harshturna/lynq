@@ -301,7 +301,7 @@ export function Histogram({
             caption={title}
             columns={["Band", name, "Share"]}
             rows={bins.map((b) => [
-              b.label,
+              b.label || `${b.from} to ${b.to}`,
               fmtNumber(b.count),
               share(b.count),
             ])}

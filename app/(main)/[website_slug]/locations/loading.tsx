@@ -18,7 +18,7 @@ export default function LocationsLoading() {
           <Bone className="h-8 w-24" />
         </div>
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         <TableSkeleton />
         <TableSkeleton />
         <TableSkeleton />

@@ -7,7 +7,7 @@ export default function SettingsLoading() {
         <Bone className="h-7 w-28" />
         <Bone className="h-4 w-72" />
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[200px_minmax(0,1fr)]">
         <div className="flex flex-col gap-2">
           {[0, 1, 2, 3, 4].map((i) => (
             <Bone key={i} className="h-6 w-32" />

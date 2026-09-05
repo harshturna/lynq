@@ -69,7 +69,7 @@ export function SlowPanel({
           Clear
         </button>
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         {targets("LCP element", "lcp", s.lcpTargets)}
         {targets("INP target", "inp", s.inpTargets)}
         <Section title="Slowest countries" qualifier="LCP p75" strong>

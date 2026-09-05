@@ -118,6 +118,11 @@ export function DataTable({
   className?: string;
 }) {
   const { state, update } = useViewState();
+  // The label column's accessible header: the table's title ("Pages"), not "Value".
+  const labelCol: Column = {
+    key: "label",
+    header: typeof title === "string" ? title : "Value",
+  };
   const announce = useAnnounce();
   const sort = state.sort[region] ?? defaultSort;
   const activeView = state.view[region] ?? defaultView ?? views?.[0]?.key;
@@ -212,7 +217,7 @@ export function DataTable({
 
   const exportCsv = () => {
     const cols = [
-      { key: "label", header: "Value" },
+      labelCol,
       ...columns.map((c) => ({ key: c.key, header: c.header })),
     ];
     downloadCsv(
@@ -240,7 +245,7 @@ export function DataTable({
       {hasHeader && (
         <div className="flex items-end gap-3 border-b border-rule-strong text-[14px] font-medium text-ink">
           {title && (
-            <h3 className="pb-[7px] text-[14px] font-medium">{title}</h3>
+            <h2 className="pb-[7px] text-[14px] font-medium">{title}</h2>
           )}
           {views && views.length > 1 && (
             <div
@@ -287,7 +292,7 @@ export function DataTable({
       <section
         aria-label={typeof title === "string" ? title : region}
         tabIndex={0}
-        className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
       >
         <table className="w-full table-auto border-collapse text-[13px]">
           <thead>
@@ -295,7 +300,7 @@ export function DataTable({
               <th
                 scope="col"
                 className={cn(
-                  "w-full max-w-0 border-b border-rule py-2 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute",
+                  "w-full min-w-[140px] max-w-0 border-b border-rule py-2 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute",
                   !hasHeader && "border-t border-t-rule-strong"
                 )}
               >
@@ -303,10 +308,10 @@ export function DataTable({
                   active={sort?.col === "label"}
                   label={
                     sort?.col === "label"
-                      ? nextSortLabel({ key: "label", header: "Value" })
+                      ? nextSortLabel(labelCol)
                       : "Value, not sorted, activate to sort descending"
                   }
-                  onClick={() => toggleSort({ key: "label", header: "Value" })}
+                  onClick={() => toggleSort(labelCol)}
                 >
                   {shown.length ? "" : "Value"}
                 </SortButton>
@@ -349,7 +354,7 @@ export function DataTable({
                     <th
                       scope="col"
                       className={cn(
-                        "w-[64px] whitespace-nowrap border-b border-rule py-2 pl-3 text-left text-[11.5px] font-normal text-faint",
+                        "w-[64px] whitespace-nowrap border-b border-rule py-2 pl-3 text-left text-[11.5px] font-normal text-mute",
                         !hasHeader && "border-t border-t-rule-strong",
                         c.secondary && !lead && "hidden min-[1000px]:table-cell"
                       )}
@@ -508,7 +513,7 @@ export function DataTable({
                       <button
                         type="button"
                         tabIndex={-1}
-                        aria-label={`${filterLabel} by ${row.id}`}
+                        aria-label={`${filterLabel} by ${typeof row.label === "string" ? row.label : row.id}`}
                         onClick={() => onFilter(row)}
                         className={cn(
                           "inline-flex h-8 w-8 items-center justify-center rounded-chip text-mute opacity-0 transition-opacity",

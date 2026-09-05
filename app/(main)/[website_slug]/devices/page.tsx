@@ -41,7 +41,7 @@ export default async function DevicesPage(props: {
       </Suspense>
       <Suspense
         fallback={
-          <div className="grid gap-8 min-[1000px]:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
             <TableSkeleton />
             <TableSkeleton />
           </div>
@@ -49,7 +49,7 @@ export default async function DevicesPage(props: {
       >
         <TablesSection screen={screen} hasFilters={hasFilters} />
       </Suspense>
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Suspense fallback={<ChartSkeleton height={210} />}>
           <HistogramSection screen={screen} />
         </Suspense>

@@ -57,7 +57,7 @@ export default async function OverviewPage(props: {
       </Suspense>
       <Suspense
         fallback={
-          <div className="grid gap-8 min-[1000px]:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
             <TableSkeleton />
             <TableSkeleton />
             <TableSkeleton />

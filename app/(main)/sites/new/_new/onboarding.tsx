@@ -76,9 +76,12 @@ const KPI_SUGGESTIONS: { label: string; input: GoalInput }[] = [
 export function Onboarding({
   userId,
   isGuest,
+  siteUrl,
 }: {
   userId: string;
   isGuest: boolean;
+  /** The hostname of the site in `?site=`, resolved by the page; null when new. */
+  siteUrl: string | null;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -134,6 +137,7 @@ export function Onboarding({
       </ol>
       {step === 1 && (
         <Install
+          siteUrl={siteUrl}
           userId={userId}
           isGuest={isGuest}
           slug={slug}
@@ -152,22 +156,26 @@ function Install({
   userId,
   isGuest,
   slug,
+  siteUrl,
   onNext,
 }: {
   userId: string;
   isGuest: boolean;
   slug: string;
+  siteUrl: string | null;
   onNext: (slug: string) => void;
 }) {
   const [name, setName] = useState("");
-  const [url, setUrl] = useState(slug ? slug.replaceAll("-", ".") : "");
-  const [created, setCreated] = useState<string | null>(slug || null);
+  const [url, setUrl] = useState(siteUrl ?? "");
+  // The hostname once the site exists (from the page for a deep link, from
+  // the form once added); the slug is derived from it, never the reverse.
+  const [created, setCreated] = useState<string | null>(
+    slug && siteUrl ? siteUrl : null
+  );
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [pending, start] = useTransition();
-  const host = created
-    ? created.replaceAll("-", ".")
-    : url.trim().toLowerCase();
+  const host = created ?? url.trim().toLowerCase();
   const snippet = `<script defer src="${SCRIPT_ORIGIN}/js/lynq.js" data-site="${host || "example.com"}" data-vitals></script>`;
   const submit = () =>
     start(async () => {
@@ -188,7 +196,7 @@ function Install({
             ? "This site is already tracked by Lynq."
             : "Couldn't add the site."
         );
-      setCreated(h.replaceAll(".", "-"));
+      setCreated(h);
     });
   return (
     <section className="flex flex-col gap-5">
@@ -254,9 +262,14 @@ function Install({
         <p className="text-[13px] font-medium">
           Put this before the closing head tag
         </p>
-        <pre className="overflow-x-auto rounded-control bg-soft p-3 text-[12px]">
-          {snippet}
-        </pre>
+        <section
+          aria-label="Tracking snippet"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+          tabIndex={0}
+          className="overflow-x-auto rounded-control bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        >
+          <pre className="p-3 text-[12px]">{snippet}</pre>
+        </section>
         <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
           <button
             type="button"
@@ -296,7 +309,7 @@ function Install({
         <button
           type="button"
           disabled={!created}
-          onClick={() => created && onNext(created)}
+          onClick={() => created && onNext(created.replaceAll(".", "-"))}
           className={PRIMARY}
         >
           I've installed it

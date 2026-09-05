@@ -49,7 +49,7 @@ export function TopNav({
   const overflow = SECTIONS.slice(1);
 
   return (
-    <div className="flex h-[54px] items-center gap-3 border-b border-rule-strong px-4 md:gap-6 md:px-8">
+    <header className="flex h-[54px] items-center gap-3 border-b border-rule-strong px-4 md:gap-6 md:px-8">
       <Link
         href="/sites"
         className="flex items-center gap-2 text-[13px] font-semibold tracking-[0.14em] text-ink"
@@ -177,7 +177,7 @@ export function TopNav({
 
         <AccountMenu userEmail={userEmail} settingsHref={`${base}/settings`} />
       </div>
-    </div>
+    </header>
   );
 }
 

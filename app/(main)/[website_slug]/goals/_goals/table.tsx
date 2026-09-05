@@ -70,7 +70,7 @@ export function GoalsTable({
       }
     >
       <div className="flex items-end gap-3 border-b border-rule-strong">
-        <h3 className="pb-[7px] text-[14px] font-medium">Goals</h3>
+        <h2 className="pb-[7px] text-[14px] font-medium">Goals</h2>
         <span className="pb-[7px] text-[12.5px] text-mute">
           {rows.length ? "the starred goal is the KPI" : "none yet"}
         </span>
@@ -83,13 +83,21 @@ export function GoalsTable({
           drives the Overview.
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <section
+          aria-label="Goals table"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+          tabIndex={0}
+          className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        >
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
                 <th
                   scope="col"
-                  className={cn(th, "w-full max-w-0 pl-0 text-left")}
+                  className={cn(
+                    th,
+                    "w-full min-w-[120px] max-w-0 pl-0 text-left"
+                  )}
                 >
                   Goal
                 </th>
@@ -229,7 +237,7 @@ export function GoalsTable({
               })}
             </tbody>
           </table>
-        </div>
+        </section>
       )}
     </div>
   );

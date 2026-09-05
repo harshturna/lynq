@@ -45,8 +45,8 @@ directories; take the highest existing `TICKET-NNN` and add one. Never reuse a n
    was actually run and its result. Outcome says what shipped, what was left out, and which
    follow-up tickets were created. Then set `done`, move to `done/`, and run `npm run verify`.
    A ticket that touches `lib/ingest`, `lib/query`, `lib/db.ts`, `supabase/migrations` or
-   `packages/tracker` also runs `npm run test:integration` (and `npm run test:e2e` once it
-   exists) and records the result. A ticket is not closed until the file has moved and the
+   `packages/tracker` also runs `npm run test:integration` and `npm run test:e2e` and records
+   the result. A ticket is not closed until the file has moved and the
    named checks pass.
 6. **Commit when a ticket closes, before the next one starts.** One ticket, one commit (or a
    few, each naming `TICKET-NNN` in the subject). Never begin a ticket with uncommitted changes
@@ -67,6 +67,9 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
   pointing at a Supabase Postgres image; locally:
   `docker run -d --name lynq-test-db -e POSTGRES_PASSWORD=postgres -p 54329:5432 public.ecr.aws/supabase/postgres:15.8.1.111`
   then `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:54329/postgres npm run test:integration`.
+  `npm run test:e2e` always runs the tracker suite; with `TEST_DATABASE_URL` set it also runs
+  the app suite (`tests/e2e/app`), which needs PostgREST over the same database:
+  `docker run -d --name lynq-postgrest -p 54331:3000 -e PGRST_DB_URI=postgres://postgres:postgres@host.docker.internal:54329/postgres -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET=lynq-e2e-jwt-secret-must-be-at-least-32-chars postgrest/postgrest:v12.2.12`.
 - Filesystem and test evidence over claims in prose. If a ticket says something is implemented,
   the path it cites must exist.
 - Never commit secrets. `.env` is ignored; keep it that way.

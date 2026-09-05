@@ -19,11 +19,11 @@ export default function DevicesLoading() {
         </div>
       </div>
       <Bone className="h-10 w-full" />
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <TableSkeleton />
         <TableSkeleton />
       </div>
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <ChartSkeleton height={210} />
         <TableSkeleton rows={5} columns={5} />
       </div>

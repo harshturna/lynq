@@ -59,7 +59,7 @@ export function DevicesHistogram({
             <b className="font-medium text-ink tabular">
               {fmtRatio(b.count, h.samples, 0)}
             </b>{" "}
-            <span className="text-faint tabular">· {fmtInt(b.count)}</span>
+            <span className="text-mute tabular">· {fmtInt(b.count)}</span>
           </li>
         ))}
       </ul>

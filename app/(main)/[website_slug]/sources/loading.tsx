@@ -21,7 +21,7 @@ export default function SourcesLoading() {
       </div>
       <StripSkeleton tiles={4} />
       <ChartSkeleton height={300} />
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <TableSkeleton />
         <TableSkeleton />
       </div>

@@ -150,20 +150,21 @@ export function Live({
         <BarChart
           title={`Pageviews per minute, ${windowLabel}`}
           name="Pageviews"
-          bars={data.per_minute.map((m, i, all) => ({
-            label:
-              (all.length - 1 - i) % (windowMin === 60 ? 10 : 5) === 0
-                ? `-${all.length - 1 - i}m`
-                : "",
-            value: m.pageviews,
-          }))}
+          bars={data.per_minute.map((m, i, all) => {
+            const ago = all.length - 1 - i;
+            return {
+              label: ago % (windowMin === 60 ? 10 : 5) === 0 ? `-${ago}m` : "",
+              title: ago === 0 ? "this minute" : `${ago} min ago`,
+              value: m.pageviews,
+            };
+          })}
           accentLast
           height={130}
           animation={false}
         />
       </Section>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         <ListPanel
           title="Pages now"
           unit="visitors"
@@ -336,7 +337,7 @@ function ListPanel({
           ))}
         </div>
       ) : (
-        <p className="text-[12.5px] text-faint">Nothing yet.</p>
+        <p className="text-[12.5px] text-mute">Nothing yet.</p>
       )}
     </Section>
   );

@@ -20,7 +20,7 @@ export default function RealtimeLoading() {
       </div>
       <StripSkeleton tiles={3} />
       <ChartSkeleton height={130} />
-      <div className="grid gap-8 min-[1000px]:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-3">
         <TableSkeleton rows={4} columns={1} />
         <TableSkeleton rows={4} columns={1} />
         <TableSkeleton rows={4} columns={1} />

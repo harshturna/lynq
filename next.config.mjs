@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The e2e suite runs its own `next dev` (TICKET-047); a separate build
+  // directory keeps it from corrupting a developer's running dev server.
+  ...(process.env.LYNQ_E2E ? { distDir: ".next-e2e" } : {}),
   // next dev would otherwise append its own block to CLAUDE.md, which is ours (TICKET-028).
   agentRules: false,
   async headers() {

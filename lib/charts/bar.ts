@@ -7,7 +7,10 @@ import { fmtNumber } from "./format";
 import { TOKENS } from "./theme";
 
 export type Bar = {
+  /** The axis label; blank for unlabelled ticks. */
   label: string;
+  /** The row header in the hidden table when the axis label is blank. */
+  title?: string;
   value: number /** A colour token name for status bands. */;
   tone?: "good" | "warn" | "poor" | "accent" | "muted";
 };

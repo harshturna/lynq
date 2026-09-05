@@ -424,7 +424,7 @@ function Body() {
         />
       </div>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         <Section
           title="Unique visitors"
           qualifier="per day"
@@ -501,7 +501,7 @@ function Body() {
         />
       </Section>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <DataTable
           region="pages"
           title="Pages"
@@ -571,7 +571,7 @@ function Body() {
         />
       </Section>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Section title="Sources" qualifier="visitors × conversion" strong>
           <Quadrant
             title="Sources by visitors and conversion"
@@ -607,7 +607,7 @@ function Body() {
         />
       </Section>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Section title="Viewport width" qualifier="sessions" strong>
           <Histogram
             title="Viewport width"
@@ -656,7 +656,7 @@ function Body() {
         />
       </Section>
 
-      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Section title="Signup funnel" qualifier="sessions" strong>
           <Funnel
             title="Signup funnel"

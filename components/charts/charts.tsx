@@ -120,7 +120,7 @@ export function BarChart({
         <HiddenTable
           caption={title}
           columns={["Bucket", opts.name]}
-          rows={bars.map((b) => [b.label, fmt(b.value)])}
+          rows={bars.map((b) => [b.title ?? b.label, fmt(b.value)])}
         />
       }
     />

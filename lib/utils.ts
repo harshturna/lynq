@@ -6,7 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function containsInvalidCharacters(s: string) {
-  const regex = /[^a-zA-Z0-9.]/;
+  // A hostname: letters, digits, dots and hyphens (docs-lynq.byharsh.com).
+  const regex = /[^a-zA-Z0-9.-]/;
   return regex.test(s);
 }
 

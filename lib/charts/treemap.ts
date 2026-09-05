@@ -87,9 +87,11 @@ export function treemapOption(
           position: "insideTopLeft",
           padding: 8,
           formatter: (p: unknown) => {
-            const d = (p as { data: { name: string; value: [number, number] } })
-              .data;
-            return `${d.name}\n{s|${fmtNumber(d.value[0])} · ${fmtShade(d.value[1])}}`;
+            const d = (p as { data?: { name?: string; value?: unknown } }).data;
+            // ECharts also formats the root node, whose value is not a cell's pair.
+            if (!d || !Array.isArray(d.value)) return d?.name ?? "";
+            const [value, shade] = d.value as [number, number];
+            return `${d.name}\n{s|${fmtNumber(value)} · ${fmtShade(shade)}}`;
           },
           rich: {
             s: {

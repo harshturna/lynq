@@ -82,7 +82,7 @@ export function DevicesTables({
     ? "Nothing matches these filters"
     : "No visitors in this period";
   return (
-    <div className="grid gap-8 min-[1000px]:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
       <Region
         region="browsers"
         title="Browsers"

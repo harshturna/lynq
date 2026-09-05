@@ -32,7 +32,7 @@ export function DevicesSplit({
       {segments.length ? (
         <SplitBar title="Devices" segments={segments} compare={compare} />
       ) : (
-        <p className="text-[12.5px] text-faint">No visitors in this period.</p>
+        <p className="text-[12.5px] text-mute">No visitors in this period.</p>
       )}
     </Section>
   );
