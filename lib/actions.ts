@@ -197,10 +197,13 @@ export async function addVisitor(clientId: string, website_url: string) {
   // client already added
   if (error && error.code === "23505") {
     const currentDateTime = new Date().toISOString();
+    // Scoped to the site: the same client id exists on every site the
+    // browser has visited, and the Visitors card counts rows by last_visited
     await supabase
       .from("visitors")
       .update({ last_visited: currentDateTime })
-      .eq("client_id", clientId);
+      .eq("client_id", clientId)
+      .eq("website_url", website_url);
   }
 }
 
