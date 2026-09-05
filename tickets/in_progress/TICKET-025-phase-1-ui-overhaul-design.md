@@ -1,8 +1,8 @@
 # TICKET-025: Phase 1 design: the app shell and overview
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-05
-**Started:** —
+**Started:** 2026-09-05
 **Completed:** —
 **Area:** ui
 
@@ -12,6 +12,8 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
 ## Context
 - Roadmap artifact (UI overhaul section and Phase 1); D-001; the query layer's actual surface in
   lib/query after TICKET-023.
+- Screen mockups (all Phase 1 screens, D-008 style):
+  https://claude.ai/code/artifact/6b345ac7-a975-478b-8796-2153c3b37bf4
 - **Visual direction is decided: D-008.** Owner-approved mockup of the Overview, with the other
   directions kept for reference: https://claude.ai/code/artifact/25f864fe-6a61-480a-965e-c3404eb7657f
   (tab "Ledger + Studio", accent Teal). Source file for that page is not in the repo; the design
@@ -51,13 +53,27 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
 - 2026-09-05 — Created (D-007, Phase 1 opening).
 - 2026-09-05 — Visual direction chosen by the owner after four mocked directions: D-008. Plan now
   starts with mocking the remaining screens in that style.
+- 2026-09-05 — Started. Built the screen mockups as one artifact page ("Lynq Screens") with a
+  tab per screen: Realtime, Pages, Sources, Locations, Devices, Events, Goals, Performance,
+  Settings, Onboarding. Same sample data family as the approved overview. Published for the
+  owner's reaction. Choices made in the mocks that the design doc must carry or revisit:
+  Pages is one wide sortable table with a detail panel for the selected page (trend, entry
+  sources, vitals, goals); Sources shows the KPI and revenue per visitor as columns and a
+  stacked channel chart; Locations drills country › region › city in three tables plus
+  languages and time-of-day; Devices nests browser versions under the browser; Events pairs
+  the volume table with a per-event trend, property breakdowns and a recent list; Goals lists
+  goals with the ★ KPI and a per-goal panel; Performance has a p75 strip, an LCP-by-device
+  chart with the 2.5 s threshold, a worst-first page table and a "what is slow" panel;
+  Settings is a single scrolling page with a sub-nav; Onboarding is a three-step flow with a
+  live first-event check and the KPI pick.
 
 ## Handoff
-Kept current while the ticket is in progress. Overwrite, do not append.
-- **State:** what is built and working right now, what is half-done
-- **Blocked on:** nothing | what
-- **Next:** the next one to three concrete actions
-- **Read first:** files to open before touching anything
+- **State:** Screen mockups published (artifact "Lynq Screens", link in Context). No design doc
+  yet.
+- **Blocked on:** owner reaction to the screen mockups.
+- **Next:** fold the owner's reactions into the mocks; then write
+  docs/design/phase-1-ui-overhaul.md; then Opus review passes.
+- **Read first:** D-008 in tickets/DECISIONS.md; this ticket's Context for tokens and layout.
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.
