@@ -1,10 +1,10 @@
 "use client";
 
+import { type LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
+import React from "react";
 import { Hint } from "@/components/hint";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
-import React from "react";
 
 interface DataCardProps {
   label: string;
@@ -108,9 +108,7 @@ const DataCard = ({
             )}
           </CardContent>
         </Card>
-        <>
-          <span className="absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></span>
-        </>
+        <span className="absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></span>
       </div>
     </Hint>
   );

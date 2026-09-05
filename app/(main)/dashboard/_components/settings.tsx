@@ -1,14 +1,14 @@
 "use client";
+import { Ellipsis, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
-import UpdateWebsite from "./update-website";
 import DeleteWebsite from "./delete-website";
+import UpdateWebsite from "./update-website";
 
 interface SettingsProps {
   website: Website;

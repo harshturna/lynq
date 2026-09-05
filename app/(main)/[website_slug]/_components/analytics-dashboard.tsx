@@ -1,19 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
-import { AnalyticsChart } from "./analytics-chart";
-import DataCard from "./data-card";
 import { ChartSpline, Eye, TimerIcon, User2 } from "lucide-react";
-import GlobeCard from "./globe-card";
-import MetricCard from "./metric-card";
-import FilterChips from "./filter-chips";
-import { useFilters } from "./filter-context";
+import { useMemo } from "react";
 import {
   applyFilters,
   calculateAverageSessionDuration,
   calculateBounceRate,
   countDistinctVisitors,
 } from "@/lib/utils";
+import { AnalyticsChart } from "./analytics-chart";
+import DataCard from "./data-card";
+import FilterChips from "./filter-chips";
+import { useFilters } from "./filter-context";
+import GlobeCard from "./globe-card";
+import MetricCard from "./metric-card";
 
 interface AnalyticsDashboardProps {
   analyticsData: AnalyticsDataWithCounts;

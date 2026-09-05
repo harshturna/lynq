@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation";
 import Header from "@/components/header";
 import { getUser } from "@/lib/user/server";
-import { redirect } from "next/navigation";
 
 export default async function Layout({
   children,

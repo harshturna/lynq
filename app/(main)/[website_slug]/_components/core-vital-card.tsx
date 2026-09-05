@@ -1,3 +1,5 @@
+import { ArrowUpRight, BadgeInfo } from "lucide-react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -13,11 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { webVitalDetails } from "@/constants";
 import { calculateWebVitalScore, cn } from "@/lib/utils";
-import { ArrowUpRight, BadgeInfo } from "lucide-react";
-import React from "react";
 
 interface CoreVitalCardProps {
   type: WebVitalType;
@@ -50,8 +49,12 @@ const CoreVitalCard = ({ type, score, isCore = false }: CoreVitalCardProps) => {
                   <DialogDescription>
                     {vitalDetails.description}
                     <div className="my-2 text-white font-bold flex items-center gap-1 justify-end">
-                      <a href={vitalDetails.link} target="_blank">
-                        Learn more
+                      <a
+                        href={vitalDetails.link}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        Learn more about {vitalDetails.type}
                       </a>
                       <ArrowUpRight width={16} height={16} />
                     </div>
@@ -66,10 +69,10 @@ const CoreVitalCard = ({ type, score, isCore = false }: CoreVitalCardProps) => {
             scoreDetails.range === "Good"
               ? "text-green-400"
               : scoreDetails.range === "Need improvement"
-              ? "text-yellow-500"
-              : scoreDetails.range === "Poor"
-              ? "text-red-600"
-              : "text-muted-foreground"
+                ? "text-yellow-500"
+                : scoreDetails.range === "Poor"
+                  ? "text-red-600"
+                  : "text-muted-foreground"
           )}
         >
           <div className="font-extrabold text-xl md:text-4xl mb-2">

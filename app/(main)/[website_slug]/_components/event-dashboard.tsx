@@ -1,15 +1,15 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
+import { type ChangeEvent, useState } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import EventData from "./event-data";
-import { formatDistanceToNow } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState } from "react";
+import EventData from "./event-data";
 
 interface EventDashboardProps {
   events: GroupedCustomEventWithSessionData[];

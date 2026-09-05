@@ -1,6 +1,6 @@
+import { formatDistanceToNow } from "date-fns";
 import DescriptionList from "@/components/ui/description-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDistanceToNow } from "date-fns";
 
 interface EventDataProps {
   event: GroupedCustomEventWithSessionData;

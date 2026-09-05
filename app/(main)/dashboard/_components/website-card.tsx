@@ -1,5 +1,11 @@
 "use client";
 
+import { LoaderCircle, UserRound } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useTransition } from "react";
+import BottomGradient from "@/components/bottom-gradient";
 import {
   Card,
   CardContent,
@@ -7,12 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LoaderCircle, UserRound } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useTransition } from "react";
 import Settings from "./settings";
-import BottomGradient from "@/components/bottom-gradient";
 
 interface WebsiteCardProps {
   website: Website;
@@ -42,7 +43,9 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
         aria-busy={isPending}
         className="group/card"
       >
-        <Card className={isPending ? "opacity-60 transition-opacity" : undefined}>
+        <Card
+          className={isPending ? "opacity-60 transition-opacity" : undefined}
+        >
           <CardHeader className="mb-8">
             {/* Keep this clear of the settings ellipsis, which is absolutely
                 positioned at top-7 right-5 */}

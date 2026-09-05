@@ -11,18 +11,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  ChartConfig,
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
   getFormatters,
+  process3MonthsData,
+  process7DaysData,
   process12MonthsData,
   process24HourData,
   process30DaysData,
-  process3MonthsData,
-  process7DaysData,
 } from "@/lib/utils";
 
 const chartConfig = {
@@ -84,6 +84,7 @@ export function AnalyticsChart({
         </div>
         <div className="flex">
           <button
+            type="button"
             key={"views"}
             data-active={activeChart === "views"}
             className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
@@ -95,6 +96,7 @@ export function AnalyticsChart({
             </span>
           </button>
           <button
+            type="button"
             key={"sessions"}
             data-active={activeChart === "sessions"}
             className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"

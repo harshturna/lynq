@@ -1,6 +1,6 @@
 "use server";
 
-import { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 import { getUser } from "./user/server";
 import {
@@ -203,8 +203,8 @@ export async function addSession(
     userAgentData.os === "Ios" || userAgentData.os === "Android"
       ? "Mobile"
       : userAgentData.os === "Unknown"
-      ? "Unknown"
-      : "Desktop";
+        ? "Unknown"
+        : "Desktop";
   await supabase.from("sessions").insert({
     website_url,
     session_id,
@@ -372,8 +372,7 @@ export async function getPeriodComparison(
       data: {
         views_count: Number(summary.views_count) || 0,
         visitors_count: Number(summary.visitors_count) || 0,
-        average_session_duration:
-          Number(summary.average_session_duration) || 0,
+        average_session_duration: Number(summary.average_session_duration) || 0,
         bounce_rate: Number(summary.bounce_rate) || 0,
       },
       error: null,

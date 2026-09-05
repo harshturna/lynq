@@ -1,5 +1,5 @@
+import type { LucideIcon } from "lucide-react";
 import { features } from "@/constants";
-import { LucideIcon } from "lucide-react";
 
 const FeatureCard = ({
   icon: Icon,

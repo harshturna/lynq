@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
 import {
   addCustomEvent,
   addPageView,
@@ -7,8 +9,6 @@ import {
   addVitals,
   getCountryAndCityFromIp,
 } from "@/lib/actions";
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
@@ -40,8 +40,8 @@ export async function POST(req: Request) {
     const host = origin?.startsWith("https://")
       ? origin.split("https://")[1]
       : origin?.startsWith("http://")
-      ? origin.split("http://")[1]
-      : origin;
+        ? origin.split("http://")[1]
+        : origin;
 
     if (process.env.NEXT_PUBLIC_ENV === "dev") {
       body.dataDomain = process.env.NEXT_PUBLIC_DEV_DATA_DOMAIN || "";
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const ip = headers().get("x-forwarded-for");
+    const ip = (await headers()).get("x-forwarded-for");
 
     if (
       body.event === "session-start" ||

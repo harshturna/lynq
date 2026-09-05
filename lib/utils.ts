@@ -1,23 +1,23 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from "clsx";
 import {
-  eachHourOfInterval,
-  parseISO,
-  format as dateFnsFormat,
-  startOfMonth,
-  subMonths,
-  startOfDay,
-  subDays,
-  eachDayOfInterval,
-  format,
-  eachWeekOfInterval,
-  startOfWeek,
-  endOfWeek,
-  eachMonthOfInterval,
   addDays,
+  format as dateFnsFormat,
+  eachDayOfInterval,
+  eachHourOfInterval,
+  eachMonthOfInterval,
+  eachWeekOfInterval,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfDay,
   startOfHour,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+  subMonths,
 } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { twMerge } from "tailwind-merge";
 import { EXCLUDED_KEYS } from "@/constants";
 
 export function cn(...inputs: ClassValue[]) {
@@ -39,10 +39,11 @@ export function getTimeFrame(timeFrame: DatePickerValues): string {
   const now = new Date();
 
   switch (timeFrame) {
-    case "Today":
+    case "Today": {
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       return yesterday.toISOString();
+    }
 
     case "Last 7 days":
       return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -50,15 +51,17 @@ export function getTimeFrame(timeFrame: DatePickerValues): string {
     case "Last 30 days":
       return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    case "Last 3 months":
+    case "Last 3 months": {
       const threeMonthsAgo = new Date(now);
       threeMonthsAgo.setMonth(now.getMonth() - 3);
       return threeMonthsAgo.toISOString();
+    }
 
-    case "Last 12 months":
+    case "Last 12 months": {
       const oneYearAgo = new Date(now);
       oneYearAgo.setFullYear(now.getFullYear() - 1);
       return oneYearAgo.toISOString();
+    }
 
     default:
       throw new Error(`Invalid timeframe: ${timeFrame}`);
@@ -96,7 +99,7 @@ export function groupByAnalytics(
 ) {
   switch (groupBy) {
     // pathname
-    case "pages":
+    case "pages": {
       const res = data
         .reduce<{ group: string; count: number }[]>((res, site) => {
           const existingIndex = res.findIndex(
@@ -116,6 +119,7 @@ export function groupByAnalytics(
         }, [])
         .sort((a, b) => b.count - a.count);
       return res;
+    }
 
     case "browsers": {
       const res = data
@@ -366,16 +370,19 @@ export const calculateAverageVital = (
     } as WebVitalsMetrics & { size: number };
   }
 
-  const initialAccumulator = Object.keys(vitals[0]).reduce((acc, key) => {
-    if (
-      !EXCLUDED_KEYS.includes(
-        key as "id" | "created_at" | "session_id" | "website_url"
-      )
-    ) {
-      acc[key] = 0;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const initialAccumulator = Object.keys(vitals[0]).reduce(
+    (acc, key) => {
+      if (
+        !EXCLUDED_KEYS.includes(
+          key as "id" | "created_at" | "session_id" | "website_url"
+        )
+      ) {
+        acc[key] = 0;
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   const sums = vitals.reduce((acc, vitalData) => {
     for (const [key, value] of Object.entries(vitalData)) {
@@ -392,10 +399,13 @@ export const calculateAverageVital = (
   }, initialAccumulator);
 
   const size = vitals.length;
-  const averages = Object.entries(sums).reduce((acc, [key, sum]) => {
-    acc[key] = Number((sum / size).toFixed(2));
-    return acc;
-  }, {} as Record<string, number>);
+  const averages = Object.entries(sums).reduce(
+    (acc, [key, sum]) => {
+      acc[key] = Number((sum / size).toFixed(2));
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return {
     ...averages,
@@ -442,12 +452,15 @@ export const process24HourData = (
     end: dayEnd,
   });
 
-  const hourCounts = hoursArray.reduce((acc, hour) => {
-    const localHour = toZonedTime(hour, timezone);
-    const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
-    acc[hourKey] = 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const hourCounts = hoursArray.reduce(
+    (acc, hour) => {
+      const localHour = toZonedTime(hour, timezone);
+      const hourKey = dateFnsFormat(startOfHour(localHour), "HH:mm");
+      acc[hourKey] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   data.forEach((entry) => {
     const utcDate = parseISO(entry.created_at);
@@ -480,10 +493,13 @@ export const process7DaysData = (
 
   const daysArray = eachDayOfInterval({ start, end: now });
 
-  const dayCounts = daysArray.reduce((acc, day) => {
-    acc[format(day, "yyyy-MM-dd")] = 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const dayCounts = daysArray.reduce(
+    (acc, day) => {
+      acc[format(day, "yyyy-MM-dd")] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   data.forEach((entry) => {
     const date = parseISO(entry.created_at);
@@ -509,10 +525,13 @@ export const process30DaysData = (
   const data = toProcess === "sessions" ? sessionData : analyticsData;
   const daysArray = eachDayOfInterval({ start, end: now });
 
-  const dayCounts = daysArray.reduce((acc, day) => {
-    acc[format(day, "yyyy-MM-dd")] = 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const dayCounts = daysArray.reduce(
+    (acc, day) => {
+      acc[format(day, "yyyy-MM-dd")] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   data.forEach((entry) => {
     const date = parseISO(entry.created_at);
@@ -541,10 +560,13 @@ export const process3MonthsData = (
     { weekStartsOn: 1 }
   );
 
-  const weekCounts = weeksArray.reduce((acc, week) => {
-    acc[format(week, "yyyy-MM-dd")] = 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const weekCounts = weeksArray.reduce(
+    (acc, week) => {
+      acc[format(week, "yyyy-MM-dd")] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   data.forEach((entry) => {
     const date = parseISO(entry.created_at);
@@ -575,10 +597,13 @@ export const process12MonthsData = (
   const data = toProcess === "sessions" ? sessionData : analyticsData;
   const monthsArray = eachMonthOfInterval({ start, end: now });
 
-  const monthCounts = monthsArray.reduce((acc, month) => {
-    acc[format(month, "yyyy-MM")] = 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const monthCounts = monthsArray.reduce(
+    (acc, month) => {
+      acc[format(month, "yyyy-MM")] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   data.forEach((entry) => {
     const date = parseISO(entry.created_at);

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import createGlobe from "cobe";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { groupByAnalytics } from "@/lib/utils";
 import { lookupCentroid } from "@/lib/geo/country-centroids";
+import { groupByAnalytics } from "@/lib/utils";
 import ShareBarList from "./share-bar-list";
 
 interface GlobeCardProps {
@@ -44,9 +44,7 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
 
   // Serialized marker list — a stable dependency for the effect below, so the
   // globe isn't torn down and rebuilt on every parent render
-  const markerKey = countries
-    .map((c) => `${c.group}:${c.count}`)
-    .join("|");
+  const markerKey = countries.map((c) => `${c.group}:${c.count}`).join("|");
 
   useEffect(() => {
     setWebglReady(hasWebGL());
@@ -181,8 +179,8 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
                 {webglReady === null
                   ? null
                   : hasGeo
-                  ? "3D globe unavailable in this browser — showing the ranked list."
-                  : "No location data for this period yet."}
+                    ? "3D globe unavailable in this browser — showing the ranked list."
+                    : "No location data for this period yet."}
               </div>
             )}
           </div>

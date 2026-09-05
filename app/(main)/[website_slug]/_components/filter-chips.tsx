@@ -1,8 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useFilters } from "./filter-context";
 import { countryFlag } from "@/lib/geo/country-centroids";
+import { useFilters } from "./filter-context";
 
 const DIMENSION_LABEL: Record<AnalyticsGroupBy, string> = {
   pages: "Page",

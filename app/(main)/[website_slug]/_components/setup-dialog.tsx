@@ -1,5 +1,8 @@
 "use client";
 
+import { Check, Copy, X } from "lucide-react";
+import { Fira_Code } from "next/font/google";
+import { useEffect, useState } from "react";
 import { Hint } from "@/components/hint";
 import {
   AlertDialog,
@@ -11,9 +14,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { cn, copyContent } from "@/lib/utils";
-import { Check, Copy, X } from "lucide-react";
-import { Fira_Code } from "next/font/google";
-import { useEffect, useState } from "react";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 

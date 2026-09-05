@@ -21,11 +21,7 @@ const FilterContext = createContext<FilterContextValue | null>(null);
 const sameFilter = (a: Filter, b: Filter) =>
   a.dimension === b.dimension && a.value === b.value;
 
-export const FilterProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   const [filters, setFilters] = useState<Filter[]>([]);
 
   const toggleFilter = useCallback((filter: Filter) => {

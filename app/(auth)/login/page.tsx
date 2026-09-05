@@ -1,14 +1,14 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect, useState } from "react";
-import { login } from "../actions";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { LoaderCircle } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { login } from "../actions";
 
 const initialState = {
   error: null,
@@ -16,7 +16,7 @@ const initialState = {
 };
 
 function Login() {
-  const [loginState, loginAction] = useFormState(login, initialState);
+  const [loginState, loginAction] = useActionState(login, initialState);
   const [guestLoading, setGuestLoading] = useState(false);
   const router = useRouter();
 

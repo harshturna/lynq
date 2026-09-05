@@ -1,22 +1,22 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import ErrorAlert from "@/components/error";
+import { Button } from "@/components/ui/button";
 import {
   getAnalytics,
   getCustomEventData,
   getPeriodComparison,
   getVitals,
 } from "@/lib/actions";
-import DatePicker from "./date-picker";
-import NavTabs from "./nav-tabs";
-import { useState } from "react";
-import ErrorAlert from "@/components/error";
-import { useSearchParams } from "next/navigation";
 import AnalyticsDashboard from "./analytics-dashboard";
-import PerformanceDashboard from "./performance-dashboard";
+import DatePicker from "./date-picker";
 import EventDashboard from "./event-dashboard";
-import { Button } from "@/components/ui/button";
-import SetupDialog from "./setup-dialog";
 import { FilterProvider } from "./filter-context";
+import NavTabs from "./nav-tabs";
+import PerformanceDashboard from "./performance-dashboard";
+import SetupDialog from "./setup-dialog";
 
 interface WebsiteDashboardProps {
   isFirstVisit: boolean;
@@ -103,62 +103,65 @@ const WebsiteDashboard = ({
 
   return (
     <FilterProvider>
-    <main className="mb-4">
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <NavTabs />
-        <DatePicker selectedTimeFrame={getUpdatedData} isLoading={isLoading} />
-      </div>
-      {/* Rendered inline rather than replacing the dashboard, so the date
+      <main className="mb-4">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+          <NavTabs />
+          <DatePicker
+            selectedTimeFrame={getUpdatedData}
+            isLoading={isLoading}
+          />
+        </div>
+        {/* Rendered inline rather than replacing the dashboard, so the date
           picker stays mounted and the user can retry another range */}
-      {error && (
-        <div className="mt-4">
-          <ErrorAlert
-            title={error}
-            description="Ran into an error while getting the data, try another range or refresh the page"
-          />
-        </div>
-      )}
-      <div className="my-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
-          <p className="text-muted-foreground">{websiteUrl}</p>
-        </div>
-        <div>
-          <Button variant="outline" onClick={() => setOpenSetupModal(true)}>
-            Configuration
-          </Button>
-        </div>
-      </div>
-      <div
-        className={
-          isLoading
-            ? "pointer-events-none opacity-50 transition-opacity duration-200"
-            : "transition-opacity duration-200"
-        }
-        aria-busy={isLoading}
-      >
-        {(!tab || tab === "analytics") && (
-          <AnalyticsDashboard
-            analyticsData={analyticsData}
-            timeFrame={timeFrame}
-            comparison={comparison}
-          />
+        {error && (
+          <div className="mt-4">
+            <ErrorAlert
+              title={error}
+              description="Ran into an error while getting the data, try another range or refresh the page"
+            />
+          </div>
         )}
-        {tab === "performance" && (
-          <PerformanceDashboard
-            performanceData={perfData}
-            timeFrame={timeFrame}
-          />
-        )}
-        {tab === "events" && <EventDashboard events={eventData} />}
-      </div>
-      <SetupDialog
-        title="Add Script"
-        siteUrl={websiteUrl}
-        open={isUserFirstVisit || openSetupModal}
-        setClose={handleSetupModalClose}
-      />
-    </main>
+        <div className="my-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
+            <p className="text-muted-foreground">{websiteUrl}</p>
+          </div>
+          <div>
+            <Button variant="outline" onClick={() => setOpenSetupModal(true)}>
+              Configuration
+            </Button>
+          </div>
+        </div>
+        <div
+          className={
+            isLoading
+              ? "pointer-events-none opacity-50 transition-opacity duration-200"
+              : "transition-opacity duration-200"
+          }
+          aria-busy={isLoading}
+        >
+          {(!tab || tab === "analytics") && (
+            <AnalyticsDashboard
+              analyticsData={analyticsData}
+              timeFrame={timeFrame}
+              comparison={comparison}
+            />
+          )}
+          {tab === "performance" && (
+            <PerformanceDashboard
+              performanceData={perfData}
+              timeFrame={timeFrame}
+            />
+          )}
+          {tab === "events" && <EventDashboard events={eventData} />}
+        </div>
+        <SetupDialog
+          title="Add Script"
+          siteUrl={websiteUrl}
+          open={isUserFirstVisit || openSetupModal}
+          setClose={handleSetupModalClose}
+        />
+      </main>
     </FilterProvider>
   );
 };

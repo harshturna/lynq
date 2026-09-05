@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,9 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { signOut } from "@/lib/user/client";
-import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const Header = ({ userEmail }: { userEmail: string }) => {
   const pathname = usePathname();

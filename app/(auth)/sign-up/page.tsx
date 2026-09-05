@@ -1,13 +1,13 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
-import { signUp } from "../actions";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { LoaderCircle } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
+import { useFormStatus } from "react-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { signUp } from "../actions";
 
 const initialState = {
   error: null,
@@ -15,7 +15,7 @@ const initialState = {
 };
 
 function SignUp() {
-  const [signupState, signupAction] = useFormState(signUp, initialState);
+  const [signupState, signupAction] = useActionState(signUp, initialState);
   const router = useRouter();
 
   useEffect(() => {

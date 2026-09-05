@@ -1,11 +1,11 @@
-import Sidebar from "./_components/sidebar";
-import AddWebsite from "./_components/add-website";
-import WebsiteCard from "./_components/website-card";
+import { redirect } from "next/navigation";
+import ErrorAlert from "@/components/error";
 import { getAllWebsites } from "@/lib/actions";
 import { getUser } from "@/lib/user/server";
-import { redirect } from "next/navigation";
+import AddWebsite from "./_components/add-website";
 import NoWebsitePrompt from "./_components/no-website-prompt";
-import ErrorAlert from "@/components/error";
+import Sidebar from "./_components/sidebar";
+import WebsiteCard from "./_components/website-card";
 
 const DashboardPage = async () => {
   const user = await getUser();

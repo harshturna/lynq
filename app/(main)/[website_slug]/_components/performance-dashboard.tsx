@@ -1,5 +1,5 @@
-import CoreVitalCard from "./core-vital-card";
 import { Card } from "@/components/ui/card";
+import CoreVitalCard from "./core-vital-card";
 import JsHeapChart from "./js-heap-chart";
 
 interface PerformanceDashboardProps {

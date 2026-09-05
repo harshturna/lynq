@@ -1,16 +1,16 @@
 "use client";
 
+import { CalendarDays, LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
 } from "@/components/ui/select";
 import { datePickerValues } from "@/constants";
-import { CalendarDays, LoaderCircle } from "lucide-react";
-import { useState } from "react";
 
 interface DatePickerProps {
   selectedTimeFrame: (timeFrame: DatePickerValues) => void;

@@ -1,4 +1,11 @@
 "use client";
+import { LoaderCircle } from "lucide-react";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useFormState } from "react-dom";
+import { login } from "@/app/(auth)/actions";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -8,13 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-import Link from "next/link";
-import { LoaderCircle } from "lucide-react";
-import { useFormState } from "react-dom";
-import { login } from "@/app/(auth)/actions";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { getUser } from "@/lib/user/client";
 
 const initialState = {
@@ -111,6 +111,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
               Welcome to Lynq
             </p>
             <button
+              type="submit"
               className="bg-gradient-to-br relative group/btn from-stone-900/10 to-zinc-900/90 flex items-center justify-center gap-2 bg-stone-800/10 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
               onClick={handleGuestLogin}
               disabled={loading}

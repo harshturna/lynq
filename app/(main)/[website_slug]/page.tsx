@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import ErrorAlert from "@/components/error";
 import {
   getAnalytics,
   getCustomEventData,
@@ -6,19 +8,17 @@ import {
   getWebsite,
   updateWebsiteOne,
 } from "@/lib/actions";
-import { redirect } from "next/navigation";
 import { getUser } from "@/lib/user/server";
 import WebsiteDashboard from "./_components/website-dashboard";
-import ErrorAlert from "@/components/error";
 
 interface WebsitePageProps {
-  params: {
+  params: Promise<{
     website_slug: string;
-  };
+  }>;
 }
 
-const WebsitePage = async ({ params }: WebsitePageProps) => {
-  const user = await getUser();
+const WebsitePage = async (props: WebsitePageProps) => {
+  const [params, user] = await Promise.all([props.params, getUser()]);
   if (!params.website_slug || !user || !user.id) {
     redirect("/dashboard");
   }
@@ -90,18 +90,16 @@ const WebsitePage = async ({ params }: WebsitePageProps) => {
   }
 
   return (
-    <>
-      <WebsiteDashboard
-        isFirstVisit={website.is_first_visit}
-        userId={user.id}
-        websiteName={website.name}
-        websiteUrl={website.url}
-        initialAnalyticsData={analyticsData}
-        initialPerformanceData={performanceData}
-        initialCustomEventData={customEventData}
-        initialComparison={comparisonData}
-      />
-    </>
+    <WebsiteDashboard
+      isFirstVisit={website.is_first_visit}
+      userId={user.id}
+      websiteName={website.name}
+      websiteUrl={website.url}
+      initialAnalyticsData={analyticsData}
+      initialPerformanceData={performanceData}
+      initialCustomEventData={customEventData}
+      initialComparison={comparisonData}
+    />
   );
 };
 
