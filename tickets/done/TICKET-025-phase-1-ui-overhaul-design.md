@@ -1,9 +1,9 @@
 # TICKET-025: Phase 1 design: the app shell and overview
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-05
 **Started:** 2026-09-05
-**Completed:** —
+**Completed:** 2026-09-05
 **Area:** ui
 
 ## Goal
@@ -47,7 +47,7 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
 - [x] Write docs/design/phase-1-ui-overhaul.md: tokens, component inventory, screen specs,
       URL state, data loading, empty and loading states, responsive behaviour.
 - [x] Review passes (design, information architecture, accessibility, implementation).
-- [ ] Owner sign-off; decisions recorded; implementation tickets opened.
+- [x] Owner sign-off; decisions recorded; implementation tickets opened.
 
 ## Progress log
 - 2026-09-05 — Created (D-007, Phase 1 opening).
@@ -97,20 +97,30 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   client component, option builders per chart, aria descriptions plus table equivalents as
   the accessible path; Nivo the alternative); §16 tickets 5 and 6 re-scoped. D-009 will
   record ECharts on sign-off.
+- 2026-09-05 — Owner: "go for it" to all three decisions. D-009 recorded (ECharts). The
+  viewport-size tracker change is routine and lives in TICKET-034. Twenty implementation
+  tickets opened, TICKET-028 to TICKET-047, with TICKET-027 as step 7 of the sequence; each
+  cites its design sections and its dependencies. Closing.
 
 ## Handoff
-- **State:** docs/design/phase-1-ui-overhaul.md v4: three review passes folded in, charts
-  switched to ECharts per the owner.
-- **Blocked on:** owner sign-off on the design and the three decisions in §17 (sign-off,
-  D-009 charting, viewport-size tracker change).
-- **Next:** on sign-off record D-009 (and the viewport decision in the ticket log), then open
-  the 21 implementation tickets from §16 in pending/ (TICKET-028 onward; TICKET-027 already
-  exists as step 7), close this ticket.
-- **Read first:** docs/design/phase-1-ui-overhaul.md; D-008.
-- **Read first:** D-008 in tickets/DECISIONS.md; this ticket's Context for tokens and layout.
+Closed; the sequence continues in TICKET-028.
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+docs/design/phase-1-ui-overhaul.md   v4, 2026-09-05
+review pass 1 (Opus, design/IA)           14 findings, folded into v2
+review pass 2 (Opus, feasibility)         16 findings, folded into v3
+review pass 3 (Opus, accessibility)       12 findings, folded into v3
+owner                                     direction approved on the mockups; "go for it" on sign-off, D-009 and the viewport change
+npm run check:tickets                     Ticket check passed
+npm run verify                            lint, typecheck, tickets, unit tests pass (no code changed by this ticket)
+```
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: the Phase 1 design, docs/design/phase-1-ui-overhaul.md v4 (tokens with measured
+contrast, routes, URL state, shell, ECharts charting, ten screens with data needs and states,
+ten query additions with SQL shapes, the schema migration, data loading, responsive and
+accessibility contracts, 21-step sequence, review record); two mockup artifacts (overview
+directions, all screens); D-008 (direction) and D-009 (ECharts). Twenty implementation
+tickets opened, TICKET-028 to TICKET-047, plus TICKET-027 already filed. Left out: the
+landing page (owner: later, needs graphics) and saved segments (right after the screens).

@@ -167,3 +167,28 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   screens in this style before implementation tickets open. The existing dark theme, cyan
   accent, globe card and card-grid layout go away with the overhaul. A dark theme, if ever
   wanted, is a later decision, not a token swap.
+
+## D-009 — Charts through Apache ECharts
+- **Status:** Accepted
+- **Date:** 2026-09-05
+- **Context:** The Phase 1 design (docs/design/phase-1-ui-overhaul.md §7, §14) needs line, bar,
+  sparkline, treemap, scatter with bubbles, heatmap, histogram and dot plot now, and a Sankey
+  for Phase 2's paths. The mockups were drawn as hand-written SVG and the v3 design proposed
+  keeping that; the owner rejected it ("let's not do hand-written charts, we should use
+  library"). Recharts is in the project today for line charts only.
+- **Decision:** Apache ECharts is the one chart library: `echarts/core` with only the needed
+  chart types and components, the SVG renderer, one `lynq` theme generated from the design
+  tokens, one `<Chart>` client component that owns the instance, and a pure option builder per
+  chart kind. Every chart keeps a table equivalent (design rule 8) as the keyboard and
+  screen-reader path. Recharts and `components/ui/chart.tsx` are removed with the old
+  dashboard.
+- **Rejected alternatives:** Hand-written SVG React components (owner's call). Nivo, the
+  second choice: server-renderable SVG and React-native components, but weaker interaction and
+  accessibility, heavier overlapping d3 packages, and no Sankey of ECharts' quality for the
+  paths screen. Recharts 3: no heatmap or dot plot without faking them, and its animation
+  caught screenshots mid-draw. visx: primitives, which is hand-writing with a dependency.
+- **Consequences:** Charts render after hydration into fixed-height skeletons rather than in
+  the server HTML. Roughly 200 KB gzipped of chart code, loaded once through a dynamic import
+  and measured against a 220 KB budget. Marks are not focusable; the table equivalent is the
+  accessible representation and must exist for every chart. Phase 2's paths view gets ECharts
+  `sankey` without a second library.

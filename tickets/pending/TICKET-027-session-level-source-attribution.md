@@ -26,9 +26,19 @@ The Referrers, Sources and Channels breakdowns count each session once, by the r
 - The dashboard's Referrers and Sources cards (lib/dashboard.ts) switch to the new dimensions;
   the Direct row synthesised in TICKET-023 goes away once Direct is a real entry value.
 
+- Design docs/design/phase-1-ui-overhaul.md §9.1 (v4) settles the shape: one composite `entry`
+  column in the sessions CTE from `array_agg(row(referrer, source, channel, utm_*) order by ts,
+  seq, pageview_id) filter (where event = 'pageview'))[1]`, opt-in through the CTE's `extra`
+  mechanism so summary and timeseries do not pay for it, projected as `(s.entry).channel`;
+  `min()` over these columns returns '' and is exactly the bug. `referrer`, `source`, `channel`
+  and `utm_*` leave SESSION_CONSTANT in the same change. lib/url-state.ts (TICKET-029) adds the
+  entry_* dimensions to its allow-list. This is step 7 of the Phase 1 sequence (§16); TICKET-034
+  depends on it.
+
 ## Plan
-- [ ] Add entry_referrer, entry_source, entry_channel and entry UTM columns to the sessions CTE
-      and register them as session dimensions in lib/query/filters.ts.
+- [ ] Add the composite entry column to the sessions CTE (opt-in) and register entry_referrer,
+      entry_source, entry_channel, entry_utm_source/medium/campaign/term/content as session
+      dimensions in lib/query/filters.ts; remove the per-row columns from SESSION_CONSTANT.
 - [ ] breakdown() on a session dimension with a session metric; integration test on the query
       fixture (session 22 arrives from Google: three pageviews, one session for Google).
 - [ ] lib/dashboard.ts uses entry dimensions for Referrers and Sources; remove the synthetic
