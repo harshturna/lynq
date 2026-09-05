@@ -76,7 +76,9 @@ separator) are restyled on the new tokens. The `bg-black text-white` body class 
 `app/layout.tsx` moves into `app/(main)/layout.tsx` as `bg-canvas text-ink`, so the landing
 and auth pages are untouched.
 
-Ratios below are measured with the WCAG formula, on white unless stated.
+Ratios below are measured with the WCAG formula, on white unless stated. In code the `--accent*`
+tokens are named `--teal*` (Tailwind `teal-*`), because the old shadcn `--accent` HSL variable is
+still read by components that leave with the Overview ticket; the design keeps the generic name.
 
 | Token | Value | Use |
 |---|---|---|

@@ -9,7 +9,29 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
+      },
       colors: {
+        // Lynq tokens (design §3). The hsl() keys below are the old dashboard's and go with TICKET-035.
+        canvas: "var(--canvas)",
+        soft: { DEFAULT: "var(--soft)", 2: "var(--soft-2)" },
+        ink: { DEFAULT: "var(--ink)", 2: "var(--ink-2)" },
+        mute: "var(--mute)",
+        faint: "var(--faint)",
+        rule: { DEFAULT: "var(--rule)", strong: "var(--rule-strong)" },
+        teal: {
+          DEFAULT: "var(--teal)",
+          ink: "var(--teal-ink)",
+          soft: "var(--teal-soft)",
+          bar: "var(--teal-bar)",
+          2: "var(--teal-2)",
+          3: "var(--teal-3)",
+        },
+        good: { DEFAULT: "var(--good)", soft: "var(--good-soft)" },
+        warn: { DEFAULT: "var(--warn)", soft: "var(--warn-soft)" },
+        poor: { DEFAULT: "var(--poor)", soft: "var(--poor-soft)" },
+        compare: "var(--compare)",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -65,6 +87,10 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        // design §3 radius scale
+        chip: "4px",
+        control: "6px",
+        card: "8px",
       },
       keyframes: {
         "accordion-down": {

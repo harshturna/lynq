@@ -34,6 +34,15 @@ const fontHeading = localFont({
   variable: "--font-heading",
 });
 
+// The new UI's face (design §3, D-008): the variable Geist file that ships with the app.
+// Exposed as a variable only; the old dashboard and the landing page keep Satoshi until
+// TICKET-035 applies the light base.
+const fontGeist = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist",
+  weight: "100 900",
+});
+
 export const metadata: Metadata = {
   title: "Lynq",
   description: "Privacy first analytics",
@@ -53,7 +62,8 @@ export default function RootLayout({
         className={cn(
           "bg-black text-white",
           fontSatoshi.variable,
-          fontHeading.variable
+          fontHeading.variable,
+          fontGeist.variable
         )}
       >
         {children}

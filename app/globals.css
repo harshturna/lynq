@@ -15,6 +15,55 @@ h6 {
   font-family: var(--font-heading);
 }
 
+/* Lynq design tokens (design §3, D-008). Light only. The design calls the accent tokens
+   --accent*; in code they are --teal* because the old shadcn --accent (an HSL triple below)
+   is still read by components that leave with TICKET-035. */
+@layer base {
+  :root {
+    --canvas: #ffffff;
+    --soft: #f5f5f7;
+    --soft-2: #ececf0;
+    --ink: #0a0a0a;
+    --ink-2: #4a4a52;
+    --mute: #63636c;
+    --faint: #9a9aa3;
+    --rule: #e8e8ec;
+    --rule-strong: #111111;
+    --teal: #0f766e;
+    --teal-ink: #0b5f59;
+    --teal-soft: #e3f1ef;
+    --teal-bar: #e6f2f0;
+    --teal-2: #7fbdb6;
+    --teal-3: #cfe6e2;
+    --good: #0c6a35;
+    --good-soft: #e1f3e8;
+    --warn: #845400;
+    --warn-soft: #fbefd2;
+    --poor: #b31e18;
+    --poor-soft: #fbe4e2;
+    --compare: #8a8a93;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Reduced motion (design §3): the selector is the most specific in the file for these
+   properties, so no !important is needed; components must not set them inline. */
+@media (prefers-reduced-motion: reduce) {
+  :root *,
+  :root *::before,
+  :root *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+    scroll-behavior: auto;
+  }
+}
+
 @layer utilities {
   .button {
     @apply bg-black border border-white/10 px-8 py-2 text-sm font-medium text-white hover:bg-[#0c0c0c] smooth;

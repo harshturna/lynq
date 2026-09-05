@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // next dev would otherwise append its own block to CLAUDE.md, which is ours (TICKET-028).
+  agentRules: false,
   async headers() {
     return [
       {
