@@ -36,7 +36,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
         if (user) {
           setIsLoggedIn(true);
           // Warm up the dashboard route so the redirect after login is fast
-          router.prefetch("/dashboard");
+          router.prefetch("/sites");
         }
       } catch {
         setIsLoggedIn(false);
@@ -49,7 +49,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
     if (loginState.success) {
       // Keep `loading` true — the button stays in its pending state until
       // the dashboard's loading skeleton takes over
-      router.push("/dashboard");
+      router.push("/sites");
     } else if (loginState.error) {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
 
   function handleModal() {
     if (isLoggedIn) {
-      router.push("/dashboard");
+      router.push("/sites");
     } else {
       setOpen(true);
     }
@@ -65,7 +65,7 @@ const CtaButton = ({ styles }: { styles?: string }) => {
 
   function handleGuestLogin() {
     if (isLoggedIn) {
-      router.push("/dashboard");
+      router.push("/sites");
       return;
     }
 

@@ -3,8 +3,8 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "@/lib/user/client";
 import { cn } from "@/lib/utils";
+import { AccountMenu, MENU_CONTENT, MENU_ITEM } from "./account-menu";
 
 /**
  * The top navigation (design §4, §6): the nine sections with the active one
@@ -25,11 +25,6 @@ export const SECTIONS = [
 ] as const;
 
 export type SiteSummary = { slug: string; name: string; url: string };
-
-const MENU_CONTENT =
-  "z-50 min-w-[200px] rounded-control border border-rule bg-canvas p-1 shadow-[0_8px_24px_-12px_rgba(10,10,10,0.25)]";
-const MENU_ITEM =
-  "flex cursor-pointer select-none items-center rounded-chip px-2 py-[6px] text-[13px] text-ink-2 outline-none data-[highlighted]:bg-soft data-[highlighted]:text-ink";
 
 export function TopNav({
   site,
@@ -163,7 +158,7 @@ export function TopNav({
               ))}
               <DropdownMenu.Separator className="my-1 h-px bg-rule" />
               <DropdownMenu.Item asChild className={MENU_ITEM}>
-                <Link href="/sites/new">Add a site</Link>
+                <Link href="/sites?add">Add a site</Link>
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
@@ -180,39 +175,7 @@ export function TopNav({
           Settings
         </Link>
 
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button
-              type="button"
-              aria-label={`Account, ${userEmail}`}
-              className="h-6 w-6 rounded-full bg-[linear-gradient(135deg,var(--teal),#0a0a0a)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-            />
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              align="end"
-              sideOffset={4}
-              className={MENU_CONTENT}
-            >
-              <DropdownMenu.Label className="px-2 py-1 text-[12px] text-mute">
-                {userEmail}
-              </DropdownMenu.Label>
-              <DropdownMenu.Item asChild className={MENU_ITEM}>
-                <Link href={`${base}/settings`}>Site settings</Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Separator className="my-1 h-px bg-rule" />
-              <DropdownMenu.Item
-                className={MENU_ITEM}
-                onSelect={async () => {
-                  const { error } = await signOut();
-                  if (!error) window.location.href = "/";
-                }}
-              >
-                Sign out
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+        <AccountMenu userEmail={userEmail} settingsHref={`${base}/settings`} />
       </div>
     </div>
   );

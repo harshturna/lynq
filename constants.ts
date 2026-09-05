@@ -1,25 +1,8 @@
 import {
   Activity,
   AlignVerticalDistributeCenter,
-  AppWindowMac,
-  BookText,
   ChartNoAxesColumnIncreasing,
 } from "lucide-react";
-
-export const sidePanelItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: AppWindowMac,
-    isExternal: false,
-  },
-  {
-    title: "Docs",
-    href: "https://docs-lynq.byharsh.com",
-    icon: BookText,
-    isExternal: true,
-  },
-];
 
 export const TODAY_FACTOR = 24 * 60 * 60 * 1000;
 

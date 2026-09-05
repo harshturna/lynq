@@ -22,7 +22,7 @@ function Login() {
 
   useEffect(() => {
     if (loginState.success) {
-      router.push("/dashboard");
+      router.push("/sites");
     } else if (loginState.error) {
       setGuestLoading(false);
     }

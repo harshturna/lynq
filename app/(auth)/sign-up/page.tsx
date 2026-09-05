@@ -20,7 +20,7 @@ function SignUp() {
 
   useEffect(() => {
     if (signupState.success) {
-      router.push("/dashboard");
+      router.push("/sites");
     }
   }, [signupState, router]);
 

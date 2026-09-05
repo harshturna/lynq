@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/sign-up"))
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/sites";
     return NextResponse.redirect(url);
   }
   return supabaseResponse;

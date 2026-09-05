@@ -22,44 +22,6 @@ export async function addWebsite(name: string, url: string, user_id: string) {
   return response;
 }
 
-/**
- * Gate for every read action that takes a website URL. Server actions are
- * callable from any client with a session, so matching the caller to the
- * passed user id is not enough: the user must also own the website. Ownership
- * is a websites row with this url and user_id, the same rule getWebsite uses.
- */
-async function authorizeWebsite(
-  website_url: string,
-  user_id: string
-): Promise<
-  | {
-      supabase: Awaited<ReturnType<typeof createClient>>;
-      siteId: number;
-      error: null;
-    }
-  | { supabase: null; siteId: null; error: string }
-> {
-  const [supabase, user] = await Promise.all([createClient(), getUser()]);
-
-  if (!user?.id || user_id !== user.id) {
-    return { supabase: null, siteId: null, error: "Unauthorized User" };
-  }
-
-  const { data: website } = await supabase
-    .from("websites")
-    .select("id")
-    .eq("url", website_url)
-    .eq("user_id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (!website) {
-    return { supabase: null, siteId: null, error: "Unauthorized User" };
-  }
-
-  return { supabase, siteId: Number(website.id), error: null };
-}
-
 export async function getAllWebsites(userId: string): Promise<{
   data: Website[] | null;
   error: PostgrestError | null | string;
