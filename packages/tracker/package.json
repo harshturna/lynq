@@ -1,0 +1,8 @@
+{
+  "name": "@lynq/tracker",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Lynq tracker v2: cookieless, batched, engagement-aware.",
+  "type": "module",
+  "main": "src/index.ts"
+}

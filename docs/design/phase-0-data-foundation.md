@@ -326,9 +326,12 @@ One JSON record in `sessionStorage`, keyed by the `data-site` value:
 monotonic event counter. `ref` and `url` are `document.referrer` and `location.href` when the
 session was minted (§7.4). Every storage access is in try/catch; the fallback is an in-memory
 record for that page load. A batch queued when the session expires is flushed under the old
-`sid` first. Tabs opened from a link inherit the record through the browser's own
-`sessionStorage` clone, so a middle-clicked link continues the session; a tab opened by typing
-the URL starts a new one.
+`sid` first. A tab opened with an opener (`window.open`, or a link with `rel="opener"`)
+inherits the record through the browser's `sessionStorage` clone and continues the session. A
+tab opened without one starts a new session: that includes `target="_blank"` links, which
+browsers have treated as `noopener` by default since 2021, and middle-clicks. Verified in the
+Playwright suite (TICKET-018); a known bias in the session count, accepted for a portfolio
+project. No cross-tab messaging is used.
 
 Known cases: duplicated tabs share a session and interleave, ordered by `(ts, seq,
 pageview_id)`; a session across UTC midnight splits because `visitor_id` rotates; people
@@ -555,8 +558,8 @@ Payload types generated from the server's zod schema (`zod-to-ts`). Playwright a
 fixture page and a local recorder: SPA navigation yields a pageview in a new batch with the
 new page context; same-URL `replaceState` and hash-only changes yield nothing; hiding the tab
 yields an engagement row with the right `pid`; a bfcache restore yields a pageview with a new
-`pid`; a `data-lynq-event` click yields a custom event; a tab opened from a link continues the
-session; the batch flushes on pagehide and an oversized queue splits; a project with site data
+`pid`; a `data-lynq-event` click yields a custom event; a tab opened with `rel="opener"` continues the session and a
+`target="_blank"` tab starts a new one; the batch flushes on pagehide and an oversized queue splits; a project with site data
 blocked still records pageviews; and an invariant test over a random walk asserting every
 captured batch has non-empty `page.url` and `session.ref`, a `pid` consistent with its page, a
 distinct `pid` across each navigation, and strictly increasing `seq`.

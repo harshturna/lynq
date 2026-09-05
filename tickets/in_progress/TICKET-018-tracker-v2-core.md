@@ -1,8 +1,8 @@
 # TICKET-018: Tracker v2 core and first-party serving
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-05
-**Started:** —
+**Started:** 2026-09-05
 **Completed:** —
 **Area:** tracker
 
@@ -32,13 +32,24 @@ Rewrite the tracker in this repository: session record, batching contract, engag
 
 ## Progress log
 - 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
+- 2026-09-05 — Started and implemented. Decisions: the envelope types are hand-written and a
+  contract test parses a tracker-built batch with the server's zod schema (simpler than
+  zod-to-ts codegen, same guarantee); the endpoint is derived from the script's own origin;
+  extras and vitals chunks are TICKET-019. Finding from the suite: Chromium does not clone
+  sessionStorage into a target=_blank tab because target=_blank implies noopener since 2021,
+  so such tabs start a new session; only rel="opener" tabs continue it. Design §6.1 corrected.
+  Two test-side fixes: the split test counted a piggybacked engagement event; the SPA test
+  stopped waiting after the engagement batch and before the new page's pageview.
 
 ## Handoff
-Kept current while the ticket is in progress. Overwrite, do not append.
-- **State:** what is built and working right now, what is half-done
-- **Blocked on:** nothing | what
-- **Next:** the next one to three concrete actions
-- **Read first:** files to open before touching anything
+- **State:** packages/tracker (types, pure envelope/split/pageKey, the core in index.ts) builds
+  to public/js/lynq.js at 1,965 bytes gzipped plus a hashed twin; contract test parses tracker
+  batches with the server schema; Playwright suite (11 tests) green against the fixture server;
+  next.config headers() for /js/*; prebuild builds the tracker; CI test job runs e2e.
+- **Blocked on:** nothing
+- **Next:** verify, commit, push, confirm /js/lynq.js is served with the cache header and no
+  cookie, close. Archiving lynq-js on GitHub is the owner's (no gh login here).
+- **Read first:** packages/tracker/src/index.ts, tests/e2e/tracker.spec.ts
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.

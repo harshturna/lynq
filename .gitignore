@@ -38,3 +38,8 @@ next-env.d.ts
 
 # supabase cli link state
 supabase/.temp
+
+# tracker build output (built by prebuild) and playwright artefacts
+/public/js/
+/test-results/
+/playwright-report/
