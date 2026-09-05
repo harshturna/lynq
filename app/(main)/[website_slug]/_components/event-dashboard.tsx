@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { type ChangeEvent, useState } from "react";
 import {
   Accordion,
@@ -9,10 +9,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
+import type { DashboardEvent } from "@/lib/dashboard-types";
 import EventData from "./event-data";
+import { displayValue } from "./filter-chips";
 
 interface EventDashboardProps {
-  events: GroupedCustomEventWithSessionData[];
+  /** Most recent custom events in the range, newest first, from lib/query rows. */
+  events: DashboardEvent[];
 }
 
 const EventDashboard = ({ events }: EventDashboardProps) => {
@@ -21,7 +24,7 @@ const EventDashboard = ({ events }: EventDashboardProps) => {
   const filteredEvents = events.filter((event) =>
     inputValue === ""
       ? true
-      : event.event_name.toLowerCase().includes(inputValue.toLowerCase())
+      : event.name.toLowerCase().includes(inputValue.toLowerCase())
   );
 
   const handleFilterChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -59,13 +62,13 @@ const EventDashboard = ({ events }: EventDashboardProps) => {
           </p>
         ) : null}
         {filteredEvents.map((event) => (
-          <AccordionItem value={`${event.id}`} key={event.id}>
+          <AccordionItem value={event.id} key={event.id}>
             <AccordionTrigger>
               <div className="grid grid-cols-[50%_30%_20%] w-full ml-4 text-sm">
-                <span>{event.event_name}</span>
-                <span>{event.sessions.country}</span>
+                <span>{event.name}</span>
+                <span>{displayValue("country", event.country)}</span>
                 <span>
-                  {formatDistanceToNow(event.created_at, { addSuffix: true })}
+                  {formatDistanceToNow(parseISO(event.ts), { addSuffix: true })}
                 </span>
               </div>
             </AccordionTrigger>

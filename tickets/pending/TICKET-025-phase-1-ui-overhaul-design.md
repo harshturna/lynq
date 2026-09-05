@@ -16,6 +16,10 @@ A reviewed design for the UI overhaul (roadmap Phase 1): design tokens and both 
   implementation tickets. Charting library decision (ECharts vs alternatives) is an expensive-
   to-reverse choice and gets a D-NNN.
 - Depends on TICKET-023 and TICKET-024.
+- Load time to design for (measured in TICKET-023 on the 12-month range against production):
+  getDashboard() fans out ~16 queries, ~1.5 s of database time with four pooled connections
+  and ~2.5 s end to end for a range change. The new data loading (per-card fetching, caching,
+  fewer round trips) is part of this design, not a separate ticket.
 
 ## Plan
 - [ ] Write docs/design/phase-1-ui-overhaul.md.

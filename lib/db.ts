@@ -5,8 +5,10 @@ import postgres from "postgres";
  * The one connection to the analytics schema (design §14). Used by ingest and
  * by lib/query; nothing else touches `analytics`.
  *
- * Transaction pooler, so `prepare: false`. `max: 1` because each warm Vercel
- * instance would otherwise hold ten of the instance's sixty connections.
+ * Transaction pooler, so `prepare: false`. `max: 4` rather than postgres.js's
+ * default of ten: the dashboard fans out ~16 short queries per load and one
+ * connection serialised them into a six-second wait (TICKET-023), while a
+ * warm Vercel instance holding ten pooler connections is more than it needs.
  */
 const url = process.env.LYNQ_DB_POOLER_URL;
 if (!url) throw new Error("LYNQ_DB_POOLER_URL is not set");
@@ -26,7 +28,7 @@ type DbTypes = { bigint: typeof postgres.BigInt };
 
 export const sql = postgres<DbTypes>(url, {
   prepare: false,
-  max: 1,
+  max: 4,
   idle_timeout: 20,
   connect_timeout: 10,
   types: { bigint: postgres.BigInt },

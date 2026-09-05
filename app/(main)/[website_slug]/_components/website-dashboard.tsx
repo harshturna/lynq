@@ -1,19 +1,15 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ErrorAlert from "@/components/error";
 import { Button } from "@/components/ui/button";
-import {
-  getAnalytics,
-  getCustomEventData,
-  getPeriodComparison,
-  getVitals,
-} from "@/lib/actions";
+import { getDashboard } from "@/lib/dashboard";
+import type { DashboardData } from "@/lib/dashboard-types";
 import AnalyticsDashboard from "./analytics-dashboard";
 import DatePicker from "./date-picker";
 import EventDashboard from "./event-dashboard";
-import { FilterProvider } from "./filter-context";
+import { FilterProvider, useFilters } from "./filter-context";
 import NavTabs from "./nav-tabs";
 import PerformanceDashboard from "./performance-dashboard";
 import SetupDialog from "./setup-dialog";
@@ -22,148 +18,109 @@ interface WebsiteDashboardProps {
   isFirstVisit: boolean;
   websiteName: string;
   websiteUrl: string;
-  userId: string;
-  initialAnalyticsData: AnalyticsDataWithCounts;
-  initialPerformanceData: WebVitalsMetrics & { size: number };
-  initialCustomEventData: GroupedCustomEventWithSessionData[];
-  initialComparison: PeriodSummary | null;
+  initialData: DashboardData;
 }
 
-const WebsiteDashboard = ({
-  isFirstVisit,
+/**
+ * Holds the loaded aggregates and refetches them whenever the range or the
+ * filter chips change. Everything it renders is computed by lib/query on the
+ * server; the client only draws (TICKET-023).
+ */
+const DashboardBody = ({
   websiteName,
   websiteUrl,
-  userId,
-  initialAnalyticsData,
-  initialPerformanceData,
-  initialCustomEventData,
-  initialComparison,
+  initialData,
+  isFirstVisit,
 }: WebsiteDashboardProps) => {
-  const [analyticsData, setAnalyticsData] = useState(initialAnalyticsData);
-  const [perfData, setPerfData] = useState(initialPerformanceData);
-  const [eventData, setEventData] = useState(initialCustomEventData);
-  const [comparison, setComparison] = useState(initialComparison);
-  const [openSetupModal, setOpenSetupModal] = useState(false);
-  const [error, setError] = useState<null | string>();
+  const [data, setData] = useState(initialData);
+  const [timeFrame, setTimeFrame] = useState<DatePickerValues>(
+    initialData.timeFrame
+  );
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [timeFrame, setTimeFrame] = useState<DatePickerValues>("Last 30 days");
-  const tab = useSearchParams().get("tab");
+  const [openSetupModal, setOpenSetupModal] = useState(false);
   const [isUserFirstVisit, setIsUserFirstVisit] = useState(isFirstVisit);
+  const tab = useSearchParams().get("tab");
+  const { filters } = useFilters();
+  const requestId = useRef(0);
+  const firstRender = useRef(true);
 
-  const handleSetupModalClose = () => {
-    setIsUserFirstVisit(false);
-    setOpenSetupModal(false);
-  };
-
-  async function getUpdatedData(pickedTimeFrame: DatePickerValues) {
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const id = ++requestId.current;
     setError(null);
     setIsLoading(true);
-
-    try {
-      const [analyticsResult, perfResult, eventResult, comparisonResult] =
-        await Promise.all([
-          getAnalytics(pickedTimeFrame, websiteUrl, userId),
-          getVitals(pickedTimeFrame, websiteUrl, userId),
-          getCustomEventData(pickedTimeFrame, websiteUrl, userId),
-          getPeriodComparison(pickedTimeFrame, websiteUrl, userId),
-        ]);
-
-      const { res: analyticsData, error: analyticsError } = analyticsResult;
-      if (!analyticsData || analyticsError) {
-        setError("Failed to get analytics data");
-        return;
-      }
-
-      const { data: perfData, error: perfError } = perfResult;
-      if (!perfData || perfError) {
-        setError("Failed to get performance data");
-        return;
-      }
-
-      const { data: eventData, error: eventError } = eventResult;
-
-      if (!eventData || eventError) {
-        setError("Failed to get custom events");
-        return;
-      }
-
-      setPerfData(perfData);
-      setAnalyticsData(analyticsData);
-      setEventData(eventData);
-      // Comparison is a nice-to-have: if the RPC is missing or errors, the
-      // dashboard still renders, just without deltas
-      setComparison(comparisonResult.data ?? null);
-      setTimeFrame(pickedTimeFrame);
-    } catch {
-      setError("Failed to get the data");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    getDashboard(websiteUrl, timeFrame, filters)
+      .then(({ data: next, error: message }) => {
+        if (id !== requestId.current) return; // a newer request superseded this one
+        if (!next || message) setError(message ?? "Failed to load analytics");
+        else setData(next);
+      })
+      .catch(() => {
+        if (id === requestId.current) setError("Failed to load analytics");
+      })
+      .finally(() => {
+        if (id === requestId.current) setIsLoading(false);
+      });
+  }, [websiteUrl, timeFrame, filters]);
 
   return (
-    <FilterProvider>
-      <main className="mb-4">
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          <NavTabs />
-          <DatePicker
-            selectedTimeFrame={getUpdatedData}
-            isLoading={isLoading}
+    <main className="mb-4">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+        <NavTabs />
+        <DatePicker selectedTimeFrame={setTimeFrame} isLoading={isLoading} />
+      </div>
+      {error && (
+        <div className="mt-4">
+          <ErrorAlert
+            title={error}
+            description="Ran into an error while getting the data, try another range or refresh the page"
           />
         </div>
-        {/* Rendered inline rather than replacing the dashboard, so the date
-          picker stays mounted and the user can retry another range */}
-        {error && (
-          <div className="mt-4">
-            <ErrorAlert
-              title={error}
-              description="Ran into an error while getting the data, try another range or refresh the page"
-            />
-          </div>
-        )}
-        <div className="my-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
-            <p className="text-muted-foreground">{websiteUrl}</p>
-          </div>
-          <div>
-            <Button variant="outline" onClick={() => setOpenSetupModal(true)}>
-              Configuration
-            </Button>
-          </div>
+      )}
+      <div className="my-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-4xl">{websiteName}</h1>
+          <p className="text-muted-foreground">{websiteUrl}</p>
         </div>
-        <div
-          className={
-            isLoading
-              ? "pointer-events-none opacity-50 transition-opacity duration-200"
-              : "transition-opacity duration-200"
-          }
-          aria-busy={isLoading}
-        >
-          {(!tab || tab === "analytics") && (
-            <AnalyticsDashboard
-              analyticsData={analyticsData}
-              timeFrame={timeFrame}
-              comparison={comparison}
-            />
-          )}
-          {tab === "performance" && (
-            <PerformanceDashboard
-              performanceData={perfData}
-              timeFrame={timeFrame}
-            />
-          )}
-          {tab === "events" && <EventDashboard events={eventData} />}
+        <div>
+          <Button variant="outline" onClick={() => setOpenSetupModal(true)}>
+            Configuration
+          </Button>
         </div>
-        <SetupDialog
-          title="Add Script"
-          siteUrl={websiteUrl}
-          open={isUserFirstVisit || openSetupModal}
-          setClose={handleSetupModalClose}
-        />
-      </main>
-    </FilterProvider>
+      </div>
+      <div
+        className={
+          isLoading
+            ? "pointer-events-none opacity-50 transition-opacity duration-200"
+            : "transition-opacity duration-200"
+        }
+        aria-busy={isLoading}
+      >
+        {(!tab || tab === "analytics") && <AnalyticsDashboard data={data} />}
+        {tab === "performance" && <PerformanceDashboard vitals={data.vitals} />}
+        {tab === "events" && <EventDashboard events={data.events} />}
+      </div>
+      <SetupDialog
+        title="Add Script"
+        siteUrl={websiteUrl}
+        open={isUserFirstVisit || openSetupModal}
+        setClose={() => {
+          setIsUserFirstVisit(false);
+          setOpenSetupModal(false);
+        }}
+      />
+    </main>
   );
 };
+
+const WebsiteDashboard = (props: WebsiteDashboardProps) => (
+  <FilterProvider>
+    <DashboardBody {...props} />
+  </FilterProvider>
+);
 
 export default WebsiteDashboard;

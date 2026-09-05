@@ -1,12 +1,18 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import DescriptionList from "@/components/ui/description-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { DashboardEvent } from "@/lib/dashboard-types";
+import { displayValue } from "./filter-chips";
 
 interface EventDataProps {
-  event: GroupedCustomEventWithSessionData;
+  event: DashboardEvent;
 }
 
+const orDash = (value: string) => value || "-";
+
 const EventData = ({ event }: EventDataProps) => {
+  const props = Object.entries(event.props);
+
   return (
     <div className="px-8">
       <Tabs defaultValue="default">
@@ -20,32 +26,28 @@ const EventData = ({ event }: EventDataProps) => {
         </TabsList>
         <TabsContent value="default">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
-            <DescriptionList term="Browser" detail={event.sessions.browser} />
-            <DescriptionList term="Country" detail={event.sessions.country} />
-            <DescriptionList term="City" detail={event.sessions.city} />
+            <DescriptionList term="Browser" detail={orDash(event.browser)} />
             <DescriptionList
-              term="OS"
-              detail={event.sessions.operating_system}
+              term="Country"
+              detail={displayValue("country", event.country)}
             />
-            <DescriptionList term="Device" detail={event.sessions.device} />
+            <DescriptionList term="City" detail={orDash(event.city)} />
+            <DescriptionList term="OS" detail={orDash(event.os)} />
+            <DescriptionList term="Device" detail={orDash(event.device)} />
             <DescriptionList
               term="Occurred"
-              detail={formatDistanceToNow(event.created_at, {
+              detail={formatDistanceToNow(parseISO(event.ts), {
                 addSuffix: true,
               })}
             />
-            <DescriptionList term="Path Name" detail={event.page_url} />
+            <DescriptionList term="Path Name" detail={orDash(event.path)} />
           </div>
         </TabsContent>
         <TabsContent value="custom">
-          {event.properties.length ? (
+          {props.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center justify-center gap-8 mt-8 mb-4 px-4">
-              {event.properties.map((prop) => (
-                <DescriptionList
-                  key={prop.property_name}
-                  term={prop.property_name}
-                  detail={prop.property_value}
-                />
+              {props.map(([name, value]) => (
+                <DescriptionList key={name} term={name} detail={value} />
               ))}
             </div>
           ) : (

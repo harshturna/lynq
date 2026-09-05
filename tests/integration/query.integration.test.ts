@@ -58,6 +58,16 @@ function row(over: Record<string, unknown>) {
     scroll_depth: 0,
     props: sql.json({}),
     revenue: null,
+    lcp: null,
+    cls: null,
+    inp: null,
+    fcp: null,
+    ttfb: null,
+    dcl: null,
+    load: null,
+    tti: null,
+    tbt: null,
+    resources: null,
     suspect: false,
     ingest_version: 2,
     ...over,
@@ -177,6 +187,52 @@ beforeAll(async () => {
       country: "US",
     }),
 
+    // Session C reports three vitals samples with gaps: one row without CLS,
+    // one without INP, so per-column p75 must ignore NULLs column by column
+    row({
+      ts: at(7210),
+      seq: 3,
+      visitor_id: 2,
+      session_id: 23,
+      pageview_id: 301,
+      event: "vitals",
+      device: "mobile",
+      country: "US",
+      lcp: 1000,
+      cls: 0.05,
+      inp: 100,
+      fcp: 800,
+      resources: 20,
+    }),
+    row({
+      ts: at(7211),
+      seq: 4,
+      visitor_id: 2,
+      session_id: 23,
+      pageview_id: 301,
+      event: "vitals",
+      device: "mobile",
+      country: "US",
+      lcp: 2000,
+      inp: 300,
+      fcp: 900,
+      resources: 40,
+    }),
+    row({
+      ts: at(7212),
+      seq: 5,
+      visitor_id: 2,
+      session_id: 23,
+      pageview_id: 301,
+      event: "vitals",
+      device: "mobile",
+      country: "US",
+      lcp: 4000,
+      cls: 0.15,
+      fcp: 1000,
+      resources: 60,
+    }),
+
     // exactly at the exclusive end of the range: must not be counted
     row({
       ts: range.toExclusive,
@@ -195,6 +251,17 @@ beforeAll(async () => {
       pageview_id: 501,
       path: "/suspect",
       suspect: true,
+    }),
+    row({
+      ts: at(11),
+      seq: 2,
+      visitor_id: 4,
+      session_id: 44,
+      pageview_id: 501,
+      event: "vitals",
+      path: "/suspect",
+      suspect: true,
+      lcp: 99000,
     }),
   ])}`;
   q = await import("@/lib/query/run");
@@ -355,5 +422,31 @@ describe("rows", () => {
     }>(ctx(), "sessions");
     expect(sessions.map((s) => s.session_id)).toEqual(["23", "22", "11"]);
     expect(sessions[2]).toMatchObject({ bounced: true, entry_path: "/" });
+  });
+});
+
+describe("vitals", () => {
+  it("takes p75 per column, ignoring NULLs column by column", async () => {
+    const v = await q.vitals(ctx());
+    expect(v.samples).toBe(3);
+    expect(v.lcp).toBe(3000); // 1000, 2000, 4000
+    expect(v.cls).toBeCloseTo(0.125); // 0.05, 0.15: the row without CLS drops out
+    expect(v.inp).toBe(250); // 100, 300
+    expect(v.fcp).toBe(950);
+    expect(v.ttfb).toBeNull();
+    expect(v.resources).toBe(40);
+  });
+  it("honours filters and the suspect flag", async () => {
+    const mobile = await q.vitals(
+      ctx({ filters: [{ dimension: "device", op: "is", values: ["mobile"] }] })
+    );
+    expect(mobile.samples).toBe(3);
+    const desktop = await q.vitals(
+      ctx({ filters: [{ dimension: "device", op: "is", values: ["desktop"] }] })
+    );
+    expect(desktop).toMatchObject({ samples: 0, lcp: null, resources: null });
+    const withSuspect = await q.vitals(ctx({ includeSuspect: true }));
+    expect(withSuspect.samples).toBe(4);
+    expect(withSuspect.lcp).toBeGreaterThan(3000);
   });
 });

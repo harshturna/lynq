@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { countryFlag } from "@/lib/geo/country-centroids";
-import { cn, groupByAnalytics } from "@/lib/utils";
+import type { BreakdownKey, Row } from "@/lib/dashboard-types";
+import { cn } from "@/lib/utils";
+import { displayValue } from "./filter-chips";
 import { useFilters } from "./filter-context";
 
 interface ShareBarListProps {
-  data: AnalyticsDataWithSessionData[];
-  groupBy: AnalyticsGroupBy;
+  /** Ranked rows for one dimension, as returned by lib/query's breakdown. */
+  rows: Row[];
+  groupBy: BreakdownKey;
   /** Rows shown before "Show all" is clicked */
   limit?: number;
   emptyLabel?: string;
@@ -15,17 +17,8 @@ interface ShareBarListProps {
 
 const DEFAULT_LIMIT = 6;
 
-const labelFor = (groupBy: AnalyticsGroupBy, group: string) => {
-  if (group === "Ios") return "iOS";
-  if (groupBy === "countries") {
-    const flag = countryFlag(group);
-    return flag ? `${flag}  ${group}` : group;
-  }
-  return group;
-};
-
 const ShareBarList = ({
-  data,
+  rows,
   groupBy,
   limit = DEFAULT_LIMIT,
   emptyLabel = "No data for this period",
@@ -33,13 +26,12 @@ const ShareBarList = ({
   const [expanded, setExpanded] = useState(false);
   const { toggleFilter, isActive } = useFilters();
 
-  const grouped = groupByAnalytics(groupBy, data) ?? [];
   // Share is relative to the top row, not the total — it makes the long tail
   // legible instead of collapsing every minor row into an invisible sliver
-  const max = grouped.length ? grouped[0].count : 0;
-  const total = grouped.reduce((sum, item) => sum + item.count, 0);
+  const max = rows.length ? rows[0].metric : 0;
+  const total = rows.reduce((sum, row) => sum + row.metric, 0);
 
-  if (!grouped.length) {
+  if (!rows.length) {
     return (
       <p className="text-center text-sm text-muted-foreground py-10">
         {emptyLabel}
@@ -47,23 +39,25 @@ const ShareBarList = ({
     );
   }
 
-  const visible = expanded ? grouped : grouped.slice(0, limit);
+  const visible = expanded ? rows : rows.slice(0, limit);
 
   return (
     <div className="px-2">
-      {visible.map((item) => {
-        const group = String(item.group);
-        const active = isActive({ dimension: groupBy, value: group });
-        const share = max ? (item.count / max) * 100 : 0;
-        const percent = total ? Math.round((item.count / total) * 100) : 0;
+      {visible.map((row) => {
+        const label = displayValue(groupBy, row.value);
+        const active = isActive({ dimension: groupBy, value: row.value });
+        const share = max ? (row.metric / max) * 100 : 0;
+        const percent = total ? Math.round((row.metric / total) * 100) : 0;
 
         return (
           <button
-            key={group}
+            key={row.value}
             type="button"
-            onClick={() => toggleFilter({ dimension: groupBy, value: group })}
+            onClick={() =>
+              toggleFilter({ dimension: groupBy, value: row.value })
+            }
             aria-pressed={active}
-            title={`${group} — ${item.count} (${percent}%)`}
+            title={`${label} — ${row.metric} (${percent}%)`}
             className={cn(
               "relative w-full group/row flex items-center justify-between",
               "px-3 py-2 my-0.5 rounded-md text-sm overflow-hidden",
@@ -81,25 +75,25 @@ const ShareBarList = ({
               style={{ width: `${share}%` }}
             />
             <span className="relative truncate text-left text-muted-foreground group-hover/row:text-foreground">
-              {labelFor(groupBy, group)}
+              {label}
             </span>
             <span className="relative flex items-center gap-3 pl-3 shrink-0 tabular-nums">
               <span className="text-xs text-muted-foreground/70">
                 {percent}%
               </span>
-              <span className="font-medium">{item.count}</span>
+              <span className="font-medium">{row.metric}</span>
             </span>
           </button>
         );
       })}
 
-      {grouped.length > limit && (
+      {rows.length > limit && (
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
           className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-2 mt-1"
         >
-          {expanded ? "Show less" : `Show all ${grouped.length}`}
+          {expanded ? "Show less" : `Show all ${rows.length}`}
         </button>
       )}
     </div>

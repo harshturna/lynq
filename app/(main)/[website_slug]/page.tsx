@@ -1,13 +1,7 @@
 import { redirect } from "next/navigation";
 import ErrorAlert from "@/components/error";
-import {
-  getAnalytics,
-  getCustomEventData,
-  getPeriodComparison,
-  getVitals,
-  getWebsite,
-  updateWebsiteOne,
-} from "@/lib/actions";
+import { getWebsite, updateWebsiteOne } from "@/lib/actions";
+import { getDashboard } from "@/lib/dashboard";
 import { getUser } from "@/lib/user/server";
 import WebsiteDashboard from "./_components/website-dashboard";
 
@@ -37,40 +31,15 @@ const WebsitePage = async (props: WebsitePageProps) => {
     );
   }
 
-  const [
-    { res: analyticsData, error: analyticsError },
-    { data: performanceData, error: performanceError },
-    { data: customEventData, error: customEventError },
-    { data: comparisonData },
-  ] = await Promise.all([
-    getAnalytics("Last 30 days", website.url, user.id),
-    getVitals("Last 30 days", website.url, user.id),
-    getCustomEventData("Last 30 days", website.url, user.id),
-    getPeriodComparison("Last 30 days", website.url, user.id),
-  ]);
+  const { data: initialData, error: dashboardError } = await getDashboard(
+    website.url,
+    "Last 30 days"
+  );
 
-  if (!analyticsData || analyticsError) {
+  if (!initialData || dashboardError) {
     return (
       <ErrorAlert
         title="Failed to get analytics"
-        description="Ran into an error while getting the data, try refreshing the page"
-      />
-    );
-  }
-
-  if (!performanceData || performanceError) {
-    return (
-      <ErrorAlert
-        title="Failed to get performance data"
-        description="Ran into an error while getting the data, try refreshing the page"
-      />
-    );
-  }
-
-  if (!customEventData || customEventError) {
-    return (
-      <ErrorAlert
-        title="Failed to get custom event data"
         description="Ran into an error while getting the data, try refreshing the page"
       />
     );
@@ -92,13 +61,9 @@ const WebsitePage = async (props: WebsitePageProps) => {
   return (
     <WebsiteDashboard
       isFirstVisit={website.is_first_visit}
-      userId={user.id}
       websiteName={website.name}
       websiteUrl={website.url}
-      initialAnalyticsData={analyticsData}
-      initialPerformanceData={performanceData}
-      initialCustomEventData={customEventData}
-      initialComparison={comparisonData}
+      initialData={initialData}
     />
   );
 };

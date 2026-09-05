@@ -7,24 +7,30 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { UiFilter } from "@/lib/dashboard-types";
 
+/**
+ * Click-to-filter chips. OR within a dimension, AND across dimensions; the
+ * server (lib/query) applies the same rule, so this only holds the chips and
+ * tells the dashboard when they change.
+ */
 type FilterContextValue = {
-  filters: Filter[];
-  toggleFilter: (filter: Filter) => void;
-  removeFilter: (filter: Filter) => void;
+  filters: UiFilter[];
+  toggleFilter: (filter: UiFilter) => void;
+  removeFilter: (filter: UiFilter) => void;
   clearFilters: () => void;
-  isActive: (filter: Filter) => boolean;
+  isActive: (filter: UiFilter) => boolean;
 };
 
 const FilterContext = createContext<FilterContextValue | null>(null);
 
-const sameFilter = (a: Filter, b: Filter) =>
+const sameFilter = (a: UiFilter, b: UiFilter) =>
   a.dimension === b.dimension && a.value === b.value;
 
 export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [filters, setFilters] = useState<UiFilter[]>([]);
 
-  const toggleFilter = useCallback((filter: Filter) => {
+  const toggleFilter = useCallback((filter: UiFilter) => {
     setFilters((current) =>
       current.some((f) => sameFilter(f, filter))
         ? current.filter((f) => !sameFilter(f, filter))
@@ -32,14 +38,14 @@ export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
     );
   }, []);
 
-  const removeFilter = useCallback((filter: Filter) => {
+  const removeFilter = useCallback((filter: UiFilter) => {
     setFilters((current) => current.filter((f) => !sameFilter(f, filter)));
   }, []);
 
   const clearFilters = useCallback(() => setFilters([]), []);
 
   const isActive = useCallback(
-    (filter: Filter) => filters.some((f) => sameFilter(f, filter)),
+    (filter: UiFilter) => filters.some((f) => sameFilter(f, filter)),
     [filters]
   );
 
@@ -55,8 +61,7 @@ export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useFilters = () => {
   const context = useContext(FilterContext);
-  if (!context) {
+  if (!context)
     throw new Error("useFilters must be used within a FilterProvider");
-  }
   return context;
 };

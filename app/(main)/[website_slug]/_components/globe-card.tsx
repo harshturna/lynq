@@ -1,15 +1,21 @@
 "use client";
 
 import createGlobe from "cobe";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { lookupCentroid } from "@/lib/geo/country-centroids";
-import { groupByAnalytics } from "@/lib/utils";
+import type { Row } from "@/lib/dashboard-types";
+import {
+  countryNameFromCode,
+  lookupCentroid,
+} from "@/lib/geo/country-centroids";
 import ShareBarList from "./share-bar-list";
 
 interface GlobeCardProps {
-  data: AnalyticsDataWithSessionData[];
+  /** Ranked country rows; values are ISO codes from lib/query. */
+  countries: Row[];
 }
+
+const centroidFor = (code: string) => lookupCentroid(countryNameFromCode(code));
 
 /**
  * cobe renders to a canvas via WebGL, which doesn't exist during SSR and may
@@ -28,7 +34,7 @@ const hasWebGL = () => {
   }
 };
 
-const GlobeCard = ({ data }: GlobeCardProps) => {
+const GlobeCard = ({ countries }: GlobeCardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [webglReady, setWebglReady] = useState<boolean | null>(null);
 
@@ -39,12 +45,29 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
   const dragOffsetRef = useRef(0);
   const autoRotateRef = useRef(true);
 
-  const countries = groupByAnalytics("countries", data) ?? [];
-  const total = countries.reduce((sum, c) => sum + c.count, 0);
+  const total = countries.reduce((sum, c) => sum + c.metric, 0);
 
-  // Serialized marker list — a stable dependency for the effect below, so the
-  // globe isn't torn down and rebuilt on every parent render
-  const markerKey = countries.map((c) => `${c.group}:${c.count}`).join("|");
+  // Memoised so the globe is only torn down and rebuilt when the rows change,
+  // not on every parent render
+  const markers = useMemo(
+    () =>
+      countries
+        .map((country) => {
+          const centroid = centroidFor(country.value);
+          if (!centroid) return null;
+          const share = total ? country.metric / total : 0;
+          return {
+            location: [centroid.lat, centroid.lon] as [number, number],
+            // Floor the size so a low-traffic country is still visible — without
+            // this, a site with one dominant country looks like an empty globe
+            size: Math.max(0.045, Math.min(0.12, 0.03 + share * 0.14)),
+          };
+        })
+        .filter((m): m is { location: [number, number]; size: number } =>
+          Boolean(m)
+        ),
+    [countries, total]
+  );
 
   useEffect(() => {
     setWebglReady(hasWebGL());
@@ -52,22 +75,6 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
 
   useEffect(() => {
     if (!webglReady || !canvasRef.current) return;
-
-    const markers = countries
-      .map((country) => {
-        const centroid = lookupCentroid(String(country.group));
-        if (!centroid) return null;
-        const share = total ? country.count / total : 0;
-        return {
-          location: [centroid.lat, centroid.lon] as [number, number],
-          // Floor the size so a low-traffic country is still visible — without
-          // this, a site with one dominant country looks like an empty globe
-          size: Math.max(0.045, Math.min(0.12, 0.03 + share * 0.14)),
-        };
-      })
-      .filter((m): m is { location: [number, number]; size: number } =>
-        Boolean(m)
-      );
 
     const canvas = canvasRef.current;
     let width = 0;
@@ -111,8 +118,7 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [webglReady, markerKey, total]);
+  }, [webglReady, markers]);
 
   // Move/up live on the window, not the canvas: a drag that leaves the canvas
   // (easy to do on a 440px circle) must keep tracking, and must still end when
@@ -146,7 +152,7 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
     e.currentTarget.style.cursor = "grabbing";
   };
 
-  const hasGeo = countries.some((c) => lookupCentroid(String(c.group)));
+  const hasGeo = countries.some((c) => centroidFor(c.value));
 
   return (
     <Card className="overflow-hidden">
@@ -194,8 +200,8 @@ const GlobeCard = ({ data }: GlobeCardProps) => {
               </span>
             </div>
             <ShareBarList
-              data={data}
-              groupBy="countries"
+              rows={countries}
+              groupBy="country"
               limit={8}
               emptyLabel="No location data for this period"
             />

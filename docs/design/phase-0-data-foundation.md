@@ -723,10 +723,11 @@ re-runnable so the CI container and a shadow database can apply the same files.
   connection, used only from server code. No `create role` migration; timeouts are per
   statement (`set local statement_timeout` inside `sql.begin`: 2 s on the ingest path, 30 s
   on reads).
-- `lib/db.ts`: `postgres(process.env.LYNQ_DB_POOLER_URL, { prepare: false, max: 1,
+- `lib/db.ts`: `postgres(process.env.LYNQ_DB_POOLER_URL, { prepare: false, max: 4,
   idle_timeout: 20, connect_timeout: 10 })`, one module-scope instance. `prepare: false`
-  because the pooler runs in transaction mode; `max: 1` because each warm Vercel instance
-  would otherwise hold ten of the instance's 60 connections. The module asserts at startup that
+  because the pooler runs in transaction mode; `max: 4` (raised from 1 in TICKET-023) because
+  the dashboard fans out ~16 short queries per load and one connection serialised them into a
+  six-second wait, while the default of ten per warm Vercel instance is more than it needs. The module asserts at startup that
   the URL's port is 6543 or its host contains `pooler.supabase.com`, so a direct-connection URL
   fails fast instead of exhausting the server.
 - `LYNQ_IDENTITY_SECRET` (§5.2) and `LYNQ_DB_POOLER_URL` are in Vercel env and `.env`.

@@ -31,13 +31,6 @@ export const datePickerValues: DatePickerValues[] = [
 
 export const TODAY_FACTOR = 24 * 60 * 60 * 1000;
 
-export const EXCLUDED_KEYS = [
-  "id",
-  "created_at",
-  "session_id",
-  "website_url",
-] as const;
-
 export const webVitalDetails: WebVitalDetail = {
   cls: {
     type: "CLS",

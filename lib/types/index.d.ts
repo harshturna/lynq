@@ -43,25 +43,6 @@ type WebVitalsEventData = {
   usedJSHeapSize: number;
 };
 
-type WebVitalsResponseData = {
-  id: number;
-  lcp: number;
-  cls: number;
-  inp: number;
-  fcp: number;
-  ttfb: number;
-  tbt: number;
-  load: number;
-  tti: number;
-  dcl: number;
-  interaction_count: number;
-  resource_count: number;
-  total_js_heap: number;
-  used_js_heap: number;
-};
-
-type WebVitalsMetrics = Omit<WebVitalsResponseData, "id">;
-
 type VitalEventData =
   | {
       metricName: "Navigation";
@@ -119,113 +100,6 @@ type TTrackedEvent =
       event: "initial-custom-event";
       eventData: CustomEventData;
     });
-
-type AnalyticsData = {
-  id: number;
-  created_at: string;
-  website_url: string;
-  page: string;
-  session_id: string;
-  pathname: string;
-  referrer: "Direct" | "Unknown" | string;
-};
-
-type AnalyticsDataWithSessionData = {
-  id: number;
-  created_at: string;
-  website_url: string;
-  page: string;
-  session_id: string;
-  pathname: string;
-  referrer: "Direct" | "Unknown" | string;
-  country: string;
-  device: Device;
-  operating_system: Os;
-  browser: Browser;
-  city: string;
-  // Carried through from the joined session so filtered visitor counts can be
-  // computed as distinct clients (page_views rows only carry session_id)
-  client_id: string;
-};
-
-type SessionData = {
-  id: number;
-  created_at: string;
-  website_url: string;
-  session_id: string;
-  client_id: string;
-  country: string;
-  device: Device;
-  operating_system: Os;
-  browser: Browser;
-  city: string;
-  session_duration: number;
-};
-
-type FetchedCustomEventData = {
-  id: number;
-  event_id: string;
-  created_at: string;
-  event_name: string;
-  property_name: string | null;
-  property_value: string | null;
-  website_url: string;
-  session_id: string;
-  page_url: string;
-};
-
-type CustomEventWithSessionData = FetchedCustomEventData & {
-  sessions: SessionData;
-};
-
-type GroupedCustomEventWithSessionData = Omit<
-  CustomEventWithSessionData,
-  "property_name" | "property_value"
-> & {
-  properties: {
-    property_name: string;
-    property_value: string;
-  }[];
-};
-
-type GroupedCustomEventWithSessionDataAccumulatorType = {
-  [key: string]: GroupedCustomEventWithSessionData;
-};
-
-type AnalyticsDataWithCounts = {
-  analyticsData: AnalyticsDataWithSessionData[] | [];
-  sessionData: SessionData[] | [];
-  views_count: number;
-  visitors_count: number;
-  average_session_duration: number;
-  bounce_rate: number;
-};
-
-type AnalyticsGroupBy =
-  | "pages"
-  | "devices"
-  | "operating_systems"
-  | "countries"
-  | "browsers"
-  | "referrers";
-
-/** A single active segment, e.g. { dimension: "countries", value: "India" } */
-type Filter = {
-  dimension: AnalyticsGroupBy;
-  value: string;
-};
-
-type PeriodSummary = {
-  views_count: number;
-  visitors_count: number;
-  average_session_duration: number;
-  bounce_rate: number;
-};
-
-interface ChartDataPoint {
-  date: string;
-  [views | sessions]: number;
-}
 
 type WebVitalType =
   | "lcp"
