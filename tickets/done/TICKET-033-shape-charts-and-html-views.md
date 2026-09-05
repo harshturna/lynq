@@ -56,7 +56,26 @@ Treemap, quadrant, heatmap, histogram and dot plot option builders exist with th
   needs one of these.
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+npm run verify
+```
+Lint (42 pre-existing warnings, none in the new files), typecheck, ticket check (47 tickets),
+29 test files / 143 unit tests passed, including `lib/charts/shapes.test.ts` (12 tests:
+everything-else leaf, shade dimension, log axis and average mark lines, bubble sizing, corner
+labels, 3-hour bucketing, cell emission, bins and tones, marker placement, reference line and
+above flags, all five thresholds).
+
+Playwright walkthrough of /ui on `next dev -p 3005` at 1280 and 390 px: 11 SVG charts with 11
+hidden tables, no console errors, both threshold sentences render, the treemap and heatmap
+give way to their width sentences at 390 px, the split bar's `role="img"` name reads
+"Devices: Desktop 57%, Mobile 39%, Tablet 4%".
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: `lib/charts/{treemap,quadrant,heatmap,histogram,dotplot}.ts` option builders,
+`lib/charts/thresholds.ts` (count and width constants with tested checks),
+`components/charts/fallback.tsx` (`ChartOrFallback` measuring its container),
+`components/charts/shapes.tsx` (Treemap, Quadrant, Heatmap, Histogram, DotPlot with
+descriptions and hidden tables), `components/shell/views.tsx` (FlowPanel, Funnel, PathList,
+Matrix, SplitBar), GraphicComponent registered in `lib/charts/echarts.ts`, and the /ui preview
+showing every one of them plus the two fallback sentences. Left out: nothing. No follow-up
+tickets.
