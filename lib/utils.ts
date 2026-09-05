@@ -748,7 +748,8 @@ export const calculateWebVitalScore = (
       break;
 
     case "load":
-      formattedScore = `${value.toFixed(2)}s`;
+      // Stored in milliseconds like every other vital; only the display is seconds
+      formattedScore = `${(value / 1000).toFixed(2)}s`;
       if (value <= 3000) {
         range = "Good";
       } else if (value <= 6000) {
