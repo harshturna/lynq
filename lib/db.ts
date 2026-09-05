@@ -21,12 +21,18 @@ if (!url) throw new Error("LYNQ_DB_POOLER_URL is not set");
   }
 }
 
-export const sql = postgres(url, {
+/** int8 columns come back as BigInt and BigInt parameters go in as int8. */
+type DbTypes = { bigint: typeof postgres.BigInt };
+
+export const sql = postgres<DbTypes>(url, {
   prepare: false,
   max: 1,
   idle_timeout: 20,
   connect_timeout: 10,
+  types: { bigint: postgres.BigInt },
 });
+
+export type Tx = postgres.TransactionSql<{ bigint: bigint }>;
 
 /**
  * Run `fn` in a transaction with a statement timeout that dies with the
@@ -34,7 +40,7 @@ export const sql = postgres(url, {
  */
 export function withTimeout<T>(
   ms: number,
-  fn: (tx: postgres.TransactionSql) => Promise<T>
+  fn: (tx: Tx) => Promise<T>
 ): Promise<T> {
   return sql.begin(async (tx) => {
     await tx.unsafe(`set local statement_timeout = ${Math.floor(ms)}`);

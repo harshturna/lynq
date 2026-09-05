@@ -1,8 +1,8 @@
 # TICKET-014: Ingest v2 endpoint
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-05
-**Started:** —
+**Started:** 2026-09-05
 **Completed:** —
 **Area:** infra
 
@@ -37,13 +37,23 @@ The /api/collect endpoint: the only writer of v2 rows, with the full pipeline, g
 
 ## Progress log
 - 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
+- 2026-09-05 — Started after the owner added the two env vars to Vercel. Implemented the whole
+  pipeline as a pure function of its inputs (handleCollect) with the database dependencies in
+  db-deps.ts, so the unit tests need no server and the integration test needs no route.
+  Decisions: ua-parser-js 1.x (MIT) rather than 2.x (AGPL); a hand-written referrer list instead
+  of copying another project's data file; net.BlockList for excluded IPs; no debug response.
+  Test setup: a `server-only` stub aliased in vitest so server modules can be imported.
 
 ## Handoff
-Kept current while the ticket is in progress. Overwrite, do not append.
-- **State:** what is built and working right now, what is half-done
-- **Blocked on:** nothing | what
-- **Next:** the next one to three concrete actions
-- **Read first:** files to open before touching anything
+- **State:** lib/ingest/{schema,url,referrers,glob,time-bounds,enrich,site-resolution,sites,
+  excluded-ips,rows,collect,db-deps,fixtures}.ts written with unit tests (56 passing);
+  app/api/collect/route.ts wires them; proxy.ts matcher excludes api/collect, api/lynq, js/;
+  request-geo.ts gained getGeoCodesFromHeaders; tests/integration/collect.integration.test.ts
+  drives the real pipeline against the container. ua-parser-js pinned to 1.x (2.x is AGPL).
+- **Blocked on:** nothing
+- **Next:** verify, integration on a fresh container, build, push (deploys), live beacon to
+  /api/collect from a registered Origin, confirm the rows and clean them up, close.
+- **Read first:** lib/ingest/collect.ts, app/api/collect/route.ts
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.
