@@ -42,7 +42,7 @@ import {
 import { buckets, type Granularity } from "./ranges";
 import { fillMinutes, type RealtimeRow, realtimeQuery } from "./realtime";
 import { type Revenue, revenueQuery } from "./revenue";
-import { trendsQuery } from "./trends";
+import { type TrendMetric, trendsQuery } from "./trends";
 import {
   type VitalsRow,
   type VitalsSummary,
@@ -331,10 +331,11 @@ export async function trends(
   ctx: QueryContext,
   dimension: string,
   values: string[],
-  granularity: Granularity
+  granularity: Granularity,
+  metric: TrendMetric = "visitors"
 ): Promise<Map<string, number[]>> {
   const rows = await run<{ value: string; bucket: Date; n: number }>(
-    trendsQuery(ctx, dimension, values, granularity),
+    trendsQuery(ctx, dimension, values, granularity, metric),
     ctx.timeoutMs
   );
   const times = buckets(

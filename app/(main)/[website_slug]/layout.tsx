@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { SessionDrawer } from "@/components/shell/session-drawer";
 import { TopNav } from "@/components/shell/top-nav";
 import { ShellProvider } from "@/components/shell/view-state";
+import { sessionTimeline } from "@/lib/screens/session";
 import { resolveSite } from "@/lib/screens/site";
 
 /** The site shell (design §4, §6): top navigation on the light base, URL state below. */
@@ -23,6 +25,7 @@ export default async function SiteLayout({
             userEmail={userEmail}
           />
           {children}
+          <SessionDrawer load={sessionTimeline.bind(null, website.slug)} />
         </ShellProvider>
       </Suspense>
     </div>

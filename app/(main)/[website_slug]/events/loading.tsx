@@ -1,0 +1,20 @@
+import { Bone, TableSkeleton } from "@/components/shell/skeleton";
+
+export default function EventsLoading() {
+  return (
+    <main className="mx-auto flex max-w-[1320px] flex-col gap-7 px-4 py-6 md:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Bone className="h-7 w-24" />
+          <Bone className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          <Bone className="h-8 w-40" />
+          <Bone className="h-8 w-28" />
+          <Bone className="h-8 w-24" />
+        </div>
+      </div>
+      <TableSkeleton rows={6} columns={5} />
+    </main>
+  );
+}

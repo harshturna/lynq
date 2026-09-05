@@ -15,11 +15,14 @@ import type { Granularity } from "./ranges";
  */
 export const MAX_TREND_VALUES = 20;
 
+export type TrendMetric = "visitors" | "custom_events";
+
 export function trendsQuery(
   ctx: QueryContext,
   dimension: string,
   values: string[],
   granularity: Granularity,
+  metric: TrendMetric = "visitors",
   w = ctx.range
 ): Compiled {
   if (!isRowDimension(dimension))
@@ -30,11 +33,16 @@ export function trendsQuery(
   const f = compileFilters(q, ctx.filters);
   const r = rowFrom(q, ctx, w, f);
   const expr = rowExpr(dimension as RowDimension, "e");
+  const n =
+    metric === "custom_events"
+      ? "count(*)::int"
+      : "count(distinct e.visitor_id)::int";
+  const event = metric === "custom_events" ? "custom" : "pageview";
   return {
     text: `${r.withClause}
-select ${expr}::text as value, ${bucketExpr(q, "e.ts", granularity, ctx.timezone)} as bucket, count(distinct e.visitor_id)::int as n
+select ${expr}::text as value, ${bucketExpr(q, "e.ts", granularity, ctx.timezone)} as bucket, ${n} as n
 from ${r.from}
-where ${r.where} and e.event = 'pageview' and ${expr} = any(${q.p(values)}::text[])
+where ${r.where} and e.event = ${q.p(event)} and ${expr} = any(${q.p(values)}::text[])
 group by 1, 2 order by 1, 2`,
     params: q.params,
   };
