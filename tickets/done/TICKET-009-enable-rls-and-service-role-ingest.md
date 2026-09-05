@@ -1,9 +1,9 @@
 # TICKET-009: Enable row-level security and move ingest writes to the service role
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-05
 **Started:** 2026-09-05
-**Completed:** —
+**Completed:** 2026-09-05
 **Area:** infra
 
 ## Goal
@@ -40,7 +40,7 @@ their own sites' data, and the ingest route writes with a server-only service-ro
 
 ## Plan
 - [x] Service-role key in `.env` (fetched through the Management API under the owner's CLI login).
-- [ ] Owner adds `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project (Production) and deploys `main`.
+- [x] Owner adds `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project (Production) and deploys `main`.
 - [x] Add `lib/supabase/admin.ts` (service-role client). Switch the six ingest write functions
       in `lib/actions.ts` to it. Move them out of the `"use server"` file into
       `lib/ingest.ts` so they are not exposed as callable server actions at all.
@@ -52,8 +52,8 @@ their own sites' data, and the ingest route writes with a server-only service-ro
         insert/update/delete policies for authenticated (the app never writes these as a user).
       - `revoke all on all tables in schema public from anon; revoke all on all sequences in
         schema public from anon;` and matching `alter default privileges`.
-- [ ] Apply with `npx supabase db push` (prompts for the database password) or the SQL editor.
-- [ ] Verify: rerun the TICKET-008 anon probe (every table should error or return 0); the
+- [x] Apply with `npx supabase db push` (prompts for the database password) or the SQL editor.
+- [x] Verify: rerun the TICKET-008 anon probe (every table should error or return 0); the
       TICKET-002 guest probe (own site readable); `npm run build`; a real beacon to a local
       `next start` with `NEXT_PUBLIC_ENV=dev` pointing at the dev data domain, then confirm the
       session row landed and delete it with the admin client.
@@ -66,11 +66,18 @@ their own sites' data, and the ingest route writes with a server-only service-ro
   the route is their only importer. Wrote the RLS migration. Verified the write path end to end
   against a local `next start`: session-start beacon → 200, session, page view and visitor rows
   present, test rows deleted through the cascade. `npm run verify` and `npm run build` green.
-- 2026-09-05 — Migration deliberately NOT pushed: the live Vercel build still writes with the
+- 2026-09-05 — Owner added the key to Vercel and authorised the push. Pushed main; the Next 16
+  build was live within ~20 s (detected by the disappearance of webpack chunk names). Live beacon
+  wrote through the service role before RLS, then `db push` applied the migration, then every
+  probe passed. Closed.
+- 2026-09-05 — (earlier) Migration deliberately NOT pushed: the live Vercel build still writes with the
   anon key, and the migration revokes anon. Applying it before the new code is deployed would
   stop tracking. Blocked on the owner adding the key to Vercel and deploying.
 
 ## Handoff
+Closed. See Outcome.
+
+(Superseded handoff kept for the record:)
 - **State:** all code done and verified locally; RLS migration written but not applied.
 - **Blocked on:** `SUPABASE_SERVICE_ROLE_KEY` set in the Vercel project and `main` deployed
   with commit "TICKET-009: ..." live. No Vercel CLI on this machine, so the owner does both.
@@ -83,7 +90,58 @@ their own sites' data, and the ingest route writes with a server-only service-ro
 - **Read first:** this ticket, lib/ingest.ts, supabase/migrations/20260905010000_enable_rls.sql
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+# 1. live beacon to https://lynq.byharsh.com/api/lynq on the new build, before RLS
+POST live /api/lynq -> 200 {"success":true}
+session row via service role: {"session_id":"ticket009-live-1788612834219-session","country":"Canada","city":"Winnipeg"}
+cleanup: deleted
+
+# 2. npx supabase db push
+Applying migration 20260905010000_enable_rls.sql...
+{"upToDate":false,"dryRun":false,"migrations":["20260905010000_enable_rls.sql"],"seeds":[],"roles":[],"message":"Finished supabase db push."}
+
+# 3. probes after RLS (anon key with no sign-in, then the guest user)
+-- anon key, no sign-in
+  websites       denied: 
+  visitors       denied: 
+  sessions       denied: 
+  page_views     denied: 
+  vitals         denied: 
+  custom_events  denied: 
+  anon insert page_views: denied: permission denied for table page_views
+-- guest user, signed in
+  own websites: 1
+  visitors       756 rows readable
+  sessions       1670 rows readable
+  page_views     6178 rows readable
+  vitals         2008 rows readable
+  custom_events  4470 rows readable
+  custom_events join sessions: ok
+  get_period_summary: {"views_count":32,"visitors_count":14,"average_session_duration":0.07,"bounce_rate":87.5}
+
+# 4. live beacon after RLS
+POST live /api/lynq -> 200 {"success":true}
+session row via service role: {"session_id":"ticket009-live-1788612846391-session","country":"Canada","city":"Winnipeg"}
+cleanup: deleted
+
+# 5. npx supabase db dump --linked --schema public -f supabase/schema.sql
+policies: 9  rls enabled: 6  anon grants on tables: 0
+
+npm run verify   # pass
+```
+The anon read denials print an empty message because PostgREST returns no body for a denied
+head-count; the insert denial shows the real "permission denied". The guest reads every row
+because the guest owns the only site in production. The live dashboard was not opened in a
+browser after RLS; every query it makes was exercised by the guest probe, including the
+custom_events → sessions join and the period-summary RPC.
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: RLS enabled on all six tables with owner-only policies for authenticated users; every
+anon privilege revoked; the ingest route writes through a server-only service-role client in
+`lib/ingest.ts`; `supabase/schema.sql` refreshed (9 policies, 6 tables with RLS, 0 anon grants).
+The public anon key can no longer read or write anything.
+
+Left out: write policies for authenticated users on the event tables (the app never needs
+them); rate limiting on the ingest route (Phase 0 ingest rewrite).
+
+Follow-up tickets: none.

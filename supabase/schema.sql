@@ -349,6 +349,70 @@ ALTER TABLE ONLY "public"."vitals"
 
 
 
+ALTER TABLE "public"."custom_events" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "custom_events: owner select" ON "public"."custom_events" FOR SELECT TO "authenticated" USING (("website_url" IN ( SELECT "websites"."url"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
+
+
+
+ALTER TABLE "public"."page_views" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "page_views: owner select" ON "public"."page_views" FOR SELECT TO "authenticated" USING (("website_url" IN ( SELECT "websites"."url"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
+
+
+
+ALTER TABLE "public"."sessions" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "sessions: owner select" ON "public"."sessions" FOR SELECT TO "authenticated" USING (("website_url" IN ( SELECT "websites"."url"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
+
+
+
+ALTER TABLE "public"."visitors" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "visitors: owner select" ON "public"."visitors" FOR SELECT TO "authenticated" USING (("website_url" IN ( SELECT "websites"."url"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
+
+
+
+ALTER TABLE "public"."vitals" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "vitals: owner select" ON "public"."vitals" FOR SELECT TO "authenticated" USING (("website_url" IN ( SELECT "websites"."url"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
+
+
+
+ALTER TABLE "public"."websites" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "websites: owner delete" ON "public"."websites" FOR DELETE TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "websites: owner insert" ON "public"."websites" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "websites: owner select" ON "public"."websites" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "websites: owner update" ON "public"."websites" FOR UPDATE TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
@@ -356,86 +420,72 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "anon";
 GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."custom_events" TO "anon";
 GRANT ALL ON TABLE "public"."custom_events" TO "authenticated";
 GRANT ALL ON TABLE "public"."custom_events" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."custom_events_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."custom_events_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."custom_events_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."page_views" TO "anon";
 GRANT ALL ON TABLE "public"."page_views" TO "authenticated";
 GRANT ALL ON TABLE "public"."page_views" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."page_views_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."page_views_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."page_views_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."visitors" TO "anon";
 GRANT ALL ON TABLE "public"."visitors" TO "authenticated";
 GRANT ALL ON TABLE "public"."visitors" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."session_clients_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."session_clients_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."session_clients_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."sessions" TO "anon";
 GRANT ALL ON TABLE "public"."sessions" TO "authenticated";
 GRANT ALL ON TABLE "public"."sessions" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."sessions_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."sessions_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."sessions_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."vitals" TO "anon";
 GRANT ALL ON TABLE "public"."vitals" TO "authenticated";
 GRANT ALL ON TABLE "public"."vitals" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."vitals_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."vitals_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."vitals_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."websites" TO "anon";
 GRANT ALL ON TABLE "public"."websites" TO "authenticated";
 GRANT ALL ON TABLE "public"."websites" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."websites_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."websites_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."websites_id_seq" TO "service_role";
 
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "service_role";
 
@@ -445,7 +495,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "service_role";
 
@@ -455,7 +504,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUN
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
 
