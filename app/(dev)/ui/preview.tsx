@@ -7,6 +7,13 @@ import {
   Sparkline,
   trendLabel,
 } from "@/components/charts/charts";
+import {
+  DotPlot,
+  Heatmap,
+  Histogram,
+  Quadrant,
+  Treemap,
+} from "@/components/charts/shapes";
 import { DeltaBadge, Pill } from "@/components/shell/badge";
 import { Control, Segmented } from "@/components/shell/control";
 import {
@@ -35,9 +42,122 @@ import {
   useAnnounce,
   useViewState,
 } from "@/components/shell/view-state";
+import {
+  FlowPanel,
+  Funnel,
+  Matrix,
+  PathList,
+  SplitBar,
+} from "@/components/shell/views";
+import { makeBins } from "@/lib/charts/histogram";
 import { withFilter, withParam } from "@/lib/url-state";
 
-/** Every shell component on sample data (TICKET-030, TICKET-031). */
+/** Every shell component on sample data (TICKET-030 to TICKET-033). */
+const TREEMAP = [
+  ["/", 5210, 48],
+  ["/pricing", 2610, 96],
+  ["/docs/getting-started", 1840, 132],
+  ["/blog/launch", 1420, 210],
+  ["/signup", 1102, 61],
+  ["/docs/api", 980, 155],
+  ["/about", 640, 34],
+  ["/changelog", 420, 88],
+].map(([label, value, shade]) => ({
+  key: String(label),
+  label: String(label),
+  value: Number(value),
+  shade: Number(shade),
+}));
+const QUADRANT = [
+  ["Google", 6200, 3.4, 211],
+  ["Direct", 3100, 4.1, 127],
+  ["Product Hunt", 1900, 1.2, 23],
+  ["GitHub", 840, 5.8, 49],
+  ["X", 620, 0.9, 6],
+  ["Newsletter", 410, 7.2, 30],
+  ["Bing", 260, 2.9, 8],
+].map(([label, x, y, size]) => ({
+  key: String(label),
+  label: String(label),
+  x: Number(x),
+  y: Number(y),
+  size: Number(size),
+}));
+const HOURS = (peak: number, scale: number) =>
+  Array.from({ length: 24 }, (_, h) => {
+    const d = Math.min(Math.abs(h - peak), 24 - Math.abs(h - peak));
+    return Math.round(scale * Math.exp(-(d * d) / 18) + ((h * 7) % 5));
+  });
+const HEATMAP = [
+  ["Canada", 14, 120],
+  ["United States", 15, 90],
+  ["India", 9, 70],
+  ["United Kingdom", 12, 40],
+  ["Germany", 11, 30],
+  ["Australia", 4, 18],
+].map(([label, peak, scale]) => ({
+  key: String(label),
+  label: String(label),
+  hours: HOURS(Number(peak), Number(scale)),
+}));
+const VIEWPORTS = makeBins(
+  [0, 400, 640, 800, 1024, 1280, 1536, 2000],
+  [180, 1210, 240, 310, 980, 1640, 420],
+  undefined,
+  (from, to) => `${from}–${to}`
+);
+const LCP = makeBins(
+  [0, 1000, 2500, 4000, 8000],
+  [1420, 2210, 640, 190],
+  (from) => (from < 2500 ? "good" : from < 4000 ? "warn" : "poor"),
+  (from, to) => `${from / 1000}–${to / 1000}s`
+);
+const CHANNEL_RATES = [
+  ["Newsletter", 7.2],
+  ["Referral", 5.1],
+  ["Organic Search", 3.4],
+  ["Direct", 4.1],
+  ["Social", 0.9],
+  ["Paid", 2.2],
+].map(([label, value]) => ({
+  key: String(label),
+  label: String(label),
+  value: Number(value),
+}));
+const FLOW_FROM = [
+  { key: "/", label: "/", count: 1290 },
+  { key: "/docs/getting-started", label: "/docs/getting-started", count: 410 },
+  { key: "google", label: "Google (entry)", count: 380 },
+  { key: "/blog/launch", label: "/blog/launch", count: 210 },
+];
+const FLOW_TO = [
+  { key: "/signup", label: "/signup", count: 1102 },
+  { key: "exit", label: "Left the site", count: 890 },
+  { key: "/docs/api", label: "/docs/api", count: 260 },
+  { key: "/", label: "/", count: 140 },
+];
+const PATHS = [
+  { key: "a", steps: ["/", "/pricing", "/signup"], count: 312 },
+  { key: "b", steps: ["/blog/launch", "/pricing", "/signup"], count: 128 },
+  { key: "c", steps: ["/docs/getting-started", "/signup"], count: 96 },
+  { key: "d", steps: ["/", "/signup"], count: 71 },
+];
+const MATRIX = {
+  rows: ["Chrome", "Safari", "Firefox", "Edge"],
+  cols: ["macOS", "Windows", "iOS", "Android", "Linux"],
+  cells: [
+    [3120, 4210, 380, 2640, 410],
+    [1980, null, 3110, null, null],
+    [420, 610, null, 90, 260],
+    [120, 890, null, null, null],
+  ],
+};
+const SPLIT = [
+  { key: "desktop", label: "Desktop", value: 9120, previous: 8410 },
+  { key: "mobile", label: "Mobile", value: 6230, previous: 6890 },
+  { key: "tablet", label: "Tablet", value: 640, previous: 610 },
+];
+
 const SITE = { slug: "ui", name: "Aivia", url: "aivia.byharsh.com" };
 const SITES = [
   SITE,
@@ -440,6 +560,133 @@ function Body() {
           compare={compare}
         />
       </div>
+
+      <Section title="Pages" qualifier="area visitors · shade engaged" strong>
+        <Treemap
+          title="Pages by visitors"
+          cells={TREEMAP}
+          total={16000}
+          shadeLabel="engaged"
+          formatShade={(v) => `${v}s`}
+        />
+      </Section>
+
+      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+        <Section title="Sources" qualifier="visitors × conversion" strong>
+          <Quadrant
+            title="Sources by visitors and conversion"
+            points={QUADRANT}
+            xLabel="Visitors"
+            yLabel="Conversion"
+            sizeLabel="Completions"
+            avgX={1200}
+            avgY={3.2}
+            formatY={(v) => `${v.toFixed(1)}%`}
+          />
+        </Section>
+        <Section
+          title="Conversion by channel"
+          qualifier="against the site average"
+          strong
+        >
+          <DotPlot
+            title="Conversion by channel"
+            rows={CHANNEL_RATES}
+            reference={3.2}
+            referenceLabel="site average"
+            format={(v) => `${v.toFixed(1)}%`}
+          />
+        </Section>
+      </div>
+
+      <Section title="Countries by hour" qualifier="site time" strong>
+        <Heatmap
+          title="Countries by hour of day"
+          rows={HEATMAP}
+          sessions={4200}
+        />
+      </Section>
+
+      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+        <Section title="Viewport width" qualifier="sessions" strong>
+          <Histogram
+            title="Viewport width"
+            name="Sessions"
+            bins={VIEWPORTS}
+            samples={4980}
+            markersAt={[
+              { value: 640, label: "sm 640" },
+              { value: 1024, label: "lg 1024" },
+              { value: 1280, label: "xl 1280" },
+            ]}
+          />
+        </Section>
+        <Section title="LCP distribution" qualifier="samples" strong>
+          <Histogram
+            title="LCP distribution"
+            name="Samples"
+            bins={LCP}
+            samples={4460}
+          />
+        </Section>
+      </div>
+
+      <Section title="Thresholds" qualifier="what shows with too little data">
+        <div className="grid gap-4 min-[1000px]:grid-cols-2">
+          <Treemap
+            title="Pages (too few)"
+            cells={TREEMAP.slice(0, 3)}
+            shadeLabel="engaged"
+          />
+          <Histogram
+            title="LCP (too few)"
+            name="Samples"
+            bins={LCP}
+            samples={12}
+          />
+        </div>
+      </Section>
+
+      <Section title="Flow" qualifier="/pricing" strong>
+        <FlowPanel
+          node={{ label: "/pricing", count: 2610, qualifier: "visitors" }}
+          from={FLOW_FROM}
+          to={FLOW_TO}
+          onPick={(r) => announce(`Picked ${r.label}`)}
+        />
+      </Section>
+
+      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+        <Section title="Signup funnel" qualifier="sessions" strong>
+          <Funnel
+            title="Signup funnel"
+            steps={[
+              { key: "visit", label: "Visited the site", count: 15990 },
+              { key: "pricing", label: "Saw /pricing", count: 2610 },
+              { key: "start", label: "Started signup", count: 1102 },
+              { key: "done", label: "Completed", count: 424 },
+            ]}
+          />
+        </Section>
+        <Section title="Paths to signup" qualifier="top sequences" strong>
+          <PathList
+            paths={PATHS}
+            endLabel="signup"
+            onPick={(p) => announce(`${p.count} sessions`)}
+          />
+        </Section>
+      </div>
+
+      <Section title="Devices" qualifier="split and matrix" strong>
+        <div className="flex flex-col gap-6">
+          <SplitBar title="Devices" segments={SPLIT} compare={compare} />
+          <Matrix
+            title="Browser by operating system"
+            rowHeader="Browser"
+            data={MATRIX}
+          />
+        </div>
+      </Section>
 
       <Section title="Skeletons" qualifier="what streams in first">
         <div className="flex flex-col gap-6">

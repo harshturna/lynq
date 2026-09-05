@@ -12,6 +12,7 @@ import {
   TreemapChart,
 } from "echarts/charts";
 import {
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   MarkLineComponent,
@@ -33,6 +34,7 @@ export function setupEcharts() {
     TreemapChart,
     HeatmapChart,
     GridComponent,
+    GraphicComponent,
     TooltipComponent,
     LegendComponent,
     VisualMapComponent,
