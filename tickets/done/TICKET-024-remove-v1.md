@@ -1,9 +1,9 @@
 # TICKET-024: Remove the v1 tracker, route, adapter and old tables
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-05
 **Started:** 2026-09-05
-**Completed:** —
+**Completed:** 2026-09-05
 **Area:** infra
 
 ## Goal
@@ -57,9 +57,9 @@ Retire everything v1 per D-007: the jsDelivr snippet on Lynq's site, /api/lynq, 
 - [x] Write the migration and the schema test expecting the old tables gone; verify, integration,
       e2e, build; commit and push; confirm the deploy answers 404 on /api/lynq and 202 on
       /api/collect.
-- [ ] Push the migration, delete ingest_version 0 and 1 rows, refresh the dump, bump the test
+- [x] Push the migration, delete ingest_version 0 and 1 rows, refresh the dump, bump the test
       constant, rerun integration tests; second commit and push.
-- [ ] Verify: npm run verify, npm run test:integration, npm run test:e2e, npm run build, live
+- [x] Verify: npm run verify, npm run test:integration, npm run test:e2e, npm run build, live
       checks.
 
 ## Progress log
@@ -72,21 +72,41 @@ Retire everything v1 per D-007: the jsDelivr snippet on Lynq's site, /api/lynq, 
   analytics.events (lib/query/site-visitors.ts). Migration 20260905040000_drop_v1.sql written and
   proven by the integration setup (dump + migration replay from a reset container): 21 pass.
   e2e 13 pass, build clean. Committed and pushed; the migration is applied after the deploy.
+- 2026-09-05 — Deploy live: /api/lynq now answers 307 to /login (the auth proxy treats it as any
+  unknown path; the route itself is gone), /api/collect 400 on an empty body, /js/lynq.js 200.
+  `npx supabase db push` applied 20260905040000_drop_v1.sql; deleted 14,216 rows
+  (ingest_version 0: 14,203; 1: 13), leaving 25 v2 rows; public schema holds only websites.
+  Dump refreshed (384 lines of v1 objects gone), test constant bumped, container reset,
+  integration 21 pass. Live guest walk-through: websites list shows 0 and 2 visitors (30 days),
+  site page renders, no console errors.
 
 ## Handoff
-- **State:** Code side complete, committed and pushed (first commit). Production database still
-  has the old tables, the RPC, websites.visitors, and the v0/v1 rows; the migration file exists
-  and is tested but not pushed.
-- **Blocked on:** the Vercel deploy of the first commit finishing (check /api/lynq -> 404).
-- **Next:** `npx supabase db push`; delete analytics.events rows with ingest_version in (0, 1);
-  `npx supabase db dump --linked --schema public,analytics -f supabase/schema.sql`; bump
-  DUMP_INCLUDES_MIGRATIONS_THROUGH to 20260905040000; reset the test container and rerun
-  integration; close the ticket; second commit.
-- **Read first:** this Context (Order paragraph), supabase/migrations/20260905040000_drop_v1.sql,
-  tests/setup/database.ts.
+Closed; nothing outstanding.
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+npm run verify                                  # lint 0 errors (42 warnings, pre-existing), typecheck, tickets, 80 unit tests pass
+TEST_DATABASE_URL=... npm run test:integration  # before the push: dump + migration replay, 21 pass; after: refreshed dump, 21 pass
+npm run test:e2e                                # 13 passed (39.7s)
+npm run build                                   # clean; /api/lynq no longer in the route list
+npx supabase db push --dry-run / db push        # 20260905040000_drop_v1.sql applied
+node delete-seed-rows                           # deleted 14216; after: [{ingest_version:2,count:25}]; public tables: websites
+curl POST https://lynq.byharsh.com/api/lynq     # 307 -> /login (route gone)
+curl POST https://lynq.byharsh.com/api/collect  # 400 on an empty body (endpoint alive)
+curl GET  https://lynq.byharsh.com/js/lynq.js   # 200
+```
+Live guest walk-through with Playwright: /dashboard lists both sites with 30-day visitor
+counts (0 and 2), /lynq-byharsh-com renders the analytics tab, zero console errors.
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: v1 is gone end to end. Deleted /api/lynq, lib/ingest.ts, the v1 adapter and its
+tests, the backfill and diff scripts, the Supabase admin client, legacyVisitorId,
+getGeoFromHeaders and the v1 tracker types; `tsx` and `i18n-iso-countries` uninstalled. The
+layout carries only the v2 snippet, the setup dialog shows the v2 snippet, and the proxy and
+middleware allow-lists shrink to api/collect and js/. Production: old tables, their policies,
+get_period_summary and websites.visitors dropped; all backfill and adapter rows deleted; the
+websites list shows 30-day unique visitors from analytics.events instead of the counter.
+Left out: no landing copy change was needed (nothing on the page claimed v1 or cookies).
+Follow-ups: TICKET-026 (seed demo data). Owner actions: install the v2 snippet on
+aivia.byharsh.com (untracked until then); remove NEXT_PUBLIC_LYNQ_SCRIPT_VERSION from Vercel
+and .env (no longer read); archive harshturna/lynq-js on GitHub.
