@@ -1,43 +1,32 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Bone,
+  ChartSkeleton,
+  StripSkeleton,
+  TableSkeleton,
+} from "@/components/shell/skeleton";
 
-const WebsiteLoading = () => {
+/** The Overview's layout as skeletons (design §12): never a spinner. */
+export default function OverviewLoading() {
   return (
-    <main className="mb-4">
-      {/* Nav tabs + date picker */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <Skeleton className="h-10 w-full md:w-[320px]" />
-        <Skeleton className="h-[44px] w-[180px]" />
-      </div>
-
-      {/* Website name + configuration button */}
-      <div className="my-8 flex items-center justify-between">
-        <div>
-          <Skeleton className="h-9 w-56 mb-2" />
-          <Skeleton className="h-5 w-40" />
+    <main className="mx-auto flex max-w-[1320px] flex-col gap-7 px-4 py-6 md:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <Bone className="h-7 w-40" />
+          <Bone className="h-4 w-72" />
         </div>
-        <Skeleton className="h-10 w-32" />
+        <div className="flex gap-2">
+          <Bone className="h-8 w-40" />
+          <Bone className="h-8 w-28" />
+          <Bone className="h-8 w-24" />
+        </div>
       </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-stone-800/60 p-6">
-            <Skeleton className="h-4 w-24 mb-3" />
-            <Skeleton className="h-8 w-16" />
-          </div>
-        ))}
-      </div>
-
-      {/* Chart */}
-      <Skeleton className="h-[350px] w-full mb-8" />
-
-      {/* Data panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Skeleton className="h-[300px] w-full" />
-        <Skeleton className="h-[300px] w-full" />
+      <StripSkeleton tiles={6} />
+      <ChartSkeleton height={220} />
+      <div className="grid gap-8 min-[1000px]:grid-cols-2">
+        <TableSkeleton />
+        <TableSkeleton />
+        <TableSkeleton />
       </div>
     </main>
   );
-};
-
-export default WebsiteLoading;
+}

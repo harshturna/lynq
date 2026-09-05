@@ -34,7 +34,20 @@ export type ViewState = {
   /** The session drawer, open on any screen. */
   session?: { visitorId: string; sessionId: string };
   device?: DeviceView;
+  /** The checked KPI tile on the Overview, which drives the lead chart. */
+  metric?: OverviewMetric;
 };
+
+export const OVERVIEW_METRICS = [
+  "visitors",
+  "sessions",
+  "pageviews",
+  "bounce_rate",
+  "engaged_time",
+  "kpi",
+] as const;
+export type OverviewMetric = (typeof OVERVIEW_METRICS)[number];
+export const DEFAULT_METRIC: OverviewMetric = "visitors";
 
 export type SearchInput = Record<string, string | string[] | undefined>;
 
@@ -204,10 +217,17 @@ export function parseSearch(sp: SearchInput): ViewState {
   }
   const device = first(sp.device);
   if (device && DEVICES.has(device)) state.device = device as DeviceView;
+  const metric = first(sp.metric);
+  if (
+    metric &&
+    metric !== DEFAULT_METRIC &&
+    (OVERVIEW_METRICS as readonly string[]).includes(metric)
+  )
+    state.metric = metric as OverviewMetric;
   return state;
 }
 
-/** Stable key order: range, compare, f…, view.*, sort.*, sel, session, device. */
+/** Stable key order: range, compare, f…, view.*, sort.*, sel, session, device, metric. */
 export function toSearch(s: ViewState): URLSearchParams {
   const out = new URLSearchParams();
   if (s.range !== DEFAULT_RANGE) {
@@ -233,6 +253,7 @@ export function toSearch(s: ViewState): URLSearchParams {
   if (s.session)
     out.set("session", `${s.session.visitorId}:${s.session.sessionId}`);
   if (s.device && s.device !== "all") out.set("device", s.device);
+  if (s.metric && s.metric !== DEFAULT_METRIC) out.set("metric", s.metric);
   return out;
 }
 

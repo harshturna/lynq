@@ -594,6 +594,13 @@ describe("phase 1 primitives (TICKET-034)", () => {
     ).toEqual([1, 0]);
   });
 
+  it("goal completions per bucket", async () => {
+    const series = await q.goalTimeseries(ctx(), signup, "hour");
+    expect(series).toHaveLength(24);
+    expect(series[10].value).toBe(1);
+    expect(series.reduce((a, p) => a + p.value, 0)).toBe(1);
+  });
+
   it("page flow, heatmap, histogram and paths", async () => {
     const flow = await q.pageFlow(ctx(), "/pricing");
     expect(flow).toHaveLength(4);

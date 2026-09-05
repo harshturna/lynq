@@ -14,6 +14,7 @@ import {
   type GoalDef,
   type GoalStats,
   goalStatsQuery,
+  goalTimeseriesQuery,
 } from "./goals";
 import { type HeatmapCell, heatmapQuery, pivotHeatmap } from "./heatmap";
 import {
@@ -48,8 +49,14 @@ import {
   vitalsTimeseriesQuery,
 } from "./vitals";
 
-/** Per-screen statement timeout (design §9): over budget fails the section, not the pool. */
-export const DEFAULT_TIMEOUT_MS = 1_500;
+/**
+ * Per-screen statement timeout (design §9): over budget fails the section,
+ * not the pool. The design named 1.5 s; measured on the production pooler
+ * (TICKET-035, 183k rows) the multi-metric breakdowns alone take 1.3 to
+ * 1.7 s at twelve months, so 5 s keeps long ranges rendering until the
+ * daily rollup (TICKET-049) brings them back under the budget.
+ */
+export const DEFAULT_TIMEOUT_MS = 5_000;
 
 /** Executes a compiled query with the read timeout (design §14). */
 export async function run<T extends Record<string, unknown>>(
@@ -302,4 +309,17 @@ function vitalsRow(r: Record<string, unknown>): Record<string, unknown> {
     out[k] = numOrNull(r[k]);
   out.samples = num(r.samples);
   return out;
+}
+
+/** Completions per bucket over the context's range (design §8.1). */
+export async function goalTimeseries(
+  ctx: QueryContext,
+  goal: GoalDef,
+  granularity: Granularity
+): Promise<SeriesPoint[]> {
+  const rows = await run<{ bucket: Date; value: number }>(
+    goalTimeseriesQuery(ctx, goal, granularity),
+    ctx.timeoutMs
+  );
+  return fillSeries(rows, ctx.range, granularity, ctx.timezone);
 }

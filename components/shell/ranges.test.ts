@@ -53,5 +53,8 @@ describe("ranges", () => {
     expect(rangeLabel({ from: "2026-08-06", to: "2026-09-04" })).toBe(
       "Aug 6 – Sep 4, 2026"
     );
+    expect(rangeLabel({ from: "2025-09-06", to: "2026-09-05" })).toBe(
+      "Sep 6, 2025 – Sep 5, 2026"
+    );
   });
 });

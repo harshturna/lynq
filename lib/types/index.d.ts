@@ -7,13 +7,6 @@ type Website = {
   deleted_at: string | null;
 };
 
-type DatePickerValues =
-  | "Today"
-  | "Last 7 days"
-  | "Last 30 days"
-  | "Last 3 months"
-  | "Last 12 months";
-
 type WebVitalType =
   | "lcp"
   | "cls"

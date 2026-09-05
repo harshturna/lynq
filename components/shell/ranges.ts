@@ -33,7 +33,8 @@ export function todayIn(timezone: string, now = new Date()): string {
 export function rangeLabel(range: Range): string {
   if (typeof range === "string")
     return PRESETS.find((p) => p.value === range)?.label ?? range;
-  return `${formatDate(range.from)} – ${formatDate(range.to, true)}`;
+  const sameYear = range.from.slice(0, 4) === range.to.slice(0, 4);
+  return `${formatDate(range.from, !sameYear)} – ${formatDate(range.to, true)}`;
 }
 
 export function formatDate(iso: string, withYear = false): string {

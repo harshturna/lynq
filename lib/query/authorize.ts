@@ -20,7 +20,15 @@ import {
  */
 export type Principal = { kind: "session"; userId: string };
 
-export type Site = { siteId: number; timezone: string };
+export type Site = {
+  siteId: number;
+  timezone: string;
+  /** The goal marked as the number-one KPI (design §8.0), if any. */
+  kpiGoalId: number | null;
+  /** Viewport breakpoints for the Devices histogram. */
+  breakpoints: number[];
+  shortcuts: boolean;
+};
 
 export async function authorize(
   principal: Principal,
@@ -38,9 +46,26 @@ export async function authorize(
     .maybeSingle();
   if (!website) return null;
   const siteId = Number(website.id);
-  const [settings] = await sql<{ timezone: string }[]>`
-    select timezone from analytics.site_settings where site_id = ${siteId}`;
-  return { siteId, timezone: settings?.timezone ?? "UTC" };
+  const [settings] = await sql<
+    {
+      timezone: string;
+      kpi_goal_id: number | null;
+      breakpoints: number[];
+      shortcuts: boolean;
+    }[]
+  >`
+    select timezone, kpi_goal_id, breakpoints, shortcuts
+    from analytics.site_settings where site_id = ${siteId}`;
+  return {
+    siteId,
+    timezone: settings?.timezone ?? "UTC",
+    kpiGoalId:
+      settings?.kpi_goal_id === null || settings?.kpi_goal_id === undefined
+        ? null
+        : Number(settings.kpi_goal_id),
+    breakpoints: settings?.breakpoints?.map(Number) ?? [640, 1024, 1280],
+    shortcuts: settings?.shortcuts ?? true,
+  };
 }
 
 export type ContextOptions = {

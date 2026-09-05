@@ -2,7 +2,8 @@ import { globToLike } from "@/lib/ingest/glob";
 import { type Compiled, Query } from "./builder";
 import { compileFilters } from "./filters";
 import type { QueryContext } from "./primitives";
-import { cteScope, scope } from "./primitives";
+import { bucketExpr, cteScope, rowFrom, scope } from "./primitives";
+import type { Granularity } from "./ranges";
 import { sessionCte, sessionWhere } from "./sessions";
 
 /**
@@ -111,6 +112,26 @@ per as (
   where ${scope(q, ctx, w)} and ${sessionWhere(f)}
   group by 1, 2)
 select ${counts.join(", ")} from per`,
+    params: q.params,
+  };
+}
+
+/** Completions per bucket, for the KPI tile's lead chart (design §8.1). */
+export function goalTimeseriesQuery(
+  ctx: QueryContext,
+  goal: GoalDef,
+  granularity: Granularity,
+  w = ctx.range
+): Compiled {
+  const q = new Query();
+  const f = compileFilters(q, ctx.filters);
+  const r = rowFrom(q, ctx, w, f);
+  return {
+    text: `${r.withClause}
+select ${bucketExpr(q, "e.ts", granularity, ctx.timezone)} as bucket, count(*)::int as value
+from ${r.from}
+where ${r.where} and ${goalPredicate(q, goal)}
+group by 1 order by 1`,
     params: q.params,
   };
 }

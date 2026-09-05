@@ -213,3 +213,13 @@ describe("state helpers", () => {
     expect(parseFilter("country::CA")).toBeNull();
   });
 });
+
+describe("metric", () => {
+  it("keeps a known metric, drops the default and unknown values", () => {
+    expect(parseSearch({ metric: "sessions" }).metric).toBe("sessions");
+    expect(parseSearch({ metric: "visitors" }).metric).toBeUndefined();
+    expect(parseSearch({ metric: "revenue" }).metric).toBeUndefined();
+    expect(toQuery({ ...defaultState(), metric: "kpi" })).toBe("?metric=kpi");
+    expect(toQuery({ ...defaultState(), metric: "visitors" })).toBe("");
+  });
+});
