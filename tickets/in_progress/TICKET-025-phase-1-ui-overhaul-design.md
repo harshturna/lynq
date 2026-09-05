@@ -46,7 +46,7 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
       owner's reaction before writing.
 - [x] Write docs/design/phase-1-ui-overhaul.md: tokens, component inventory, screen specs,
       URL state, data loading, empty and loading states, responsive behaviour.
-- [ ] Review passes (design, information architecture, accessibility, implementation).
+- [x] Review passes (design, information architecture, accessibility, implementation).
 - [ ] Owner sign-off; decisions recorded; implementation tickets opened.
 
 ## Progress log
@@ -83,13 +83,23 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   responsive, charting decision (proposed D-009: hand-written SVG, drop Recharts), sequence
   of 15 implementation tickets, open questions. Review passes start: 1 design/IA, 2
   implementation feasibility, 3 accessibility/states/responsive.
+- 2026-09-05 — Pass 1 (14 findings) folded into v2. Passes 2 (16 findings) and 3 (12
+  findings) ran in parallel after the owner asked why agents were sequential (CLAUDE.md rule
+  corrected) and are folded into v3: settled section promises awaited in server children,
+  two-CTE multi-metric breakdown, entry dimensions via array_agg, goals RLS site-scoped and
+  revoked from PostgREST, migration ledger for the test container, viewport width added to the
+  tracker, /api/live route outside the auth proxy, normalised-viewBox charts with HTML text,
+  full ARIA contract per chart type, table semantics, scoped shortcuts, contrast fixes to four
+  tokens, drawer focus and history rules, responsive fixes, missing states. Sequence is now 21
+  tickets. v3 is ready for owner sign-off with three decisions requested (§17).
 
 ## Handoff
-- **State:** Direction approved. docs/design/phase-1-ui-overhaul.md v1 drafted. Review pass 1
-  (design/IA) running.
-- **Blocked on:** nothing.
-- **Next:** fold review findings into v2; passes 2 and 3; present the high-level summary and
-  the D-009 charting decision for owner sign-off; open the implementation tickets in §15.
+- **State:** docs/design/phase-1-ui-overhaul.md v3, all three review passes folded in.
+- **Blocked on:** owner sign-off on the design and the three decisions in §17 (sign-off,
+  D-009 charting, viewport-size tracker change).
+- **Next:** on sign-off record D-009 (and the viewport decision in the ticket log), then open
+  the 21 implementation tickets from §16 in pending/ (TICKET-028 onward; TICKET-027 already
+  exists as step 7), close this ticket.
 - **Read first:** docs/design/phase-1-ui-overhaul.md; D-008.
 - **Read first:** D-008 in tickets/DECISIONS.md; this ticket's Context for tokens and layout.
 
