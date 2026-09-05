@@ -11,11 +11,9 @@ Rewrite the tracker in this repository: session record, batching contract, engag
 
 ## Context
 - Design §6.1 (session record and storage rules), §6.2 (engagement schedule), §7.1 (envelope,
-  transport contract, 8 KB / 20 event cap, sendBeacon fallback), §8.1 (chunks, budget, serving
-  with headers(), attribute surface), §8.2 (behaviour table), §8.3 (tests including the
-  invariant test).
-- Depends on TICKET-014 for the zod schema the payload types are generated from; can start once
-  that schema exists.
+  transport contract, caps, sendBeacon fallback), §8.1 (chunks, budget, serving with headers(),
+  attribute surface), §8.2 (behaviour table), §8.3 (tests including the invariant test).
+- Depends on TICKET-014 for the zod schema the payload types are generated from.
 - The current tracker lives in harshturna/lynq-js; it is archived at its last v1 commit at the end
   of this ticket so jsDelivr keeps serving v1.
 - npm workspaces: `packages/tracker` is the second workspace; the Next app stays at the root.
@@ -33,7 +31,7 @@ Rewrite the tracker in this repository: session record, batching contract, engag
 - [ ] Verify: `npm run verify`, `npm run test:e2e`, gzipped core size printed by the build under 3 KB.
 
 ## Progress log
-- 2026-09-05 — Created from the Phase 0 design (TICKET-011, D-004, D-005).
+- 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
 
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.

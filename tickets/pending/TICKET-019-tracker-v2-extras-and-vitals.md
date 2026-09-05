@@ -11,10 +11,9 @@ The two optional chunks: extras (outbound, downloads, declarative events) and vi
 
 ## Context
 - Design §8.1 (chunk loading by attribute), §8.2 (extras rows), §8.4 (vitals module contents, what
-  is dropped).
+  is dropped), §4 (typed vitals columns the values land in).
 - Depends on TICKET-018.
-- web-vitals/attribution is about 4 KB gzipped on its own; the navigation timing and longtask
-  additions must stay small.
+- web-vitals/attribution is about 4 KB gzipped on its own.
 
 ## Plan
 - [ ] Extras chunk loaded on data-outbound / data-auto-events.
@@ -23,7 +22,7 @@ The two optional chunks: extras (outbound, downloads, declarative events) and vi
 - [ ] Playwright cases for each chunk. Verify: `npm run verify`, `npm run test:e2e`.
 
 ## Progress log
-- 2026-09-05 — Created from the Phase 0 design (TICKET-011, D-004, D-005).
+- 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
 
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.

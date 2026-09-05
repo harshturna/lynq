@@ -1,4 +1,4 @@
-# TICKET-016: Query foundations: authorize, ranges, sessions, primitives, filters
+# TICKET-016: Query foundations
 
 **Status:** pending
 **Created:** 2026-09-05
@@ -7,31 +7,32 @@
 **Area:** quality
 
 ## Goal
-The typed query layer Phase 1 will build screens on: authorization seam, ranges with timezone, session definitions, the four primitives, and the filter compiler.
+The typed query layer Phase 1 will build screens on: authorization seam, half-open ranges with timezone, the session CTE, the four primitives, and the filter compiler.
 
 ## Context
-- Design §6.3 (definitions), §9 (all subsections: QueryContext, ranges and granularity, primitives
-  incl. `rows`, filters with sessionWhere and the AND/OR rule, authorize seam), §16 (query
-  shapes to validate against).
-- Depends on TICKET-012 (read client) and TICKET-013 (authorizeWebsite returning the site id).
+- Design §6.3 (session CTE and definitions), §9 (QueryContext, ranges, primitives incl. rows,
+  filters with session predicates, prop operators, user_hash <> 0, AND/OR, authorize seam), §16
+  (query shapes to validate against, including the corrected realtime, paths, attribution and
+  grouping-sets forms).
+- Depends on TICKET-012 and TICKET-013 (authorizeWebsite returning the site id).
 - Today's dashboard logic to be reproducible: lib/utils.ts groupByAnalytics, applyFilters (OR
   within, AND across), process*Data bucketing, calculateBounceRate; lib/actions.ts
   getAnalytics/getPeriodComparison.
-- Only site_settings.timezone is read here; the UI for it is Phase 1.
+- `between` must not appear in this directory; `->>` must not appear in a where clause.
 
 ## Plan
-- [ ] `lib/query/authorize.ts` with the session-user principal; `ranges.ts` (rolling and calendar
-      ranges, compare, granularity, timezone via toStartOfInterval).
-- [ ] `sessions.ts`: the §6.3 definitions as reusable SQL fragments.
-- [ ] `filters.ts`: allow-list, rowWhere and sessionWhere keyed on (visitor_id, session_id), AND/OR
-      rule.
+- [ ] `lib/query/authorize.ts` (session-user principal), `ranges.ts` (rolling and calendar, compare,
+      granularity, half-open, timezone round trip), `sessions.ts` (the materialised CTE).
+- [ ] `filters.ts`: allow-list, row predicates, session predicates as `having` on the CTE, `@>`/`?`
+      for props, `user_hash <> 0` for identity queries, AND/OR rule.
 - [ ] `timeseries`, `breakdown` (with total, entry/exit as session dimensions), `summary` (range and
       compare), `rows` (events, session, sessions).
-- [ ] Integration tests on fixtures for every primitive, the repair rules, suspect exclusion, p75 with
-      mapContains. Verify: `npm run verify`, `npm run test:integration`.
+- [ ] Integration tests on fixtures for every primitive, session repair, suspect exclusion, p75 with
+      NULLs, a boundary event counted once across range and compare, retention excluding
+      anonymous rows. Verify: `npm run verify`, `npm run test:integration`.
 
 ## Progress log
-- 2026-09-05 — Created from the Phase 0 design (TICKET-011, D-004, D-005).
+- 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
 
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.

@@ -31,7 +31,7 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   plus a screen inside a shell that already exists.
 
 ## D-002 — ClickHouse for events, Supabase Postgres for metadata
-- **Status:** Accepted
+- **Status:** Superseded by D-006
 - **Date:** 2026-09-05
 - **Context:** Funnels, paths, retention, p75 vitals, and realtime all need columnar scans over
   events. Postgres with Timescale would work to roughly 10 to 20 million events and then require
@@ -95,3 +95,28 @@ Accepted decisions are immutable except for their status and a pointer to a supe
 - **Consequences:** Retention, funnels and attribution beyond one day need `identify()`. Sites
   that want DNT honoured must add an attribute to their snippet. Some customers will ask for
   titles and raw ids and will find a switch in settings.
+
+## D-006 — Events stay in Supabase Postgres; ClickHouse is the exit ramp, not the start
+- **Status:** Accepted
+- **Date:** 2026-09-05
+- **Context:** D-002 chose ClickHouse for the scale and ad-hoc flexibility a many-tenant product
+  needs. The owner's horizon for the next six months is a few sites, shipped fast, with the
+  fewest moving parts, and no feature compromise. At that scale Postgres handles the workload,
+  and every roadmap feature is expressible in SQL (window functions and array aggregates in
+  place of ClickHouse's one-line funnel and retention functions).
+- **Decision:** Events live in a dedicated `analytics` schema in the existing Supabase Postgres:
+  one wide `events` table, monthly range partitions, the same row shape as the ClickHouse
+  design, JSONB for props and vitals. The query layer (`lib/query`) stays the only place with
+  SQL and the only tenant boundary for analytics reads, so the store can be swapped behind it.
+  Rollup tables are the first scaling lever; ClickHouse is the second, taken when a site's
+  raw-event queries exceed budget, expected somewhere past ten million events a year.
+- **Rejected alternatives:** ClickHouse now (D-002), rejected for operational cost at a scale
+  that does not need it. Postgres plus TimescaleDB, rejected because Supabase's Timescale
+  support is limited to the community edition without compression, which removes most of its
+  value; native partitioning plus pg_cron covers what Phase 0 needs.
+- **Consequences:** One system to operate; RLS stays available on the app tables; migrations
+  stay in `supabase/migrations`. Count distinct is exact and costs a scan; funnel, path and
+  retention queries are hand-written SQL. Disk grows roughly 40 GB per 100M events with no
+  columnar compression, so the Supabase plan and the retention default matter earlier than
+  they would have. The design document is revised to v5 for Postgres; the wide row, the client
+  session id, the envelope, the ingest pipeline, the tracker and the backfill are unchanged.

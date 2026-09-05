@@ -1,4 +1,4 @@
-# TICKET-017: Backfill Supabase into ClickHouse
+# TICKET-017: Backfill the old tables into analytics.events
 
 **Status:** pending
 **Created:** 2026-09-05
@@ -7,24 +7,24 @@
 **Area:** infra
 
 ## Goal
-Move all historical Supabase event data into ClickHouse with the mappings and approximations stated in design §10.
+Move all historical data into the events table with the mappings and approximations stated in design §10.
 
 ## Context
-- Design §10 (mapping table, approximations, --until, mutation polling, dry-run, batching), §5.3
+- Design §10 (mapping table, approximations, --until, idempotent wipe, dry-run, batching), §5.3
   (legacy visitor id).
 - Depends on TICKET-015 being deployed: `--until` is its deploy timestamp.
-- Legacy country names must map to ISO codes with i18n-iso-countries; print unmapped names.
-- Runs from a laptop with the service-role key and the ClickHouse admin credentials; never from
-  CI.
+- Legacy country names must map to ISO codes with i18n-iso-countries; print unmapped names. Heap
+  sizes and interaction count are not carried.
+- Runs from a laptop with the pooler URL; never from CI.
 
 ## Plan
-- [ ] `scripts/backfill-clickhouse.mjs --site --until --dry-run` per §10.
+- [ ] `scripts/backfill-events.mjs --site --until --dry-run` per §10.
 - [ ] Dry run against production; review the unmapped-country and orphan reports.
-- [ ] Real run; record counts per table on both sides in this ticket.
-- [ ] Verify: counts match the Supabase export within the stated approximations; `npm run verify`.
+- [ ] Real run; record counts per table on both sides here.
+- [ ] Verify: counts match the old tables within the stated approximations; `npm run verify`.
 
 ## Progress log
-- 2026-09-05 — Created from the Phase 0 design (TICKET-011, D-004, D-005).
+- 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
 
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.
