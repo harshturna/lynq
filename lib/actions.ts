@@ -31,11 +31,48 @@ export async function addWebsite(name: string, url: string, user_id: string) {
   return response;
 }
 
+/**
+ * Gate for every read action that takes a website URL. Server actions are
+ * callable from any client with a session, so matching the caller to the
+ * passed user id is not enough: the user must also own the website. Ownership
+ * is a websites row with this url and user_id, the same rule getWebsite uses.
+ */
+async function authorizeWebsite(
+  website_url: string,
+  user_id: string
+): Promise<
+  | { supabase: Awaited<ReturnType<typeof createClient>>; error: null }
+  | { supabase: null; error: string }
+> {
+  const [supabase, user] = await Promise.all([createClient(), getUser()]);
+
+  if (!user?.id || user_id !== user.id) {
+    return { supabase: null, error: "Unauthorized User" };
+  }
+
+  const { data: website } = await supabase
+    .from("websites")
+    .select("id")
+    .eq("url", website_url)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!website) {
+    return { supabase: null, error: "Unauthorized User" };
+  }
+
+  return { supabase, error: null };
+}
+
 export async function getAllWebsites(userId: string): Promise<{
   data: Website[] | null;
-  error: PostgrestError | null;
+  error: PostgrestError | null | string;
 }> {
-  const supabase = await createClient();
+  const [supabase, user] = await Promise.all([createClient(), getUser()]);
+  if (!user?.id || userId !== user.id) {
+    return { data: null, error: "Unauthorized User" };
+  }
+
   const { data, error } = await supabase
     .from("websites")
     .select("*")
@@ -249,13 +286,12 @@ export async function getAnalytics(
   error: PostgrestError | null | string;
 }> {
   try {
-    const [supabase, user] = await Promise.all([createClient(), getUser()]);
-
-    if (!user?.id) {
-      return { res: null, error: "Unauthorized User" };
-    }
-    if (user_id !== user.id) {
-      return { res: null, error: "Unauthorized User" };
+    const { supabase, error: authError } = await authorizeWebsite(
+      website_url,
+      user_id
+    );
+    if (!supabase) {
+      return { res: null, error: authError };
     }
 
     const timeFrame = getTimeFrame(pickedTimeFrame);
@@ -348,10 +384,12 @@ export async function getPeriodComparison(
   user_id: string
 ): Promise<{ data: PeriodSummary | null; error: string | null }> {
   try {
-    const [supabase, user] = await Promise.all([createClient(), getUser()]);
-
-    if (!user?.id || user_id !== user.id) {
-      return { data: null, error: "Unauthorized User" };
+    const { supabase, error: authError } = await authorizeWebsite(
+      website_url,
+      user_id
+    );
+    if (!supabase) {
+      return { data: null, error: authError };
     }
 
     const { from, to } = getPreviousPeriodBounds(pickedTimeFrame);
@@ -421,13 +459,12 @@ export async function getVitals(
   data: (WebVitalsMetrics & { size: number }) | null;
   error: PostgrestError | null | string;
 }> {
-  const [supabase, user] = await Promise.all([createClient(), getUser()]);
-
-  if (!user?.id) {
-    return { data: null, error: "Unauthorized User" };
-  }
-  if (user_id !== user.id) {
-    return { data: null, error: "Unauthorized User" };
+  const { supabase, error: authError } = await authorizeWebsite(
+    website_url,
+    user_id
+  );
+  if (!supabase) {
+    return { data: null, error: authError };
   }
 
   const timeFrame = getTimeFrame(pickedTimeFrame);
@@ -510,13 +547,12 @@ export async function getCustomEventData(
   data: GroupedCustomEventWithSessionData[] | null;
   error: PostgrestError | null | string;
 }> {
-  const [supabase, user] = await Promise.all([createClient(), getUser()]);
-
-  if (!user?.id) {
-    return { data: null, error: "Unauthorized User" };
-  }
-  if (user_id !== user.id) {
-    return { data: null, error: "Unauthorized User" };
+  const { supabase, error: authError } = await authorizeWebsite(
+    website_url,
+    user_id
+  );
+  if (!supabase) {
+    return { data: null, error: authError };
   }
 
   const timeFrame = getTimeFrame(pickedTimeFrame);
