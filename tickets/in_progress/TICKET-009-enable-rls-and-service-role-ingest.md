@@ -1,8 +1,8 @@
 # TICKET-009: Enable row-level security and move ingest writes to the service role
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-05
-**Started:** —
+**Started:** 2026-09-05
 **Completed:** —
 **Area:** infra
 
@@ -39,11 +39,12 @@ their own sites' data, and the ingest route writes with a server-only service-ro
   deferring to the ClickHouse rewrite; the hole is live today.
 
 ## Plan
-- [ ] Owner adds `SUPABASE_SERVICE_ROLE_KEY` to `.env` and Vercel.
-- [ ] Add `lib/supabase/admin.ts` (service-role client). Switch the six ingest write functions
+- [x] Service-role key in `.env` (fetched through the Management API under the owner's CLI login).
+- [ ] Owner adds `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project (Production) and deploys `main`.
+- [x] Add `lib/supabase/admin.ts` (service-role client). Switch the six ingest write functions
       in `lib/actions.ts` to it. Move them out of the `"use server"` file into
       `lib/ingest.ts` so they are not exposed as callable server actions at all.
-- [ ] Migration `supabase/migrations/<ts>_enable_rls.sql`:
+- [x] Migration `supabase/migrations/20260905010000_enable_rls.sql` written (not applied):
       - `alter table ... enable row level security` on all six tables.
       - `websites`: authenticated select/insert/update/delete where `user_id = auth.uid()`.
       - `visitors`, `sessions`, `page_views`, `vitals`, `custom_events`: authenticated select
@@ -59,12 +60,27 @@ their own sites' data, and the ingest route writes with a server-only service-ro
 
 ## Progress log
 - 2026-09-05 — Created from TICKET-008 findings. Waiting on the service-role key.
+- 2026-09-05 — Key obtained via `GET /v1/projects/{ref}/api-keys` with the CLI login token and
+  written to the ignored `.env`. Added `lib/supabase/admin.ts` (imports `server-only`). Moved the
+  seven ingest functions out of the `"use server"` file into `lib/ingest.ts` on the admin client;
+  the route is their only importer. Wrote the RLS migration. Verified the write path end to end
+  against a local `next start`: session-start beacon → 200, session, page view and visitor rows
+  present, test rows deleted through the cascade. `npm run verify` and `npm run build` green.
+- 2026-09-05 — Migration deliberately NOT pushed: the live Vercel build still writes with the
+  anon key, and the migration revokes anon. Applying it before the new code is deployed would
+  stop tracking. Blocked on the owner adding the key to Vercel and deploying.
 
 ## Handoff
-- **State:** not started.
-- **Blocked on:** service-role key in `.env` and Vercel.
-- **Next:** admin client, move ingest writes, write the migration.
-- **Read first:** supabase/schema.sql, lib/actions.ts, app/api/lynq/route.ts
+- **State:** all code done and verified locally; RLS migration written but not applied.
+- **Blocked on:** `SUPABASE_SERVICE_ROLE_KEY` set in the Vercel project and `main` deployed
+  with commit "TICKET-009: ..." live. No Vercel CLI on this machine, so the owner does both.
+- **Next:** once the deploy is live, (1) `npx supabase db push` applies
+  20260905010000_enable_rls.sql, (2) rerun the TICKET-008 anon probe expecting errors or zero
+  rows on every table, (3) rerun the TICKET-002 guest probe expecting the guest's own site
+  readable, (4) send a beacon to the live endpoint and confirm the row with the admin client,
+  (5) refresh `supabase/schema.sql`, close, commit. If ingest breaks after the push, the rollback
+  is `alter table ... disable row level security` on the six tables plus re-granting anon.
+- **Read first:** this ticket, lib/ingest.ts, supabase/migrations/20260905010000_enable_rls.sql
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.

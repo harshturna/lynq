@@ -1,6 +1,7 @@
 import { isbot } from "isbot";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { getClientIp, getGeoFromHeaders } from "@/lib/geo/request-geo";
 import {
   addCustomEvent,
   addPageView,
@@ -9,8 +10,7 @@ import {
   addVisitor,
   addVitals,
   getCountryAndCityFromIp,
-} from "@/lib/actions";
-import { getClientIp, getGeoFromHeaders } from "@/lib/geo/request-geo";
+} from "@/lib/ingest";
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
