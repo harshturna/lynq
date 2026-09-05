@@ -44,7 +44,10 @@ directories; take the highest existing `TICKET-NNN` and add one. Never reuse a n
 5. **Closing a ticket: verification is evidence, not a claim.** Verification names the command that
    was actually run and its result. Outcome says what shipped, what was left out, and which
    follow-up tickets were created. Then set `done`, move to `done/`, and run `npm run verify`.
-   A ticket is not closed until the file has moved and verify passes.
+   A ticket that touches `lib/ingest`, `lib/query`, `lib/db.ts`, `supabase/migrations` or
+   `packages/tracker` also runs `npm run test:integration` (and `npm run test:e2e` once it
+   exists) and records the result. A ticket is not closed until the file has moved and the
+   named checks pass.
 6. **Commit when a ticket closes, before the next one starts.** One ticket, one commit (or a
    few, each naming `TICKET-NNN` in the subject). Never begin a ticket with uncommitted changes
    from another. The commit includes the moved ticket file.
@@ -59,13 +62,18 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
 
 ## Engineering rules
 
-- Run `npm run verify` (lint, typecheck, ticket check) before committing, not after.
+- Run `npm run verify` (lint, typecheck, ticket check, unit tests) before committing, not after.
+  It needs neither Docker nor a browser. `npm run test:integration` needs `TEST_DATABASE_URL`
+  pointing at a Supabase Postgres image; locally:
+  `docker run -d --name lynq-test-db -e POSTGRES_PASSWORD=postgres -p 54329:5432 public.ecr.aws/supabase/postgres:15.8.1.111`
+  then `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:54329/postgres npm run test:integration`.
 - Filesystem and test evidence over claims in prose. If a ticket says something is implemented,
   the path it cites must exist.
 - Never commit secrets. `.env` is ignored; keep it that way.
 - Unreachable code is deleted, not carried. Git is the archive.
 - Keep changes focused. Preserve unrelated work in a dirty tree.
-- There are no tests yet. Add `npm test` to `verify` in the same commit that adds the first test.
+- Unit tests live next to the code as `*.test.ts`; integration tests as `*.integration.test.ts`
+  under `tests/`. Add tests with the code they cover.
 
 ## Subagents
 
