@@ -22,6 +22,8 @@ import {
   withParam,
 } from "@/lib/url-state";
 
+const WAITING_BELOW = 10;
+
 const GRAIN: Record<Granularity, string> = {
   hour: "per hour",
   day: "per day",
@@ -64,8 +66,9 @@ export function Lead({
     update(withParam(state, "metric", next), { replace: true });
     announce(`Chart shows ${key.replace("_", " ")}.`);
   };
+  // fewer than ten pageviews reads as "waiting for data" (design §8.11)
   const noData =
-    summary.ok && summary.data.current.pageviews === 0 && !hasFilters;
+    summary.ok && summary.data.current.pageviews < WAITING_BELOW && !hasFilters;
 
   return (
     <div
@@ -74,7 +77,13 @@ export function Lead({
         pending ? "opacity-70 transition-opacity" : "transition-opacity"
       }
     >
-      {noData && <NoDataPanel siteUrl={siteUrl} />}
+      {noData && (
+        <NoDataPanel
+          siteUrl={siteUrl}
+          slug={slug}
+          pageviews={summary.ok ? summary.data.current.pageviews : 0}
+        />
+      )}
       {summary.ok ? (
         <KpiStrip
           value={metric}
@@ -332,14 +341,32 @@ function DevicesPanel({
   );
 }
 
-function NoDataPanel({ siteUrl }: { siteUrl: string }) {
+function NoDataPanel({
+  siteUrl,
+  slug,
+  pageviews,
+}: {
+  siteUrl: string;
+  slug: string;
+  pageviews: number;
+}) {
   const snippet = `<script defer src="https://lynq.byharsh.com/js/lynq.js" data-site="${siteUrl}"></script>`;
   return (
     <div className="mb-6 rounded-card border border-rule-strong p-4 text-[13px]">
-      <p className="font-medium">No data yet for {siteUrl}.</p>
+      <p className="font-medium">
+        {pageviews === 0
+          ? `Waiting for data from ${siteUrl}.`
+          : `Waiting for data: ${pageviews} ${pageviews === 1 ? "pageview" : "pageviews"} so far.`}
+      </p>
       <p className="mt-1 text-mute">
-        Add the snippet before the closing head tag; the first pageview shows
-        here within a minute.
+        Add the snippet before the closing head tag, then{" "}
+        <Link
+          href={`/sites/new?site=${slug}&step=2`}
+          className="text-teal-ink underline underline-offset-2"
+        >
+          watch it arrive
+        </Link>
+        .
       </p>
       <pre className="mt-2 overflow-x-auto rounded-control bg-soft p-3 text-[12px]">
         {snippet}

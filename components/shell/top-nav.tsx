@@ -158,7 +158,7 @@ export function TopNav({
               ))}
               <DropdownMenu.Separator className="my-1 h-px bg-rule" />
               <DropdownMenu.Item asChild className={MENU_ITEM}>
-                <Link href="/sites?add">Add a site</Link>
+                <Link href="/sites/new">Add a site</Link>
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>

@@ -5,8 +5,9 @@ import { type ReactNode, useState, useTransition } from "react";
 import { Pill } from "@/components/shell/badge";
 import { deleteWebsite } from "@/lib/actions";
 import { fmtAgo, fmtInt } from "@/lib/format";
+import { explainDiagnostic } from "@/lib/screens/diagnostics";
 import { setKpi } from "@/lib/screens/goal-actions";
-import type { Diagnostic, SettingsData } from "@/lib/screens/settings";
+import type { SettingsData } from "@/lib/screens/settings";
 import {
   type SaveResult,
   saveData,
@@ -290,24 +291,6 @@ function General({ slug, data, isGuest }: SectionProps) {
   );
 }
 
-const STAGE_TEXT: Record<string, (d: Diagnostic) => string> = {
-  site_mismatch: (d) =>
-    `We received events from ${d.hostname}, which is not one of this site's hostnames.`,
-  unregistered: (d) =>
-    `We received events for ${d.hostname}, which no site claims.`,
-  origin_missing: () =>
-    "The request had no Origin header; is the snippet inside a sandboxed iframe?",
-  bot: () => "Traffic arrived but all of it was classified as bots.",
-  excluded_path: (d) =>
-    `The page path ${d.detail || "(unknown)"} is on your excluded list.`,
-  excluded_ip: () => "Traffic arrived from an excluded IP range.",
-  schema: (d) =>
-    `Events were malformed${d.detail ? ` (${d.detail})` : ""}; is the snippet the current version?`,
-  size: () => "A batch was larger than the ingest limit.",
-  insert_failed: () =>
-    "Events arrived but could not be stored; this is on our side.",
-};
-
 function Tracking({ slug, data, isGuest }: SectionProps) {
   const [vitals, setVitals] = useState(true);
   const [outbound, setOutbound] = useState(false);
@@ -446,13 +429,7 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
                 className="flex flex-wrap items-baseline gap-2"
               >
                 <Pill status="warn">{d.stage.replaceAll("_", " ")}</Pill>
-                <span>
-                  {(
-                    STAGE_TEXT[d.stage] ??
-                    ((x: Diagnostic) =>
-                      `Rejected at "${x.stage}"${x.detail ? `: ${x.detail}` : ""}.`)
-                  )(d)}
-                </span>
+                <span>{explainDiagnostic(d)}</span>
                 <span className="text-mute tabular">
                   {fmtInt(d.count)} {d.count === 1 ? "time" : "times"}, last{" "}
                   {fmtAgo(new Date(d.lastAt))}

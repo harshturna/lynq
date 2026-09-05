@@ -18,6 +18,8 @@ export type RealtimeRow = {
   pageviews: number;
   pageviews_prev: number;
   custom_events: number;
+  /** vitals samples in the window, for onboarding's check list */
+  vitals: number;
   event_names: { value: string; count: number }[];
   /** the last event the site ever received, for the empty state */
   last_at: string | null;
@@ -31,6 +33,7 @@ export type RealtimeRow = {
     name: string;
     path: string;
     country: string;
+    browser: string;
     visitor_id: string;
     session_id: string;
   }[];
@@ -70,13 +73,14 @@ select
   (select count(*)::int from win where event = 'pageview') as pageviews,
   (select count(*)::int from recent where event = 'pageview' and received_at < ${q.p(from)}) as pageviews_prev,
   (select count(*)::int from win where event = 'custom') as custom_events,
+  (select count(*)::int from win where event = 'vitals') as vitals,
   ${agg("jsonb_build_object('value', name, 'count', n)", "n desc, name", "select name, count(*)::int as n from win where event = 'custom' group by 1 order by 2 desc, 1 limit 3")} as event_names,
   (select max(e.received_at) from analytics.events e where e.site_id = ${q.p(ctx.siteId)}) as last_at,
   ${agg("jsonb_build_object('minute', m, 'pageviews', c)", "m", "select date_trunc('minute', received_at) as m, count(*) filter (where event = 'pageview')::int as c from win group by 1")} as per_minute,
   ${agg("jsonb_build_object('value', path, 'visitors', n)", "n desc, path", "select path, count(distinct visitor_id)::int as n from win where event = 'pageview' group by 1 order by 2 desc, 1 limit 10")} as pages,
   ${agg("jsonb_build_object('value', source, 'sessions', n)", "n desc, source", "select source, count(*)::int as n from (select distinct on (visitor_id, session_id) source from win where event = 'pageview' order by visitor_id, session_id, ts, seq, pageview_id) first group by 1 order by 2 desc, 1 limit 10")} as sources,
   ${agg("jsonb_build_object('value', country, 'visitors', n)", "n desc, country", "select country, count(distinct visitor_id)::int as n from win where event = 'pageview' group by 1 order by 2 desc, 1 limit 10")} as countries,
-  ${agg("jsonb_build_object('ts', ts, 'event', event, 'name', name, 'path', path, 'country', country, 'visitor_id', visitor_id::text, 'session_id', session_id::text)", "ts desc", "select * from win where event in ('pageview', 'custom') order by ts desc, seq desc limit 50")} as events`,
+  ${agg("jsonb_build_object('ts', ts, 'event', event, 'name', name, 'path', path, 'country', country, 'browser', browser, 'visitor_id', visitor_id::text, 'session_id', session_id::text)", "ts desc", "select * from win where event in ('pageview', 'custom') order by ts desc, seq desc limit 50")} as events`,
     params: q.params,
   };
 }

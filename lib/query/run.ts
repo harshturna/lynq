@@ -195,6 +195,7 @@ export async function realtime(
     pageviews: num(row?.pageviews),
     pageviews_prev: num(row?.pageviews_prev),
     custom_events: num(row?.custom_events),
+    vitals: num(row?.vitals),
     event_names: row?.event_names ?? [],
     last_at: row?.last_at ? new Date(row.last_at).toISOString() : null,
     per_minute: fillMinutes(row?.per_minute ?? [], now, windowMin),

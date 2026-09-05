@@ -1,15 +1,13 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SitesNav } from "@/components/shell/sites-nav";
 import { getSitesScreen } from "@/lib/screens/sites";
 import { getUser } from "@/lib/user/server";
-import { AddSite } from "./_components/add-site";
 import { SitesTable } from "./_components/sites-table";
 
 /** The sites list (design §8.12): one row per site, Add a site as the one accent button. */
-export default async function SitesPage(props: {
-  searchParams: Promise<{ add?: string | string[] }>;
-}) {
-  const [user, sp] = await Promise.all([getUser(), props.searchParams]);
+export default async function SitesPage() {
+  const user = await getUser();
   if (!user?.id) redirect("/login");
   const rows = await getSitesScreen(user.id);
   const isGuest = user.id === process.env.GUEST_USER_ID;
@@ -28,11 +26,12 @@ export default async function SitesPage(props: {
                 : `${rows.length} ${rows.length === 1 ? "site" : "sites"} · visitors are the last 30 days`}
             </p>
           </div>
-          <AddSite
-            userId={user.id}
-            isGuest={isGuest}
-            openOnLoad={sp.add !== undefined}
-          />
+          <Link
+            href="/sites/new"
+            className="inline-flex h-[30px] items-center gap-2 rounded-control border border-teal bg-teal px-[10px] text-[13px] font-medium leading-none text-canvas hover:bg-teal-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          >
+            + Add a site
+          </Link>
         </div>
         <SitesTable rows={rows} userId={user.id} isGuest={isGuest} />
       </main>
