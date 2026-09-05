@@ -186,11 +186,16 @@ export function breakdownMultiQuery(
         : ` and ${d.expr} is not null and ${d.expr}::text <> ''`;
     })
     .join("");
-  const sc = scope(q, ctx, w);
   const from = needSess
     ? "analytics.events e join sess s using (visitor_id, session_id)"
     : "analytics.events e";
-  const where = `${sc} and ${f.rowWhere}${needSess ? ` and ${sessionWhere(f)}` : ""}${guard}${nonEmpty}`;
+  // Parameters are numbered by push order and every one must appear in the
+  // text, so the row scope is only compiled when a CTE reads the rows.
+  let rowWhere: string | null = null;
+  const where = () => {
+    rowWhere ??= `${scope(q, ctx, w)} and ${f.rowWhere}${needSess ? ` and ${sessionWhere(f)}` : ""}${guard}${nonEmpty}`;
+    return rowWhere;
+  };
   const withParts: string[] = [];
   if (needSess)
     withParts.push(
@@ -202,7 +207,7 @@ export function breakdownMultiQuery(
     withParts.push(`rowm as (
   select ${dimCols}, ${rowMetrics.map((m) => `${rowMetricSql(q, m)} as ${metricKey(m)}`).join(", ")}
   from ${from}
-  where ${where}
+  where ${where()}
   group by ${dims.length === 2 ? "1, 2" : "1"})`);
     selects.push(...rowMetrics.map((m) => `r.${metricKey(m)}`));
   }
@@ -226,7 +231,7 @@ export function breakdownMultiQuery(
         : `pairs as (
   select ${dimCols}, s.visitor_id, s.session_id, s.bounced, s.duration_ms, s.pageviews as pv, s.time_on_site, ${converted} as converted
   from ${from}
-  where ${where}
+  where ${where()}
   group by ${dims.length === 2 ? "1, 2, 3, 4, 5, 6, 7, 8" : "1, 2, 3, 4, 5, 6, 7"})`
     );
     withParts.push(`sessm as (

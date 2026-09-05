@@ -16,6 +16,8 @@ export type TreemapCell = {
 export type TreemapOptions = {
   /** Text for the shade dimension in the tooltip, e.g. "engaged". */
   shadeLabel: string;
+  /** Unit of the area, e.g. "pageviews" (default "visitors"). */
+  unit?: string;
   formatShade?: (v: number) => string;
   /** The sum the cells should add up to; the remainder becomes "everything else". */
   total?: number;

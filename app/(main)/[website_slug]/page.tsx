@@ -1,17 +1,15 @@
 import { Suspense } from "react";
+import { ScreenHeader } from "@/components/shell/screen-header";
 import {
   Bone,
   ChartSkeleton,
   StripSkeleton,
   TableSkeleton,
 } from "@/components/shell/skeleton";
-import { buildContext } from "@/lib/query/authorize";
-import { loadKpi } from "@/lib/screens/kpi";
+import { screenContext } from "@/lib/screens/context";
 import { getOverviewScreen } from "@/lib/screens/overview";
-import { resolveSite } from "@/lib/screens/site";
 import { suggestValues } from "@/lib/screens/suggest";
-import { parseSearch, type SearchInput } from "@/lib/url-state";
-import { OverviewHeader } from "./_overview/header";
+import type { SearchInput } from "@/lib/url-state";
 import {
   LeadSection,
   TablesSection,
@@ -31,19 +29,13 @@ export default async function OverviewPage(props: {
     props.params,
     props.searchParams,
   ]);
-  const { site, website } = await resolveSite(slug);
-  const state = parseSearch(sp);
-  const ctx = buildContext(site, {
-    range: state.range,
-    compare: state.compare === "none" ? undefined : state.compare,
-    filters: state.filters,
-  });
-  const kpi = await loadKpi(site, ctx);
+  const { site, website, state, ctx, kpi } = await screenContext(slug, sp);
   const screen = getOverviewScreen(ctx, state, kpi);
 
   return (
     <main className="mx-auto flex max-w-[1320px] flex-col gap-7 px-4 py-6 md:px-8">
-      <OverviewHeader
+      <ScreenHeader
+        title="Overview"
         timezone={site.timezone}
         shortcuts={site.shortcuts}
         suggest={suggestValues.bind(null, slug)}

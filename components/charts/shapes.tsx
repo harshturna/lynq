@@ -52,16 +52,17 @@ export function Treemap({
   height?: number;
   onMarkClick?: (m: MarkClick) => void;
 } & TreemapOptions) {
-  const { shadeLabel, formatShade, total, animation } = opts;
+  const { shadeLabel, formatShade, total, animation, unit } = opts;
   const option = useMemo(
-    () => treemapOption(cells, { shadeLabel, formatShade, total, animation }),
-    [cells, shadeLabel, formatShade, total, animation]
+    () =>
+      treemapOption(cells, { shadeLabel, formatShade, total, animation, unit }),
+    [cells, shadeLabel, formatShade, total, animation, unit]
   );
   const all = treemapCells(cells, total);
   const fs = formatShade ?? fmtNumber;
   const top = cells[0];
   const description = top
-    ? `${title}: ${cells.length} pages; largest ${top.label} with ${fmtNumber(top.value)} visitors, ${shadeLabel} ${fs(top.shade)}.`
+    ? `${title}: ${cells.length} pages; largest ${top.label} with ${fmtNumber(top.value)} ${unit ?? "visitors"}, ${shadeLabel} ${fs(top.shade)}.`
     : `${title}: no data.`;
   return (
     <ChartOrFallback check={(w) => treemapThreshold(cells.length, w)}>
@@ -74,7 +75,7 @@ export function Treemap({
         table={
           <HiddenTable
             caption={title}
-            columns={["Page", "Visitors", shadeLabel]}
+            columns={["Page", unit ?? "visitors", shadeLabel]}
             rows={all.map((c) => [c.label, fmtNumber(c.value), fs(c.shade)])}
           />
         }

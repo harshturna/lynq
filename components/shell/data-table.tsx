@@ -92,6 +92,7 @@ export function DataTable({
   emptyText = "No data for this period",
   compare = false,
   lead,
+  changes = "all",
   className,
 }: {
   region: string;
@@ -112,6 +113,8 @@ export function DataTable({
   compare?: boolean;
   /** Show only this column, ranked, with a share bar and a Details link (D-010). */
   lead?: string;
+  /** Which numeric columns get a change slot when compare is on: every one, or the sorted one. */
+  changes?: "all" | "sorted";
   className?: string;
 }) {
   const { state, update } = useViewState();
@@ -134,6 +137,9 @@ export function DataTable({
     [rows, lead]
   );
   const hasHeader = Boolean(title || views);
+  const sortedCol = (state.sort[region] ?? defaultSort)?.col;
+  const hasSlot = (c: Column) =>
+    compare && (changes === "all" || c.key === sortedCol);
   const sorted = useMemo(() => {
     if (!sort) return rows;
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -339,7 +345,7 @@ export function DataTable({
                       </SortButton>
                     )}
                   </th>
-                  {compare && (
+                  {hasSlot(c) && (
                     <th
                       scope="col"
                       className={cn(
@@ -372,7 +378,7 @@ export function DataTable({
             {flat.length === 0 && (
               <tr>
                 <td
-                  colSpan={shown.length * (compare ? 2 : 1) + 2}
+                  colSpan={shown.length + shown.filter(hasSlot).length + 2}
                   className="py-8 text-center text-[13px] text-mute"
                 >
                   {emptyText}
@@ -475,7 +481,7 @@ export function DataTable({
                         >
                           {c.format ? c.format(v, row) : fmt(v)}
                         </td>
-                        {compare && (
+                        {hasSlot(c) && (
                           <td
                             className={cn(
                               "w-[64px] whitespace-nowrap pl-3 text-left text-[11.5px] text-mute tabular",

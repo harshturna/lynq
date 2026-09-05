@@ -1,29 +1,32 @@
 "use client";
 
-import { useCallback } from "react";
-import { FilterBuilder } from "@/components/shell/filter-builder";
-import { FilterChips } from "@/components/shell/filter-chips";
-import { PageHeader } from "@/components/shell/page-header";
-import { ComparePicker, RangePicker } from "@/components/shell/range-picker";
-import {
-  presetDates,
-  rangeLabel,
-  stepRange,
-  todayIn,
-} from "@/components/shell/ranges";
-import { Shortcuts } from "@/components/shell/shortcuts";
-import { useViewState } from "@/components/shell/view-state";
+import { type ReactNode, useCallback } from "react";
 import { withParam } from "@/lib/url-state";
+import { FilterBuilder } from "./filter-builder";
+import { FilterChips } from "./filter-chips";
+import { PageHeader } from "./page-header";
+import { ComparePicker, RangePicker } from "./range-picker";
+import { presetDates, rangeLabel, stepRange, todayIn } from "./ranges";
+import { Shortcuts } from "./shortcuts";
+import { useViewState } from "./view-state";
 
-/** Title, range, compare, filters and the keyboard shortcuts (design §6). */
-export function OverviewHeader({
+/** Title, range, compare, filters and the keyboard shortcuts, for every screen (design §6). */
+export function ScreenHeader({
+  title,
   timezone,
   shortcuts,
   suggest,
+  extra,
+  controls,
 }: {
+  title: string;
   timezone: string;
   shortcuts: boolean;
   suggest: (dimension: string) => Promise<string[]>;
+  /** Appended to the subtitle. */
+  extra?: ReactNode;
+  /** Extra controls before the range picker (a search box, a segment). */
+  controls?: ReactNode;
 }) {
   const { state, update } = useViewState();
   const today = todayIn(timezone);
@@ -45,15 +48,17 @@ export function OverviewHeader({
     <>
       <Shortcuts enabled={shortcuts} onRangeStep={step} />
       <PageHeader
-        title="Overview"
+        title={title}
         subtitle={
           <>
+            {extra}
             {rangeLabel({ from: dates.from, to: dates.to })} · {compareText} ·{" "}
             {timezone}
           </>
         }
         controls={
           <>
+            {controls}
             <RangePicker timezone={timezone} />
             <ComparePicker />
             <FilterBuilder id="add-filter" suggest={suggest} />

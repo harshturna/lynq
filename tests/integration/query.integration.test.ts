@@ -509,6 +509,14 @@ describe("phase 1 primitives (TICKET-034)", () => {
     expect(asc.rows[0].value).toBe("/docs");
   });
 
+  it("a session dimension with only session metrics reads the CTE alone", async () => {
+    const entries = await q.breakdownMulti(ctx(), "entry_path", ["sessions"]);
+    expect(entries.rows).toEqual([
+      { value: "/", sessions: 2, total: 2 },
+      { value: "/pricing", sessions: 1, total: 2 },
+    ]);
+  });
+
   it("two dimensions, revenue metrics and goal metrics", async () => {
     const matrix = await q.breakdownMulti(
       ctx(),
@@ -592,6 +600,14 @@ describe("phase 1 primitives (TICKET-034)", () => {
         { kind: "event", match: "signup" },
       ])
     ).toEqual([1, 0]);
+  });
+
+  it("trends for a few values in one statement", async () => {
+    const t = await q.trends(ctx(), "path", ["/", "/pricing", "/nope"], "hour");
+    expect(t.get("/")?.reduce((a, b) => a + b, 0)).toBe(2);
+    expect(t.get("/pricing")?.[10]).toBe(1);
+    expect(t.get("/pricing")?.[12]).toBe(1);
+    expect(t.get("/nope")?.every((v) => v === 0)).toBe(true);
   });
 
   it("goal completions per bucket", async () => {
