@@ -66,6 +66,16 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   chart with the 2.5 s threshold, a worst-first page table and a "what is slow" panel;
   Settings is a single scrolling page with a sub-nav; Onboarding is a three-step flow with a
   live first-event check and the KPI pick.
+- 2026-09-05 — Owner: likes it overall but the screens repeat the same components; asked for
+  variety and "use the data in interesting ways". Each screen now has a signature view built
+  from its own data shape: Pages a treemap (area visitors, shade engaged time) and a flow panel
+  (came from › page › went to next); Sources a quadrant plot (visitors × conversion, bubble =
+  revenue, labelled scale / winning / watch / fix the landing page); Locations a country × hour
+  heatmap; Devices a viewport-width histogram with CSS breakpoints and a browser × OS matrix;
+  Events the top paths that end in the event; Goals a funnel with drop-off and a conversion
+  dot plot against the site average; Performance an LCP distribution with the three bands.
+  Line charts stay on Overview, Realtime and as small trends. These are the chart types the
+  charting-library decision must cover.
 
 ## Handoff
 - **State:** Screen mockups published (artifact "Lynq Screens", link in Context). No design doc
