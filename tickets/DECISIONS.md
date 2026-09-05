@@ -192,3 +192,33 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   and measured against a 220 KB budget. Marks are not focusable; the table equivalent is the
   accessible representation and must exist for every chart. Phase 2's paths view gets ECharts
   `sankey` without a second library.
+
+## D-010 — Overview tables rank one metric with a share bar; changes in a fixed slot; teal lead line
+- **Status:** Accepted
+- **Date:** 2026-09-05
+- **Context:** The Overview as built under D-008 put four metrics and four deltas in each
+  half-width table, with every delta glued to its number in the same cell. On the seeded site
+  the owner found it unreadable ("numbers don't align, it's so hard to read"). An audit
+  (https://claude.ai/code/artifact/8731fb9c-c34f-4b2c-b417-2ae5a3280ba0) showed the fault was
+  the column count, not the delta placement; three delta-placement variants were rejected
+  as still congested. The lead chart's sharp ink polyline with a dotted compare crossing it
+  was called ugly.
+- **Decision:** An Overview table ranks one metric: label, one right-aligned number, and a
+  fixed change slot when compare is on. A quiet share bar (teal-soft) sits behind the label,
+  scaled to the top row, so the ranking reads before the numbers do; this amends D-008's
+  "no share bars" line for ranked lists only. "Details" opens the full drawer with every
+  column; the section screens keep full tables. In every table the change never shares a
+  cell with its number: it sits in a 64 px slot, 11.5 px, mute text, only the triangle
+  coloured; rates change in points; a missing previous value reads "—". A table's view tabs
+  underline on the table's top rule, as the top navigation does. The lead line is teal with
+  a vertical gradient fill, smoothed, the previous period drawn behind it as a thin solid
+  grey line, the last point marked.
+- **Rejected alternatives:** Deltas in their own column beside every number, deltas stacked
+  under the number, and a "change on the sorted column only" toggle: all three keep four
+  numeric columns in 560 px and were rejected by the owner as congested. Keeping the ink
+  line with a gentler curve: the owner preferred the teal treatment.
+- **Consequences:** The Overview reads as three ranked lists; anyone wanting bounce or
+  engaged time per page goes to Details or the Pages screen, one click away. The share bar
+  costs nothing in queries (share of the top row). The accent now doubles as the series
+  colour, so accent-coloured controls near a chart must stay clearly control-shaped. D-008
+  otherwise stands.

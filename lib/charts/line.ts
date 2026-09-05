@@ -1,7 +1,8 @@
 /**
- * The trend line (design §7): the primary series in ink with a faint area,
- * the previous period dotted in the compare colour, a tooltip that shows both
- * values and the change. Pure: arrays in, an option out.
+ * The trend line (design §7, D-010): the primary series in teal over a
+ * vertical gradient, smoothed, the previous period a thin solid grey line
+ * behind it, the last point marked, a tooltip that shows both values and the
+ * change. Pure: arrays in, an option out.
  */
 import type { Granularity } from "@/lib/query/ranges";
 import type { ChartOption } from "./echarts";
@@ -19,7 +20,7 @@ export type LineSeries = {
   points: Point[];
   /** Same length as points, aligned by index; the previous period's values. */
   previous?: Point[];
-  /** Ink (default) for the page's lead trend, accent for an entity's trend. */
+  /** Accent (default, D-010) or ink. */
   color?: "ink" | "accent";
   /** Format a value for the tooltip and axis (default: number with separators). */
   format?: (v: number) => string;
@@ -48,8 +49,8 @@ export function lineOption(
     ) ?? [];
   const fmt = primary?.format ?? fmtNumber;
   const seriesOptions: object[] = [];
-  const stroke = (s: LineSeries, i: number) =>
-    s.color === "accent" || (i > 0 && !s.color) ? TOKENS.teal : TOKENS.ink;
+  const stroke = (s: LineSeries) =>
+    s.color === "ink" ? TOKENS.ink : TOKENS.teal;
 
   series.forEach((s, i) => {
     if (s.previous) {
@@ -57,25 +58,48 @@ export function lineOption(
         name: `${s.name}, previous period`,
         type: "line",
         data: s.previous.map((p) => p.v),
-        lineStyle: { color: TOKENS.compare, width: 1.2, type: [1.5, 3] },
+        lineStyle: { color: TOKENS.compare, width: 1.2, opacity: 0.6 },
         itemStyle: { color: TOKENS.compare },
+        smooth: 0.35,
+        smoothMonotone: "x",
         showSymbol: false,
         emphasis: { disabled: true },
         z: 1,
       });
     }
+    const last = s.points.length - 1;
     seriesOptions.push({
       name: s.name,
       type: "line",
-      data: s.points.map((p) => p.v),
-      lineStyle: { color: stroke(s, i), width: 1.6 },
+      data: s.points.map((p, j) =>
+        j === last ? { value: p.v, symbol: "circle", symbolSize: 7 } : p.v
+      ),
+      lineStyle: { color: stroke(s), width: 1.75 },
       itemStyle: {
-        color: stroke(s, i),
+        color: stroke(s),
         borderColor: TOKENS.canvas,
         borderWidth: 2,
       },
-      areaStyle: i === 0 ? { color: TOKENS.teal, opacity: 0.045 } : undefined,
-      showSymbol: false,
+      areaStyle:
+        i === 0
+          ? {
+              color: {
+                type: "linear",
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  { offset: 0, color: "rgba(15,118,110,0.18)" },
+                  { offset: 1, color: "rgba(15,118,110,0)" },
+                ],
+              },
+            }
+          : undefined,
+      smooth: 0.35,
+      smoothMonotone: "x",
+      showSymbol: true,
+      symbol: "none",
       symbolSize: 8,
       z: 2,
     });

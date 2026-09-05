@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Fragment,
   type KeyboardEvent,
   type ReactNode,
   useEffect,
@@ -12,7 +13,7 @@ import {
 import { downloadCsv, toCsv } from "@/lib/csv";
 import { toQuery, withSort, withView } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
-import { DeltaText } from "./badge";
+import { ChangeSlot } from "./badge";
 import { useAnnounce, useViewState } from "./view-state";
 
 /**
@@ -23,8 +24,9 @@ import { useAnnounce, useViewState } from "./view-state";
  * one Tab stop with roving focus on the first cell's button: arrows move,
  * Enter is the row's primary action (select or filter, the screen decides),
  * F or Shift+Enter filters; the Filter button in the last cell appears on
- * hover or focus. Deltas show after numbers when compare is on. No share bars
- * (D-008); ranking is the sort.
+ * hover or focus. When compare is on every number gets a change slot beside
+ * it, never inside its cell (D-010). `lead` shows one ranked column with a
+ * share bar behind the label and a Details link to the full drawer.
  */
 export type Column = {
   key: string;
@@ -36,6 +38,8 @@ export type Column = {
   sortable?: boolean;
   /** Lower is better for the delta colour (bounce rate). */
   lowerIsBetter?: boolean;
+  /** A rate: the change is in points, not a relative percentage. */
+  points?: boolean;
   /** Format a raw cell value; default formats numbers with separators. */
   format?: (value: string | number | null, row: TableRow) => ReactNode;
 };
@@ -87,6 +91,7 @@ export function DataTable({
   exportName,
   emptyText = "No data for this period",
   compare = false,
+  lead,
   className,
 }: {
   region: string;
@@ -105,6 +110,8 @@ export function DataTable({
   exportName?: string;
   emptyText?: string;
   compare?: boolean;
+  /** Show only this column, ranked, with a share bar and a Details link (D-010). */
+  lead?: string;
   className?: string;
 }) {
   const { state, update } = useViewState();
@@ -115,6 +122,18 @@ export function DataTable({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
 
+  const shown = useMemo(
+    () => (lead ? columns.filter((c) => c.key === lead) : columns),
+    [columns, lead]
+  );
+  const leadMax = useMemo(
+    () =>
+      lead
+        ? Math.max(1, ...rows.map((r) => Number(r.cells[lead] ?? 0) || 0))
+        : 1,
+    [rows, lead]
+  );
+  const hasHeader = Boolean(title || views);
   const sorted = useMemo(() => {
     if (!sort) return rows;
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -212,14 +231,16 @@ export function DataTable({
 
   return (
     <div className={cn("min-w-0", className)}>
-      {(title || views) && (
-        <div className="mb-2 flex items-center gap-3 text-[14px] font-medium text-ink">
-          {title && <h3 className="text-[14px] font-medium">{title}</h3>}
+      {hasHeader && (
+        <div className="flex items-end gap-3 border-b border-rule-strong text-[14px] font-medium text-ink">
+          {title && (
+            <h3 className="pb-[7px] text-[14px] font-medium">{title}</h3>
+          )}
           {views && views.length > 1 && (
             <div
               role="tablist"
               aria-label={`${typeof title === "string" ? title : region} view`}
-              className="flex gap-3"
+              className="-mb-px flex gap-3"
             >
               {views.map((v) => {
                 const on = v.key === activeView;
@@ -236,8 +257,8 @@ export function DataTable({
                       update(withView(state, region, v.key), { replace: true });
                     }}
                     className={cn(
-                      "text-[12.5px] font-normal text-mute hover:text-ink",
-                      on && "border-b-2 border-teal pb-[1px] text-ink"
+                      "border-b-2 border-transparent pb-[6px] text-[12.5px] font-normal text-mute hover:text-ink",
+                      on && "border-teal text-ink"
                     )}
                   >
                     {v.label}
@@ -245,6 +266,15 @@ export function DataTable({
                 );
               })}
             </div>
+          )}
+          {lead && onShowAll && (
+            <button
+              type="button"
+              onClick={onShowAll}
+              className="ml-auto pb-[7px] text-[12px] font-medium text-teal-ink hover:underline"
+            >
+              Details →
+            </button>
           )}
         </div>
       )}
@@ -258,7 +288,10 @@ export function DataTable({
             <tr>
               <th
                 scope="col"
-                className="w-full max-w-0 border-b border-rule border-t border-t-rule-strong py-2 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute"
+                className={cn(
+                  "w-full max-w-0 border-b border-rule py-2 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute",
+                  !hasHeader && "border-t border-t-rule-strong"
+                )}
               >
                 <SortButton
                   active={sort?.col === "label"}
@@ -269,46 +302,67 @@ export function DataTable({
                   }
                   onClick={() => toggleSort({ key: "label", header: "Value" })}
                 >
-                  {columns.length ? "" : "Value"}
+                  {shown.length ? "" : "Value"}
                 </SortButton>
               </th>
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  scope="col"
-                  aria-sort={c.sortable === false ? undefined : ariaSort(c)}
-                  style={
-                    c.width
-                      ? ({ "--w": c.width } as React.CSSProperties)
-                      : undefined
-                  }
-                  className={cn(
-                    "whitespace-nowrap border-b border-rule border-t border-t-rule-strong py-2 pl-3 text-[11.5px] font-medium tracking-[0.02em] text-mute min-[1000px]:w-[var(--w)]",
-                    c.align === "right"
-                      ? "text-right"
-                      : c.align === "center"
-                        ? "text-center"
-                        : "text-left",
-                    c.secondary && "hidden min-[1000px]:table-cell"
-                  )}
-                >
-                  {c.sortable === false ? (
-                    c.header
-                  ) : (
-                    <SortButton
-                      active={sort?.col === c.key}
-                      label={nextSortLabel(c)}
-                      onClick={() => toggleSort(c)}
-                      align={c.align}
+              {shown.map((c, i) => (
+                <Fragment key={c.key}>
+                  <th
+                    scope="col"
+                    aria-sort={c.sortable === false ? undefined : ariaSort(c)}
+                    style={
+                      c.width
+                        ? ({ "--w": c.width } as React.CSSProperties)
+                        : undefined
+                    }
+                    className={cn(
+                      "whitespace-nowrap border-b border-rule py-2 pl-3 text-[11.5px] font-medium tracking-[0.02em] text-mute min-[1000px]:w-[var(--w)]",
+                      !hasHeader && "border-t border-t-rule-strong",
+                      c.align === "right"
+                        ? "text-right"
+                        : c.align === "center"
+                          ? "text-center"
+                          : "text-left",
+                      c.secondary && !lead && "hidden min-[1000px]:table-cell"
+                    )}
+                  >
+                    {c.sortable === false ? (
+                      c.header
+                    ) : (
+                      <SortButton
+                        active={sort?.col === c.key}
+                        label={nextSortLabel(c)}
+                        onClick={() => toggleSort(c)}
+                        align={c.align}
+                      >
+                        {c.header}
+                      </SortButton>
+                    )}
+                  </th>
+                  {compare && (
+                    <th
+                      scope="col"
+                      className={cn(
+                        "w-[64px] whitespace-nowrap border-b border-rule py-2 pl-3 text-left text-[11.5px] font-normal text-faint",
+                        !hasHeader && "border-t border-t-rule-strong",
+                        c.secondary && !lead && "hidden min-[1000px]:table-cell"
+                      )}
                     >
-                      {c.header}
-                    </SortButton>
+                      {i === 0 ? (
+                        "vs prev"
+                      ) : (
+                        <span className="sr-only">change</span>
+                      )}
+                    </th>
                   )}
-                </th>
+                </Fragment>
               ))}
               <th
                 scope="col"
-                className="w-[36px] border-b border-rule border-t border-t-rule-strong"
+                className={cn(
+                  "w-[36px] border-b border-rule",
+                  !hasHeader && "border-t border-t-rule-strong"
+                )}
               >
                 <span className="sr-only">Actions</span>
               </th>
@@ -318,7 +372,7 @@ export function DataTable({
             {flat.length === 0 && (
               <tr>
                 <td
-                  colSpan={columns.length + 2}
+                  colSpan={shown.length * (compare ? 2 : 1) + 2}
                   className="py-8 text-center text-[13px] text-mute"
                 >
                   {emptyText}
@@ -342,10 +396,20 @@ export function DataTable({
                 >
                   <td
                     className={cn(
-                      "w-full max-w-0 truncate py-[7px] text-ink",
+                      "relative w-full max-w-0 truncate text-ink",
+                      lead ? "py-[9px]" : "py-[7px]",
                       isChild && "pl-[18px] text-ink-2"
                     )}
                   >
+                    {lead && !isChild && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-y-[6px] left-0 rounded-[3px] bg-teal-soft opacity-80"
+                        style={{
+                          width: `${Math.min(100, ((Number(row.cells[lead] ?? 0) || 0) / leadMax) * 100)}%`,
+                        }}
+                      />
+                    )}
                     {parent && (
                       <button
                         type="button"
@@ -378,7 +442,8 @@ export function DataTable({
                         Boolean(onFilter)
                       )}
                       className={cn(
-                        "max-w-full truncate rounded-chip text-left align-middle",
+                        "relative max-w-full truncate rounded-chip text-left align-middle",
+                        lead && "pl-2",
                         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal",
                         selected &&
                           "font-medium text-teal-ink underline decoration-teal underline-offset-[3px]"
@@ -387,31 +452,49 @@ export function DataTable({
                       {row.label}
                     </button>
                   </td>
-                  {columns.map((c) => {
+                  {shown.map((c) => {
                     const v = row.cells[c.key] ?? null;
                     const prev = compare ? row.previous?.[c.key] : undefined;
+                    const hidden =
+                      c.secondary && !lead && "hidden min-[1000px]:table-cell";
                     return (
-                      <td
-                        key={c.key}
-                        className={cn(
-                          "whitespace-nowrap py-[7px] pl-3 text-ink-2 tabular",
-                          c.align === "right"
-                            ? "text-right"
-                            : c.align === "center"
-                              ? "text-center"
-                              : "text-left",
-                          c.secondary && "hidden min-[1000px]:table-cell"
+                      <Fragment key={c.key}>
+                        <td
+                          className={cn(
+                            "whitespace-nowrap pl-3 tabular",
+                            lead
+                              ? "py-[9px] text-[13.5px] text-ink"
+                              : "py-[7px] text-ink-2",
+                            c.align === "right"
+                              ? "text-right"
+                              : c.align === "center"
+                                ? "text-center"
+                                : "text-left",
+                            hidden
+                          )}
+                        >
+                          {c.format ? c.format(v, row) : fmt(v)}
+                        </td>
+                        {compare && (
+                          <td
+                            className={cn(
+                              "w-[64px] whitespace-nowrap pl-3 text-left text-[11.5px] text-mute tabular",
+                              hidden
+                            )}
+                          >
+                            {typeof v === "number" ? (
+                              <ChangeSlot
+                                current={v}
+                                previous={prev}
+                                lowerIsBetter={c.lowerIsBetter}
+                                points={c.points}
+                              />
+                            ) : (
+                              <span className="text-faint">—</span>
+                            )}
+                          </td>
                         )}
-                      >
-                        {c.format ? c.format(v, row) : fmt(v)}
-                        {typeof v === "number" && prev !== undefined && (
-                          <DeltaText
-                            current={v}
-                            previous={prev}
-                            lowerIsBetter={c.lowerIsBetter}
-                          />
-                        )}
-                      </td>
+                      </Fragment>
                     );
                   })}
                   <td className="py-[3px] text-right">
@@ -456,7 +539,7 @@ export function DataTable({
               {total.toLocaleString("en-US")} {total === 1 ? "row" : "rows"}
             </span>
           )}
-          {onShowAll && (
+          {onShowAll && !lead && (
             <>
               <span aria-hidden>·</span>
               <button

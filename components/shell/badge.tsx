@@ -98,27 +98,42 @@ export function DeltaBadge({
   );
 }
 
-/** Inline delta text for table cells: "+9%" green or "−3%" red after the number. */
-export function DeltaText({
+/**
+ * The change slot beside a table number (D-010): mute text, only the triangle
+ * coloured, points for rates, "—" when there is nothing to compare.
+ */
+export function ChangeSlot({
   current,
   previous,
   lowerIsBetter,
+  points,
 }: {
   current: number;
   previous: number | null | undefined;
   lowerIsBetter?: boolean;
+  points?: boolean;
 }) {
-  const d = deltaOf(current, previous, { lowerIsBetter });
-  if (!d || d.direction === "flat") return null;
+  const d = deltaOf(current, previous, { lowerIsBetter, points });
+  if (!d || d.direction === "flat")
+    return (
+      <span className="text-faint">
+        <span aria-hidden>—</span>
+        <span className="sr-only">no change</span>
+      </span>
+    );
   return (
-    <span
-      className={cn(
-        "ml-[6px] text-[11.5px]",
-        d.good ? "text-good" : "text-poor"
-      )}
-    >
-      {d.direction === "up" ? "+" : "−"}
-      {d.text}
+    <span data-change={d.good ? "good" : "bad"}>
+      <span
+        aria-hidden
+        className={cn(
+          "mr-[3px] text-[8px] align-[1px]",
+          d.good ? "text-good" : "text-poor"
+        )}
+      >
+        {d.direction === "up" ? "▲" : "▼"}
+      </span>
+      <span className="sr-only">{d.direction} </span>
+      <span>{d.text}</span>
     </span>
   );
 }

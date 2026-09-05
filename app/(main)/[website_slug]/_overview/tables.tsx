@@ -65,6 +65,7 @@ const COL: Record<string, Column> = {
     align: "right",
     width: "84px",
     lowerIsBetter: true,
+    points: true,
     format: pct,
   },
   engaged_time: {
@@ -86,6 +87,7 @@ const COL: Record<string, Column> = {
     header: "Conv.",
     align: "right",
     width: "84px",
+    points: true,
     format: pct,
   },
   revenue: {
@@ -132,7 +134,11 @@ function toRows(data: TableData): TableRow[] {
   }));
 }
 
-/** Pages, Sources and Locations (design §8.1): views in the URL, rows filter on Enter. */
+/**
+ * Pages, Sources and Locations (design §8.1, D-010): one ranked metric per
+ * table with a share bar; Details opens the drawer with every column; views
+ * in the URL; rows filter on Enter.
+ */
 export function Tables({
   kpi,
   compare,
@@ -238,10 +244,11 @@ function Region({
         defaultView={views[0].key}
         columns={columns}
         rows={rows.slice(0, SHOWN)}
+        lead={columns[0].key}
         defaultSort={{ col: columns[0].key, dir: "desc" }}
         onFilter={filter}
         total={data.data.total}
-        onShowAll={rows.length > SHOWN ? () => setDrawer(true) : undefined}
+        onShowAll={rows.length ? () => setDrawer(true) : undefined}
         exportName={`${region}-${data.data.view}`}
         emptyText={emptyText}
         compare={compare}

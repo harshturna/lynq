@@ -17,7 +17,7 @@ const previous = [
 ];
 
 describe("lineOption", () => {
-  it("draws the primary in ink with an area and the previous period dotted in the compare colour", () => {
+  it("draws the primary in teal over a gradient and the previous period solid in the compare colour behind it", () => {
     const o = lineOption([{ name: "Visitors", points, previous }], {
       granularity: "day",
     }) as {
@@ -34,9 +34,17 @@ describe("lineOption", () => {
       "Visitors",
     ]);
     expect(o.series[0].lineStyle.color).toBe(TOKENS.compare);
-    expect(o.series[0].lineStyle.type).toEqual([1.5, 3]);
-    expect(o.series[1].lineStyle.color).toBe(TOKENS.ink);
+    expect(o.series[0].lineStyle.type).toBeUndefined();
+    expect(o.series[1].lineStyle.color).toBe(TOKENS.teal);
     expect(o.series[1].areaStyle).toBeDefined();
+    const ink = lineOption([{ name: "V", points, color: "ink" }], {
+      granularity: "day",
+    }) as { series: { lineStyle: { color: string }; data: unknown[] }[] };
+    expect(ink.series[0].lineStyle.color).toBe(TOKENS.ink);
+    expect(ink.series[0].data[2]).toMatchObject({
+      value: 12,
+      symbol: "circle",
+    });
   });
 
   it("formats the tooltip with both values and the change, and adds a threshold line", () => {

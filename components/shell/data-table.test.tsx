@@ -159,8 +159,23 @@ describe("DataTable", () => {
     expect(
       await screen.findByRole("button", { name: /Chrome, version 128/ })
     ).toBeInTheDocument();
-    expect(screen.getByText("+9.0%")).toBeInTheDocument(); // 4490 vs 4120
-    expect(screen.getByText("+8.6%")).toHaveClass("text-poor"); // bounce up is bad
+    // the change sits in its own slot beside the number, triangle coloured
+    expect(screen.getByText("9.0%")).toBeInTheDocument(); // 4490 vs 4120
+    expect(
+      screen.getByText("8.6%").previousSibling?.previousSibling
+    ).toHaveClass("text-poor"); // bounce up is bad
+    expect(screen.getByText("vs prev")).toBeInTheDocument();
+  });
+
+  it("in lead mode shows one column with a share bar and a Details link", async () => {
+    const onShowAll = vi.fn();
+    setup("", { lead: "visitors", onShowAll, compare: true });
+    expect(screen.getByText("Visitors")).toBeInTheDocument();
+    expect(screen.queryByText("Bounce")).toBeNull();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Details →" }));
+    expect(onShowAll).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: "Show all" })).toBeNull();
   });
 
   it("shows the footer with the count and the export", () => {
