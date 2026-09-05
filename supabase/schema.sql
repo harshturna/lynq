@@ -21,6 +21,49 @@ ALTER SCHEMA "public" OWNER TO "pg_database_owner";
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
+
+CREATE OR REPLACE FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) RETURNS TABLE("views_count" bigint, "visitors_count" bigint, "average_session_duration" numeric, "bounce_rate" numeric)
+    LANGUAGE "sql" STABLE
+    AS $$
+  with period_views as (
+    select count(*) as views
+    from public.page_views
+    where website_url = p_website_url
+      and created_at >= p_from
+      and created_at <= p_to
+  ),
+  period_sessions as (
+    select client_id, session_duration
+    from public.sessions
+    where website_url = p_website_url
+      and created_at >= p_from
+      and created_at <= p_to
+  )
+  select
+    (select views from period_views)::bigint as views_count,
+    (select count(distinct client_id) from period_sessions)::bigint
+      as visitors_count,
+    -- Mirrors calculateAverageSessionDuration in lib/utils.ts: milliseconds
+    -- converted to minutes, rounded to 2dp
+    coalesce(
+      round(
+        (avg(coalesce(session_duration, 0)) / 60000.0)::numeric, 2
+      ), 0
+    ) as average_session_duration,
+    -- Mirrors calculateBounceRate in lib/utils.ts: a bounce is a session
+    -- shorter than 10 seconds. Keep this threshold in sync with the JS.
+    coalesce(
+      round(
+        (count(*) filter (where session_duration < 10000)::numeric
+          / nullif(count(*), 0)::numeric) * 100, 2
+      ), 0
+    ) as bounce_rate
+  from period_sessions;
+$$;
+
+
+ALTER FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) OWNER TO "postgres";
+
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
@@ -241,6 +284,26 @@ ALTER TABLE ONLY "public"."websites"
 
 
 
+CREATE INDEX "custom_events_site_time_idx" ON "public"."custom_events" USING "btree" ("website_url", "created_at");
+
+
+
+CREATE INDEX "page_views_site_time_idx" ON "public"."page_views" USING "btree" ("website_url", "created_at");
+
+
+
+CREATE INDEX "sessions_site_time_idx" ON "public"."sessions" USING "btree" ("website_url", "created_at");
+
+
+
+CREATE INDEX "visitors_site_last_visited_idx" ON "public"."visitors" USING "btree" ("website_url", "last_visited");
+
+
+
+CREATE INDEX "vitals_site_time_idx" ON "public"."vitals" USING "btree" ("website_url", "created_at");
+
+
+
 ALTER TABLE ONLY "public"."custom_events"
     ADD CONSTRAINT "custom_events_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("session_id") ON UPDATE CASCADE ON DELETE CASCADE;
 
@@ -290,6 +353,12 @@ GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) TO "service_role";
 
 
 
