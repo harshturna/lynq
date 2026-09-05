@@ -12,7 +12,8 @@ Move all historical data into the events table with the mappings and approximati
 ## Context
 - Design §10 (mapping table, approximations, --until, idempotent wipe, dry-run, batching), §5.3
   (legacy visitor id).
-- Depends on TICKET-015 being deployed: `--until` is its deploy timestamp.
+- Depends on TICKET-015, deployed 2026-09-05. `--until 2026-09-05T15:26:54.220Z` (first adapter row in
+  production).
 - Legacy country names must map to ISO codes with i18n-iso-countries; print unmapped names. Heap
   sizes and interaction count are not carried.
 - Runs from a laptop with the pooler URL; never from CI.
