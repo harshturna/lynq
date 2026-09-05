@@ -1,9 +1,9 @@
 # TICKET-011: Phase 0 design, the data foundation
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-05
 **Started:** 2026-09-05
-**Completed:** —
+**Completed:** 2026-09-05
 **Area:** infra
 
 ## Goal
@@ -33,9 +33,9 @@ tracker v2, backfill, and cutover. No code in this ticket. Its output is
 - [x] Review 2: ingest path on Vercel, tracker v2, privacy, security, operations, cost.
 - [x] Review 3: does the schema and query API cover every Tier 1 to 3 feature in the roadmap.
 - [x] Revise after each; final confirmation pass.
-- [ ] Present to the owner at a high level; record decisions raised as D-NNN; open the
+- [x] Present to the owner at a high level; record decisions raised as D-NNN; open the
       implementation tickets.
-- [ ] Verify: `npm run verify` (ticket check) and the document exists at the cited path.
+- [x] Verify: `npm run verify` (ticket check) and the document exists at the cited path.
 
 ## Progress log
 - 2026-09-05 — Started. Design written: docs/design/phase-0-data-foundation.md, 17 sections.
@@ -71,14 +71,26 @@ tracker v2, backfill, and cutover. No code in this ticket. Its output is
   roadmap coverage, Phase 1 reproduction) launched.
 
 ## Handoff
-- **State:** v4 of docs/design/phase-0-data-foundation.md incorporates all three reviews. Presented.
-- **Blocked on:** owner acceptance of the five visible cutover changes and the settings defaults in §15.
-- **Next:** record accepted choices as D-004+ with the `decide` skill, open TICKET-012..020 from §17, close this ticket.
-- **Read first:** docs/design/phase-0-data-foundation.md §15, then §17.
-- **Read first:** docs/design/phase-0-data-foundation.md, then this ticket's log
+Closed. See Outcome.
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+ls docs/design/phase-0-data-foundation.md   # 1088 lines, v4
+npm run check:tickets                        # Ticket check passed (21 tickets)
+npm run verify                               # lint 0 errors / 44 warnings, tsc clean, ticket check pass
+```
+Three Opus review agents ran sequentially (data layer; ingest/tracker/privacy/ops; consistency
+and roadmap coverage), each on the revision produced by the previous one; their findings and the
+section-by-section responses are in the document's Appendix A and in this log.
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: `docs/design/phase-0-data-foundation.md` v4 (17 sections, three review appendices),
+D-004 (design and visible cutover changes accepted), D-005 (privacy and retention defaults).
+
+Left out: nothing from the plan. Parallel reviews were not used; each review needed the
+previous revision.
+
+Follow-up tickets: TICKET-012 ClickHouse service and migrations; TICKET-013 identity and site
+registry; TICKET-014 ingest v2; TICKET-015 v1 adapter; TICKET-016 query foundations; TICKET-017
+backfill; TICKET-018 tracker core; TICKET-019 tracker extras and vitals; TICKET-020 dual-run
+and close-out; TICKET-021 dependency vulnerabilities (unrelated to Phase 0).
