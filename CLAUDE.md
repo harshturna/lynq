@@ -69,8 +69,10 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
 
 ## Subagents
 
-- A subagent may never spawn its own subagents. Say so explicitly in every brief.
-- Pass `model` explicitly on every Agent call and use `haiku` or `sonnet`. Never `opus` or `fable`.
+- **Only ever spawn `opus` agents. Never `fable`.** Pass `model: "opus"` explicitly on every
+  Agent call; never rely on the default.
+- **A subagent may never spawn its own subagents.** Every brief must say so explicitly, in these
+  words: "Do not spawn subagents or use the Agent tool; do this work yourself."
 - One agent at a time. Prefer doing moderate work inline where each step is visible.
 
 ## Project references
