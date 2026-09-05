@@ -1,3 +1,4 @@
+import { isbot } from "isbot";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -62,6 +63,12 @@ export async function POST(req: Request) {
     }
 
     const requestHeaders = await headers();
+
+    // Crawlers, headless browsers and monitors execute the script too. Drop
+    // them before any write, with the normal response so they learn nothing.
+    if (isbot(requestHeaders.get("user-agent"))) {
+      return NextResponse.json({ success: true }, { headers: corsHeaders });
+    }
 
     if (
       body.event === "session-start" ||
