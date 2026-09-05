@@ -1,7 +1,7 @@
 # Lynq
 
-Privacy-first web analytics. Next.js 14 app with Supabase for auth and storage, a tracking
-script in the separate `harshturna/lynq-js` repo, and one ingest route at `app/api/lynq/route.ts`.
+Privacy-first web analytics. Next.js 16 app with Supabase for auth and storage, the tracker in
+`packages/tracker` (served from `/js/lynq.js`), and one ingest route at `app/api/collect/route.ts`.
 
 ## Start here
 

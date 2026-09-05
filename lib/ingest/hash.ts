@@ -50,22 +50,6 @@ export function userHash(
   return digestToInt64(h.digest());
 }
 
-/** Backfilled rows: legacy client id, salted by day like everything else. */
-export function legacyVisitorId(
-  backfillSalt: Buffer,
-  utcDay: string,
-  siteId: number | bigint,
-  legacyClientId: string
-): bigint {
-  const h = createHash("sha256");
-  h.update(backfillSalt);
-  h.update(utcDay, "utf8");
-  h.update(SEP);
-  h.update(siteIdBytes(siteId));
-  h.update(legacyClientId, "utf8");
-  return digestToInt64(h.digest());
-}
-
 /** Any legacy text id (session id, page view id) to a stable bigint. */
 export function idFromText(kind: string, value: string): bigint {
   const h = createHash("sha256");

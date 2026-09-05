@@ -14,8 +14,8 @@ export const config = {
      * - favicon.ico (favicon file)
      * Feel free to modify this pattern to include more paths.
      */
-    // api/collect, api/lynq and js/ are public: the ingest endpoints and the
+    // api/collect and js/ are public: the ingest endpoint and the
     // tracker script must never be redirected to /login or cost an auth call
-    "/((?!_next/static|_next/image|favicon.ico|api/collect|api/lynq|js/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/collect|js/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

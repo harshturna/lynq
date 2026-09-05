@@ -35,6 +35,20 @@ describe("analytics schema", () => {
     ]);
   });
 
+  it("has no v1 tables, RPC or counter column left in public (TICKET-024)", async () => {
+    const tables = await sql<{ table_name: string }[]>`
+      select table_name from information_schema.tables where table_schema = 'public' order by 1`;
+    expect(tables.map((t) => t.table_name)).toEqual(["websites"]);
+    const [{ n: fns }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname = 'get_period_summary'`;
+    expect(fns).toBe(0);
+    const columns = await sql<{ column_name: string }[]>`
+      select column_name from information_schema.columns
+      where table_schema = 'public' and table_name = 'websites' and column_name = 'visitors'`;
+    expect(columns).toHaveLength(0);
+  });
+
   it("rejects an unknown event type and accepts a minimal pageview", async () => {
     const [site] = await sql<{ id: number }[]>`
       insert into public.websites (name, url, user_id, slug)

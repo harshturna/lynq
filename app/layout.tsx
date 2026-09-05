@@ -57,8 +57,7 @@ export default function RootLayout({
         )}
       >
         {children}
-        {/* Lynq tracks itself (design §11). v2 is the product; the v1 script stays alongside
-            for the comparison window and is removed at v1 sunset (D-005). */}
+        {/* Lynq tracks itself (design §11). */}
         <script
           defer
           src="/js/lynq.js"
@@ -66,12 +65,6 @@ export default function RootLayout({
           data-vitals=""
           data-outbound=""
           data-auto-events=""
-        />
-        <script
-          async
-          src={`https://cdn.jsdelivr.net/gh/harshturna/lynq-js${process.env.NEXT_PUBLIC_LYNQ_SCRIPT_VERSION ?? ""}/dist/lynq.min.js`}
-          data-domain="lynq.byharsh.com"
-          data-script-id="lynq"
         />
       </body>
     </html>

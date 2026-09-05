@@ -30,13 +30,13 @@ const SetupDialog = ({
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isCopy, setIsCopy] = useState(false);
-  const lynqScriptVersion = process.env.NEXT_PUBLIC_LYNQ_SCRIPT_VERSION;
-  const lynqScriptSrc = `https://cdn.jsdelivr.net/gh/harshturna/lynq-js${
-    lynqScriptVersion || ""
-  }/dist/lynq.min.js`;
-  const stubScript = `!function(){"use strict";window.lynq=window.lynq||{track:function(n,e){(window.lynqQueue=window.lynqQueue||[]).push({name:n,properties:e,eventId:crypto.randomUUID()})}}}();`;
+  // The tracker is served first-party from this deployment (design §7); the
+  // origin is read after mount so the snippet matches wherever Lynq is hosted.
+  const lynqScriptSrc = `${
+    typeof window === "undefined" ? "" : window.location.origin
+  }/js/lynq.js`;
 
-  const constructedScript = `<script>${stubScript}</script>\n<script async src="${lynqScriptSrc}" data-domain="${siteUrl}" data-script-id="lynq"></script>`;
+  const constructedScript = `<script defer src="${lynqScriptSrc}" data-site="${siteUrl}"></script>`;
 
   const copyContentHandler = () => {
     copyContent(constructedScript);
@@ -60,7 +60,7 @@ const SetupDialog = ({
             <AlertDialogTitle className="font-light">{title}</AlertDialogTitle>
             <AlertDialogDescription>
               {
-                "Add the following snippet to the `<head>` of your HTML file for us to start tracking your website"
+                "Add this snippet to the `<head>` of your site. Add data-vitals, data-outbound or data-auto-events to the tag to turn those features on."
               }
             </AlertDialogDescription>
           </div>
@@ -77,42 +77,25 @@ const SetupDialog = ({
             )}
           >
             <div className="cursor-pointer">
-              <div>
-                <span className="text-gray-500">{`<`}</span>
-                <span className="text-[rgb(244_114_182)]">{`script`}</span>
-                <span className="text-gray-500">{`>`}</span>
-                <br />
-                <span>{stubScript}</span>
-                <br />
-                <span className="text-gray-500">{`</`}</span>
-                <span className="text-[rgb(244_114_182)]">{`script`}</span>
-                <span className="text-gray-500">{`>`}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">{`<`}</span>
-                <span className="text-[rgb(244_114_182)]">{`script`}</span>
-                <br />
-                <span className="text-slate-300 ml-6">{` async`}</span>
-                <br />
-                <span className="text-slate-300 ml-6">{` src`}</span>
-                <span className="text-[rgb(125_211_252)]">{`=`}</span>
-                <span className="text-[rgb(125_211_252)]">
-                  {`"${lynqScriptSrc}"`}
-                </span>
-                <br />
-                <span className="text-slate-300 ml-6">{` data-script-id`}</span>
-                <span className="text-[rgb(125_211_252)]">{`=`}</span>
-                <span className="text-[rgb(125_211_252)]">{`"lynq"`}</span>
-                <br />
-                <span className="text-slate-300 ml-6">{` data-domain`}</span>
-                <span className="text-[rgb(125_211_252)]">{`=`}</span>
-                <span className="text-[rgb(125_211_252)]">{`"${siteUrl}"`}</span>
-                <span className="text-gray-500">{`>`}</span>
-                <br />
-                <span className="text-gray-500">{`</`}</span>
-                <span className="text-[rgb(244_114_182)]">{`script`}</span>
-                <span className="text-gray-500">{`>`}</span>
-              </div>
+              <span className="text-gray-500">{`<`}</span>
+              <span className="text-[rgb(244_114_182)]">{`script`}</span>
+              <br />
+              <span className="text-slate-300 ml-6">{` defer`}</span>
+              <br />
+              <span className="text-slate-300 ml-6">{` src`}</span>
+              <span className="text-[rgb(125_211_252)]">{`=`}</span>
+              <span className="text-[rgb(125_211_252)]">
+                {`"${lynqScriptSrc}"`}
+              </span>
+              <br />
+              <span className="text-slate-300 ml-6">{` data-site`}</span>
+              <span className="text-[rgb(125_211_252)]">{`=`}</span>
+              <span className="text-[rgb(125_211_252)]">{`"${siteUrl}"`}</span>
+              <span className="text-gray-500">{`>`}</span>
+              <br />
+              <span className="text-gray-500">{`</`}</span>
+              <span className="text-[rgb(244_114_182)]">{`script`}</span>
+              <span className="text-gray-500">{`>`}</span>
             </div>
             <Button variant="link" size="icon">
               {isCopy ? (

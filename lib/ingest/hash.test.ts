@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  digestToInt64,
-  idFromText,
-  legacyVisitorId,
-  userHash,
-  utcDay,
-  visitorId,
-} from "./hash";
+import { digestToInt64, idFromText, userHash, utcDay, visitorId } from "./hash";
 
 // Fixed vectors: the backfill script reimplements nothing, it imports this
 // module, but the vectors pin byte order and signedness for anyone who does.
@@ -37,17 +30,11 @@ describe("identity hashes", () => {
     for (const v of [
       visitorId(zeroSalt, 1, "1.1.1.1", "a"),
       userHash("s", 1, "u"),
-      legacyVisitorId(zeroSalt, "2026-09-05", 1, "client"),
       idFromText("session", "abc"),
     ]) {
       expect(v <= max && v >= min).toBe(true);
     }
     expect(digestToInt64(Buffer.alloc(8, 0xff))).toBe(BigInt("-1"));
-  });
-  it("legacy ids rotate by day", () => {
-    expect(legacyVisitorId(zeroSalt, "2026-09-05", 1, "c")).not.toBe(
-      legacyVisitorId(zeroSalt, "2026-09-06", 1, "c")
-    );
   });
   it("utcDay uses the UTC calendar", () => {
     expect(utcDay(new Date("2026-09-05T23:59:59Z"))).toBe("2026-09-05");

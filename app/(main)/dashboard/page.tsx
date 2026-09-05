@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import ErrorAlert from "@/components/error";
 import { getAllWebsites } from "@/lib/actions";
+import { visitorsBySite } from "@/lib/query/site-visitors";
 import { getUser } from "@/lib/user/server";
 import AddWebsite from "./_components/add-website";
 import NoWebsitePrompt from "./_components/no-website-prompt";
@@ -15,6 +16,9 @@ const DashboardPage = async () => {
   }
 
   const { data: websites, error } = await getAllWebsites(user.id);
+  const visitors = websites?.length
+    ? await visitorsBySite(websites.map((w) => Number(w.id)))
+    : new Map<number, number>();
 
   if (error) {
     return (
@@ -45,7 +49,11 @@ const DashboardPage = async () => {
               <NoWebsitePrompt />
             ) : (
               websites.map((website) => (
-                <WebsiteCard website={website} key={website.url} />
+                <WebsiteCard
+                  website={website}
+                  visitors={visitors.get(Number(website.id)) ?? 0}
+                  key={website.url}
+                />
               ))
             )}
           </div>

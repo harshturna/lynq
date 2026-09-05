@@ -17,9 +17,11 @@ import Settings from "./settings";
 
 interface WebsiteCardProps {
   website: Website;
+  /** Unique visitors over the last 30 days */
+  visitors: number;
 }
 
-const WebsiteCard = ({ website }: WebsiteCardProps) => {
+const WebsiteCard = ({ website, visitors }: WebsiteCardProps) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -59,7 +61,10 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
           <CardContent className="flex items-center justify-between gap-2">
             <div className="text-cyan-500/80 flex items-center gap-2 font-extrabold">
               <UserRound />
-              <span>{website.visitors} Visitors</span>
+              <span>{visitors} Visitors</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                last 30 days
+              </span>
             </div>
             {isPending && (
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-muted-foreground" />

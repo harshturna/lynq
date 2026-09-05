@@ -30,4 +30,4 @@ Lynq is a powerful open-source web analytics platform that provides deep insight
 - Cookie-free tracking capabilities
 
 ## Curious what powers lynq?
-View our script repository https://github.com/harshturna/lynq-js
+The tracker lives in `packages/tracker` and is served from `/js/lynq.js`; events land in `/api/collect`.
