@@ -567,7 +567,10 @@ export async function getCustomEventData(
     .eq("website_url", website_url)
     .gte("created_at", timeFrame)
     .lte("created_at", currentDateTime)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // Same ceiling as page views and sessions. Rows are one per property, so
+    // the cap can split the oldest event's properties; newest come first.
+    .limit(5000);
 
   if (!data || error) {
     return { data: null, error: "No data" };
