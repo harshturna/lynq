@@ -1,6 +1,12 @@
 "use client";
 
 import { Suspense, useCallback, useState } from "react";
+import {
+  BarChart,
+  LineChart,
+  Sparkline,
+  trendLabel,
+} from "@/components/charts/charts";
 import { DeltaBadge, Pill } from "@/components/shell/badge";
 import { Control, Segmented } from "@/components/shell/control";
 import {
@@ -22,11 +28,7 @@ import {
 } from "@/components/shell/ranges";
 import { RowBar, Section } from "@/components/shell/section";
 import { Shortcuts } from "@/components/shell/shortcuts";
-import {
-  ChartSkeleton,
-  StripSkeleton,
-  TableSkeleton,
-} from "@/components/shell/skeleton";
+import { StripSkeleton, TableSkeleton } from "@/components/shell/skeleton";
 import { TopNav } from "@/components/shell/top-nav";
 import {
   ShellProvider,
@@ -51,6 +53,24 @@ const SUGGEST: Record<string, string[]> = {
 
 const PAGE_COLUMNS: Column[] = [
   { key: "visitors", header: "Visitors", align: "right", width: "110px" },
+  {
+    key: "trend",
+    header: "Trend",
+    align: "right",
+    width: "84px",
+    sortable: false,
+    secondary: true,
+    format: (_, row) => {
+      const values = sparkOf(row.id.length);
+      return (
+        <Sparkline
+          values={values}
+          label={trendLabel(values)}
+          accent={row.id === "/pricing"}
+        />
+      );
+    },
+  },
   {
     key: "pageviews",
     header: "Pageviews",
@@ -138,6 +158,32 @@ const BROWSERS: TableRow[] = [
     previous: { visitors: 980 },
   },
 ];
+const rnd = (seed: number) => {
+  let x = seed;
+  return () => {
+    x = (x * 16807) % 2147483647;
+    return x / 2147483647;
+  };
+};
+const DAYS = 30;
+const dayIso = (i: number) => new Date(Date.UTC(2026, 7, 6 + i)).toISOString();
+const seriesOf = (base: number, growth: number, seed: number) => {
+  const r = rnd(seed);
+  return Array.from({ length: DAYS }, (_, i) => ({
+    t: dayIso(i),
+    v: Math.round(base * (1 + (growth * i) / (DAYS - 1)) * (0.82 + 0.36 * r())),
+  }));
+};
+const VISITORS = seriesOf(380, 0.7, 11);
+const VISITORS_PREV = seriesOf(340, 0.5, 12);
+const MINUTES = Array.from({ length: 30 }, (_, i) => ({
+  label: i % 5 === 0 ? `-${30 - i}m` : "",
+  value: 1 + Math.round(4 * Math.abs(Math.sin(i / 3))),
+}));
+const sparkOf = (seed: number) =>
+  seriesOf(10, 0.4, seed)
+    .slice(0, 12)
+    .map((p) => p.v);
 const MANY: TableRow[] = Array.from({ length: 800 }, (_, i) => ({
   id: `/docs/page-${i + 1}`,
   label: `/docs/page-${i + 1}`,
@@ -274,7 +320,18 @@ function Body() {
             />
           }
         >
-          <ChartSkeleton height={220} />
+          <LineChart
+            title="Unique visitors per day"
+            series={[
+              {
+                name: "Unique visitors",
+                points: VISITORS,
+                previous: compare ? VISITORS_PREV : undefined,
+              },
+            ]}
+            granularity="day"
+            height={220}
+          />
         </Section>
         <div className="flex flex-col gap-5">
           <Section title="Signups" qualifier="goal · last 30 days" strong>
@@ -312,6 +369,17 @@ function Body() {
           </Section>
         </div>
       </div>
+
+      <Section title="Visitors per minute" qualifier="last 30 minutes" strong>
+        <BarChart
+          title="Visitors per minute"
+          name="Visitors"
+          bars={MINUTES}
+          accentLast
+          max={8}
+          height={140}
+        />
+      </Section>
 
       <div className="grid gap-8 min-[1000px]:grid-cols-2">
         <DataTable
