@@ -15,13 +15,17 @@ type Lynq = {
 };
 
 (() => {
-  const w = window as Window & { lynq?: Lynq; __lynqVitals?: boolean };
+  const w = window as Window & {
+    lynq?: Lynq;
+    __lynq?: Lynq;
+    __lynqVitals?: boolean;
+  };
   if (w.__lynqVitals) return;
   w.__lynqVitals = true;
   const report = (
     m: Record<string, number>,
     targets?: Record<string, string>
-  ) => w.lynq?._v?.(m, targets);
+  ) => (w.__lynq ?? w.lynq)?._v?.(m, targets);
   const round = (n: number, d = 0) => Number(n.toFixed(d));
 
   onLCP((metric) =>

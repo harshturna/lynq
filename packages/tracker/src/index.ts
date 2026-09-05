@@ -27,6 +27,8 @@ import {
 (() => {
   const w = window as Window & {
     lynq?: LynqApi;
+    /** always the v2 api, even while a v1 script owns window.lynq (dual run) */
+    __lynq?: LynqApi;
     lynqQueue?: { name: string; properties?: Record<string, unknown> }[];
   };
   const d = document;
@@ -34,7 +36,7 @@ import {
     (d.currentScript as HTMLScriptElement | null) ??
     d.querySelector<HTMLScriptElement>("script[data-site]");
   const site = script?.dataset.site?.toLowerCase().replace(/^www\./, "");
-  if (!site || w.lynq) return;
+  if (!site || w.__lynq) return;
 
   type LynqApi = {
     track: (name: string, props?: Record<string, unknown>) => void;
@@ -341,7 +343,9 @@ import {
       push({ t: "vitals", m, targets });
     },
   };
-  w.lynq = api;
+  w.__lynq = api;
+  // During the v1/v2 dual run the v1 script may own window.lynq; do not clobber it.
+  if (!w.lynq) w.lynq = api;
 
   // Optional chunks, from the same origin as this script (design §8.1).
   const load = (name: string) => {

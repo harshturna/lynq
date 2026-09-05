@@ -14,6 +14,15 @@ const nextConfig = {
         ],
       },
       {
+        source: "/js/lynq-:chunk(extras|vitals).js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
         source: "/js/lynq.:hash([0-9a-f]{12}).js",
         headers: [
           {

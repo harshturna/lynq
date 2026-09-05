@@ -6,7 +6,11 @@
 type Lynq = { track: (name: string, props?: Record<string, unknown>) => void };
 
 (() => {
-  const w = window as Window & { lynq?: Lynq; __lynqExtras?: boolean };
+  const w = window as Window & {
+    lynq?: Lynq;
+    __lynq?: Lynq;
+    __lynqExtras?: boolean;
+  };
   if (w.__lynqExtras) return;
   w.__lynqExtras = true;
   const script = document.querySelector<HTMLScriptElement>("script[data-site]");
@@ -31,7 +35,7 @@ type Lynq = { track: (name: string, props?: Record<string, unknown>) => void };
   document.addEventListener(
     "click",
     (e) => {
-      const lynq = w.lynq;
+      const lynq = w.__lynq ?? w.lynq;
       if (!lynq) return;
       const target = e.target instanceof Element ? e.target : null;
       if (!target) return;

@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 
@@ -58,7 +57,22 @@ export default function RootLayout({
         )}
       >
         {children}
-        <Analytics />
+        {/* Lynq tracks itself (design §11). v2 is the product; the v1 script stays alongside
+            for the comparison window and is removed at v1 sunset (D-005). */}
+        <script
+          defer
+          src="/js/lynq.js"
+          data-site="lynq.byharsh.com"
+          data-vitals=""
+          data-outbound=""
+          data-auto-events=""
+        />
+        <script
+          async
+          src={`https://cdn.jsdelivr.net/gh/harshturna/lynq-js${process.env.NEXT_PUBLIC_LYNQ_SCRIPT_VERSION ?? ""}/dist/lynq.min.js`}
+          data-domain="lynq.byharsh.com"
+          data-script-id="lynq"
+        />
       </body>
     </html>
   );
