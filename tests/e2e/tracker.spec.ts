@@ -366,3 +366,85 @@ test("invariant: a random walk keeps page context on every batch, distinct pids 
   const allPids = [...pidsByUrl.values()].flatMap((s) => [...s]);
   expect(new Set(allPids).size).toBe(allPids.length);
 });
+
+test("extras chunk: outbound and download clicks and declarative events, only when enabled", async ({
+  page,
+}) => {
+  await page.goto("/?full=1");
+  await waitForBatches(page, 1);
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __lynqExtras?: boolean }).__lynqExtras === true
+  );
+  await reset(page);
+  await page.click("#outbound");
+  await page.click("#download");
+  await page.click("#internal");
+  await page.click("#declared-inner");
+  const got = await waitForBatches(page, 1, 4000);
+  const customs = events(got).filter((e) => e.t === "custom");
+  expect(customs.map((e) => e.name)).toEqual(
+    expect.arrayContaining(["outbound", "download", "signup"])
+  );
+  expect(customs.find((e) => e.name === "outbound")?.props).toEqual({
+    url: "https://example.com/elsewhere",
+  });
+  expect(customs.find((e) => e.name === "download")?.props).toEqual({
+    url: "http://localhost:4321/files/report.pdf",
+  });
+  expect(customs.find((e) => e.name === "signup")?.props).toEqual({
+    plan: "pro",
+    cta: "hero",
+  });
+  expect(
+    customs.some(
+      (e) => e.props && (e.props as { url?: string }).url?.includes("/docs")
+    )
+  ).toBe(false);
+
+  await page.goto("/");
+  await waitForBatches(page, 1);
+  await reset(page);
+  await page.click("#outbound");
+  await page.click("#declared-inner");
+  await page.waitForTimeout(1500);
+  const names = events(await batches(page))
+    .filter((e) => e.t === "custom")
+    .map((e) => e.name);
+  expect(names).not.toEqual(
+    expect.arrayContaining(["outbound", "download", "signup"])
+  );
+});
+
+test("vitals chunk: web-vitals and navigation timing arrive as vitals events on the page's pid", async ({
+  page,
+}) => {
+  await page.goto("/?full=1");
+  await waitForBatches(page, 1);
+  const pid = (await batches(page))[0]?.batch?.pid;
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __lynqVitals?: boolean }).__lynqVitals === true
+  );
+  await page.mouse.move(10, 10);
+  await page.waitForTimeout(500);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      value: "hidden",
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  const got = await waitForBatches(page, 2, 6000);
+  const vitals = events(got).filter((e) => e.t === "vitals") as unknown as {
+    m: Record<string, number>;
+    pid: string;
+  }[];
+  expect(vitals.length).toBeGreaterThan(0);
+  const keys = new Set(vitals.flatMap((v) => Object.keys(v.m)));
+  expect([...keys]).toEqual(
+    expect.arrayContaining(["ttfb", "dcl", "load", "resources"])
+  );
+  expect(keys.has("fcp") || keys.has("lcp")).toBe(true);
+  for (const v of vitals) expect(v.pid).toBe(pid);
+});

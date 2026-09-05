@@ -5,7 +5,12 @@ import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 const port = Number(process.env.PORT ?? 4321);
-const tracker = readFileSync("public/js/lynq.js", "utf8");
+const chunks = Object.fromEntries(
+  ["lynq", "lynq-extras", "lynq-vitals"].map((n) => [
+    n,
+    readFileSync(`public/js/${n}.js`, "utf8"),
+  ])
+);
 let batches = [];
 
 const page = (title, body = "", attrs = "") => `<!doctype html>
@@ -18,6 +23,10 @@ const page = (title, body = "", attrs = "") => `<!doctype html>
 <button id="same" type="button" onclick="history.replaceState({}, '', location.pathname)">same</button>
 <button id="hash" type="button" onclick="location.hash = 'h' + Date.now()">hash</button>
 <button id="track" type="button" onclick="lynq.track('clicked', { where: 'button' })">track</button>
+<a id="outbound" href="https://example.com/elsewhere" onclick="event.preventDefault()">outbound</a>
+<a id="download" href="/files/report.pdf" onclick="event.preventDefault()">download</a>
+<a id="internal" href="/docs" onclick="event.preventDefault()">internal</a>
+<button id="declared" type="button" data-lynq-event="signup" data-lynq-prop-plan="pro" data-lynq-prop-cta="hero"><span id="declared-inner">declared</span></button>
 </nav>${body}<div style="height:3000px"></div></body></html>`;
 
 createServer((req, res) => {
@@ -55,13 +64,19 @@ createServer((req, res) => {
     res.end();
     return;
   }
-  if (url.pathname === "/js/lynq.js") {
+  const chunk = /^\/js\/(lynq(?:-extras|-vitals)?)\.js$/.exec(url.pathname);
+  if (chunk) {
     res.writeHead(200, { "content-type": "text/javascript" });
-    res.end(tracker);
+    res.end(chunks[chunk[1]]);
     return;
   }
   res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-  res.end(page(url.pathname === "/" ? "Home" : url.pathname.slice(1)));
+  const attrs = url.searchParams.has("full")
+    ? "data-outbound data-auto-events data-vitals"
+    : "";
+  res.end(
+    page(url.pathname === "/" ? "Home" : url.pathname.slice(1), "", attrs)
+  );
 }).listen(port, () =>
   console.log(`fixture server on http://localhost:${port}`)
 );

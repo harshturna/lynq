@@ -55,6 +55,7 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "ua-parser-js": "^1.0.41",
+    "web-vitals": "^6.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {

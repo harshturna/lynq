@@ -41,6 +41,8 @@ import {
     identify: (uid: string) => void;
     optOut: () => void;
     optIn: () => void;
+    /** vitals chunk hook: one vitals event per finalised metric */
+    _v: (m: Record<string, number>, targets?: Record<string, string>) => void;
   };
 
   // ------------------------------------------------------------ consent
@@ -334,8 +336,26 @@ import {
         /* nothing to do */
       }
     },
+    _v: (m, targets) => {
+      if (!m || typeof m !== "object") return;
+      push({ t: "vitals", m, targets });
+    },
   };
   w.lynq = api;
+
+  // Optional chunks, from the same origin as this script (design §8.1).
+  const load = (name: string) => {
+    const el = d.createElement("script");
+    el.src = endpoint.replace(/\/api\/collect$/, `/js/${name}.js`);
+    el.async = true;
+    d.head.appendChild(el);
+  };
+  if (
+    script?.dataset.outbound !== undefined ||
+    script?.dataset.autoEvents !== undefined
+  )
+    load("lynq-extras");
+  if (script?.dataset.vitals !== undefined) load("lynq-vitals");
 
   // ------------------------------------------------------------ start
   session();
