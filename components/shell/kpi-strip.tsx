@@ -32,16 +32,17 @@ export function KpiStrip({
   label = "Metric",
 }: {
   tiles: KpiTile[];
-  value: string;
-  onChange: (key: string) => void;
+  /** The checked tile; omit both value and onChange for a static strip with nothing to drive. */
+  value?: string;
+  onChange?: (key: string) => void;
   label?: string;
 }) {
   const groupName = useId();
+  const interactive = Boolean(onChange);
 
   return (
     <div
-      role="radiogroup"
-      aria-label={label}
+      {...(interactive ? { role: "radiogroup", "aria-label": label } : {})}
       className={cn(
         "grid border-t border-rule-strong",
         "max-[479px]:flex max-[479px]:snap-x max-[479px]:snap-mandatory max-[479px]:overflow-x-auto",
@@ -50,7 +51,7 @@ export function KpiStrip({
       style={{ "--tiles": tiles.length } as React.CSSProperties}
     >
       {tiles.map((t) => {
-        const checked = t.key === value;
+        const checked = interactive && t.key === value;
         return (
           <div
             key={t.key}
@@ -81,6 +82,10 @@ export function KpiStrip({
               >
                 {t.ghost.text} →
               </Link>
+            ) : !interactive ? (
+              <span className="block text-[30px] font-medium leading-none tracking-[-0.02em] text-ink tabular max-[479px]:text-[24px]">
+                {t.value}
+              </span>
             ) : (
               <label className="block cursor-pointer rounded-chip has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-teal">
                 <input
@@ -88,7 +93,7 @@ export function KpiStrip({
                   name={groupName}
                   value={t.key}
                   checked={checked}
-                  onChange={() => onChange(t.key)}
+                  onChange={() => onChange?.(t.key)}
                   className="sr-only"
                 />
                 <span className="block text-[30px] font-medium leading-none tracking-[-0.02em] text-ink tabular max-[479px]:text-[24px]">

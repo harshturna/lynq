@@ -602,6 +602,17 @@ describe("phase 1 primitives (TICKET-034)", () => {
     ).toEqual([1, 0]);
   });
 
+  it("revenue and payments over the range", async () => {
+    expect(await q.revenue(ctx())).toEqual({ revenue: 4900, payments: 1 });
+    expect(
+      await q.revenue(
+        ctx({
+          filters: [{ dimension: "device", op: "is", values: ["mobile"] }],
+        })
+      )
+    ).toEqual({ revenue: 0, payments: 0 });
+  });
+
   it("trends for a few values in one statement", async () => {
     const t = await q.trends(ctx(), "path", ["/", "/pricing", "/nope"], "hour");
     expect(t.get("/")?.reduce((a, b) => a + b, 0)).toBe(2);

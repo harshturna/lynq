@@ -41,6 +41,7 @@ import {
 } from "./primitives";
 import { buckets, type Granularity } from "./ranges";
 import { fillMinutes, type RealtimeRow, realtimeQuery } from "./realtime";
+import { type Revenue, revenueQuery } from "./revenue";
 import { trendsQuery } from "./trends";
 import {
   type VitalsRow,
@@ -354,4 +355,13 @@ export async function trends(
     if (series && i >= 0) series[i] = Number(r.n);
   }
   return out;
+}
+
+/** Revenue and payments over the range (design §8.0). */
+export async function revenue(ctx: QueryContext): Promise<Revenue> {
+  const [r] = await run<Record<string, unknown>>(
+    revenueQuery(ctx),
+    ctx.timeoutMs
+  );
+  return { revenue: num(r?.revenue), payments: num(r?.payments) };
 }

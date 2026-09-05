@@ -6,6 +6,7 @@ import { DeltaBadge } from "@/components/shell/badge";
 import { displayValue } from "@/components/shell/dimensions";
 import { KpiStrip, type KpiTile } from "@/components/shell/kpi-strip";
 import { RowBar, Section } from "@/components/shell/section";
+import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
 import { SplitBar } from "@/components/shell/views";
 import type { Point } from "@/lib/charts/format";
@@ -20,7 +21,6 @@ import {
   type OverviewMetric,
   withParam,
 } from "@/lib/url-state";
-import { SectionError } from "./section-error";
 
 const GRAIN: Record<Granularity, string> = {
   hour: "per hour",

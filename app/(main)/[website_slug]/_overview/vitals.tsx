@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Pill } from "@/components/shell/badge";
 import { Section } from "@/components/shell/section";
+import { SectionError } from "@/components/shell/section-error";
 import { fmtInt } from "@/lib/format";
 import type { VitalsSummary } from "@/lib/query/vitals";
 import type { Section as Settled } from "@/lib/screens/settle";
 import { fmtVital, STATUS_TEXT, VITAL_LABELS, vitalStatus } from "@/lib/vitals";
-import { SectionError } from "./section-error";
 
 const VITALS = ["lcp", "inp", "cls", "fcp", "ttfb"] as const;
 

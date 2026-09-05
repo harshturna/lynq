@@ -5,6 +5,7 @@ import { LineChart } from "@/components/charts/charts";
 import { Pill } from "@/components/shell/badge";
 import { displayValue } from "@/components/shell/dimensions";
 import { RowBar, Section } from "@/components/shell/section";
+import { SectionError } from "@/components/shell/section-error";
 import { useViewState } from "@/components/shell/view-state";
 import { FlowPanel } from "@/components/shell/views";
 import { fmtDuration, fmtInt, fmtRatio } from "@/lib/format";
@@ -14,7 +15,6 @@ import type { SelectedPage } from "@/lib/screens/pages";
 import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter, withParam } from "@/lib/url-state";
 import { fmtVital, STATUS_TEXT, VITAL_LABELS, vitalStatus } from "@/lib/vitals";
-import { SectionError } from "../../_overview/section-error";
 
 /** Ranked rows per side of the flow panel; the query returns up to 60. */
 const FLOW_ROWS = 8;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Section } from "@/components/shell/section";
+import { Section } from "./section";
 
 /** A section that failed keeps its title and offers a retry (design §12). */
 export function SectionError({

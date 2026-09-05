@@ -8,6 +8,7 @@ import {
 } from "@/components/shell/data-table";
 import { displayValue, filterSentence } from "@/components/shell/dimensions";
 import { ShowAllDrawer } from "@/components/shell/drawer";
+import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
 import { fmtDuration, fmtPct, fmtRevenue } from "@/lib/format";
 import type { BreakdownMultiRow } from "@/lib/query/breakdown";
@@ -15,7 +16,6 @@ import type { Kpi } from "@/lib/screens/kpi";
 import type { TableData } from "@/lib/screens/overview";
 import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter } from "@/lib/url-state";
-import { SectionError } from "./section-error";
 
 const SHOWN = 8;
 

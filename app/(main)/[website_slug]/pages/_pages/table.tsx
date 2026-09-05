@@ -11,6 +11,7 @@ import {
 import { filterSentence } from "@/components/shell/dimensions";
 import { ShowAllDrawer } from "@/components/shell/drawer";
 import { Section } from "@/components/shell/section";
+import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
 import { fmtDuration, fmtPct } from "@/lib/format";
 import { globToRegExp } from "@/lib/ingest/glob";
@@ -21,7 +22,6 @@ import type {
 } from "@/lib/screens/pages";
 import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter, withParam } from "@/lib/url-state";
-import { SectionError } from "../../_overview/section-error";
 
 const SHOWN = 12;
 /** Top rows in the treemap plus the everything-else leaf (design §8.3). */

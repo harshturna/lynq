@@ -179,9 +179,10 @@ export function breakdownMultiQuery(
   const guard = dims.map((d) => d.guard).join("");
   const nonEmpty = dims
     .map((d, i) => {
-      // '' is a real entry value (Direct); for row dimensions it is noise
+      // '' is a real entry value for referrer, source and channel (Direct);
+      // for UTM fields and row dimensions it is the absence of one
       const raw = Array.isArray(dimension) ? dimension[i] : dimension;
-      return d.session && isEntryDimension(raw)
+      return d.session && isEntryDimension(raw) && !raw.startsWith("entry_utm_")
         ? ` and ${d.expr} is not null`
         : ` and ${d.expr} is not null and ${d.expr}::text <> ''`;
     })
