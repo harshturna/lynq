@@ -41,10 +41,10 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   fewer round trips) is part of this design, not a separate ticket.
 
 ## Plan
-- [ ] Mock the remaining screens in the D-008 style on the same artifact page (Realtime, Pages,
+- [x] Mock the remaining screens in the D-008 style on the same artifact page (Realtime, Pages,
       Sources, Locations, Devices, Events, Goals, Performance, Settings, onboarding) and get the
       owner's reaction before writing.
-- [ ] Write docs/design/phase-1-ui-overhaul.md: tokens, component inventory, screen specs,
+- [x] Write docs/design/phase-1-ui-overhaul.md: tokens, component inventory, screen specs,
       URL state, data loading, empty and loading states, responsive behaviour.
 - [ ] Review passes (design, information architecture, accessibility, implementation).
 - [ ] Owner sign-off; decisions recorded; implementation tickets opened.
@@ -76,13 +76,21 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   dot plot against the site average; Performance an LCP distribution with the three bands.
   Line charts stay on Overview, Realtime and as small trends. These are the chart types the
   charting-library decision must cover.
+- 2026-09-05 — Owner approved the direction ("some components look a bit messy but likely
+  because it's a mockup, overall I am liking the direction we can proceed"). Landing page is
+  explicitly later (needs graphics). docs/design/phase-1-ui-overhaul.md v1 written: tokens,
+  routes, URL state, shell, chart inventory, ten screens, query additions, schema, states,
+  responsive, charting decision (proposed D-009: hand-written SVG, drop Recharts), sequence
+  of 15 implementation tickets, open questions. Review passes start: 1 design/IA, 2
+  implementation feasibility, 3 accessibility/states/responsive.
 
 ## Handoff
-- **State:** Screen mockups published (artifact "Lynq Screens", link in Context). No design doc
-  yet.
-- **Blocked on:** owner reaction to the screen mockups.
-- **Next:** fold the owner's reactions into the mocks; then write
-  docs/design/phase-1-ui-overhaul.md; then Opus review passes.
+- **State:** Direction approved. docs/design/phase-1-ui-overhaul.md v1 drafted. Review pass 1
+  (design/IA) running.
+- **Blocked on:** nothing.
+- **Next:** fold review findings into v2; passes 2 and 3; present the high-level summary and
+  the D-009 charting decision for owner sign-off; open the implementation tickets in §15.
+- **Read first:** docs/design/phase-1-ui-overhaul.md; D-008.
 - **Read first:** D-008 in tickets/DECISIONS.md; this ticket's Context for tokens and layout.
 
 ## Verification
