@@ -18,6 +18,8 @@ export function ScreenHeader({
   suggest,
   extra,
   controls,
+  pickers = true,
+  subtitle,
 }: {
   title: string;
   timezone: string;
@@ -27,6 +29,10 @@ export function ScreenHeader({
   extra?: ReactNode;
   /** Extra controls before the range picker (a search box, a segment). */
   controls?: ReactNode;
+  /** Range and compare pickers; Realtime replaces them with its own segment. */
+  pickers?: boolean;
+  /** Replaces the range sentence in the subtitle when the pickers are off. */
+  subtitle?: ReactNode;
 }) {
   const { state, update } = useViewState();
   const today = todayIn(timezone);
@@ -50,17 +56,24 @@ export function ScreenHeader({
       <PageHeader
         title={title}
         subtitle={
-          <>
-            {extra}
-            {rangeLabel({ from: dates.from, to: dates.to })} · {compareText} ·{" "}
-            {timezone}
-          </>
+          pickers ? (
+            <>
+              {extra}
+              {rangeLabel({ from: dates.from, to: dates.to })} · {compareText} ·{" "}
+              {timezone}
+            </>
+          ) : (
+            <>
+              {extra}
+              {subtitle}
+            </>
+          )
         }
         controls={
           <>
             {controls}
-            <RangePicker timezone={timezone} />
-            <ComparePicker />
+            {pickers && <RangePicker timezone={timezone} />}
+            {pickers && <ComparePicker />}
             <FilterBuilder id="add-filter" suggest={suggest} />
           </>
         }

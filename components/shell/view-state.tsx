@@ -14,10 +14,12 @@ import {
 } from "react";
 import {
   parseSearch,
-  type SearchInput,
+  searchParamsToInput,
   toQuery,
   type ViewState,
 } from "@/lib/url-state";
+
+export { searchParamsToInput };
 
 /**
  * The URL is the state (design §5). `useViewState()` gives the parsed state and
@@ -36,17 +38,6 @@ type AnnounceValue = { announce: (message: string) => void };
 
 const ViewStateContext = createContext<ViewStateValue | null>(null);
 const AnnounceContext = createContext<AnnounceValue | null>(null);
-
-/** URLSearchParams to the record shape parseSearch takes (repeated keys become arrays). */
-export function searchParamsToInput(sp: URLSearchParams): SearchInput {
-  const out: Record<string, string | string[]> = {};
-  for (const [k, v] of sp.entries()) {
-    const cur = out[k];
-    if (cur === undefined) out[k] = v;
-    else out[k] = Array.isArray(cur) ? [...cur, v] : [cur, v];
-  }
-  return out;
-}
 
 export function ShellProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();

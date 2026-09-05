@@ -183,12 +183,21 @@ export async function breakdownMulti(
 /** The last 30 minutes by received_at, in one statement (design §9.4). */
 export async function realtime(
   ctx: QueryContext,
-  now = new Date()
+  now = new Date(),
+  windowMin?: number
 ): Promise<RealtimeRow> {
-  const [row] = await run<RealtimeRow>(realtimeQuery(ctx, now), ctx.timeoutMs);
+  const [row] = await run<RealtimeRow & { last_at: Date | string | null }>(
+    realtimeQuery(ctx, now, windowMin),
+    ctx.timeoutMs
+  );
   return {
     visitors_now: num(row?.visitors_now),
-    per_minute: fillMinutes(row?.per_minute ?? [], now),
+    pageviews: num(row?.pageviews),
+    pageviews_prev: num(row?.pageviews_prev),
+    custom_events: num(row?.custom_events),
+    event_names: row?.event_names ?? [],
+    last_at: row?.last_at ? new Date(row.last_at).toISOString() : null,
+    per_minute: fillMinutes(row?.per_minute ?? [], now, windowMin),
     pages: row?.pages ?? [],
     sources: row?.sources ?? [],
     countries: row?.countries ?? [],

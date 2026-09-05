@@ -719,6 +719,13 @@ describe("phase 1 primitives (TICKET-034)", () => {
     try {
       const r = await q.realtime(ctx(), now);
       expect(r.visitors_now).toBe(1);
+      expect(r).toMatchObject({
+        pageviews: 1,
+        pageviews_prev: 0,
+        custom_events: 1,
+      });
+      expect(r.event_names).toEqual([{ value: "ping", count: 1 }]);
+      expect(r.last_at).toBe(now.toISOString());
       expect(r.pages).toEqual([{ value: "/live", visitors: 1 }]);
       expect(r.sources).toEqual([{ value: "", sessions: 1 }]);
       expect(r.countries).toEqual([{ value: "DE", visitors: 1 }]);

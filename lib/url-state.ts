@@ -76,6 +76,17 @@ const MAX_FILTERS = 20;
 const MAX_VALUES = 20;
 const MAX_VALUE_LENGTH = 512;
 
+/** URLSearchParams to the record shape parseSearch takes (repeated keys become arrays). */
+export function searchParamsToInput(sp: URLSearchParams): SearchInput {
+  const out: Record<string, string | string[]> = {};
+  for (const [k, v] of sp.entries()) {
+    const cur = out[k];
+    if (cur === undefined) out[k] = v;
+    else out[k] = Array.isArray(cur) ? [...cur, v] : [cur, v];
+  }
+  return out;
+}
+
 export function defaultState(): ViewState {
   return {
     range: DEFAULT_RANGE,
