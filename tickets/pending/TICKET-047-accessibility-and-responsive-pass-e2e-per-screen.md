@@ -11,6 +11,9 @@ Every screen is checked with a screen reader and at 375 px against the design's 
 
 ## Context
 - Design §6, §7, §12, §13; the preview route from TICKET-031; Playwright with axe-core for automated checks; VoiceOver for the manual pass. Depends on every screen ticket.
+- Known from TICKET-030's walk-through at 390 px: the TopNav's More trigger is clipped by a
+  few pixels and the LYNQ wordmark still showed although it is `hidden sm:inline`; check the
+  row's overflow and the wordmark rule on a real device width first.
 - Part of the Phase 1 sequence in docs/design/phase-1-ui-overhaul.md §16 (TICKET-025, D-008, D-009).
 
 ## Plan

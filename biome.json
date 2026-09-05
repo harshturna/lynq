@@ -66,6 +66,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["components/shell/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off"
+          }
+        }
+      }
     }
   ]
 }
