@@ -44,10 +44,12 @@ import { fillMinutes, type RealtimeRow, realtimeQuery } from "./realtime";
 import { type Revenue, revenueQuery } from "./revenue";
 import { type TrendMetric, trendsQuery } from "./trends";
 import {
+  type TargetColumn,
   type VitalsRow,
   type VitalsSummary,
   vitalsBreakdownQuery,
   vitalsQuery,
+  vitalsTargetsQuery,
   vitalsTimeseriesQuery,
 } from "./vitals";
 
@@ -365,4 +367,22 @@ export async function revenue(ctx: QueryContext): Promise<Revenue> {
     ctx.timeoutMs
   );
   return { revenue: num(r?.revenue), payments: num(r?.payments) };
+}
+
+/** The elements behind LCP or INP on the matching rows (design §8.9). */
+export async function vitalsTargets(
+  ctx: QueryContext,
+  column: TargetColumn,
+  limit = 5
+): Promise<{ value: string; samples: number; p75: number | null }[]> {
+  const rows = await run<{
+    value: string;
+    samples: number;
+    p75: number | null;
+  }>(vitalsTargetsQuery(ctx, column, limit), ctx.timeoutMs);
+  return rows.map((r) => ({
+    value: r.value,
+    samples: num(r.samples),
+    p75: numOrNull(r.p75),
+  }));
 }

@@ -669,6 +669,11 @@ describe("phase 1 primitives (TICKET-034)", () => {
     ]);
   });
 
+  it("vitals attribution targets", async () => {
+    // the fixture's vitals rows carry no lcp_target, so the query is exercised on emptiness
+    expect(await q.vitalsTargets(ctx(), "lcp_target")).toEqual([]);
+  });
+
   it("vitals by dimension and over time", async () => {
     const byDevice = await q.vitalsBreakdown(ctx(), "device");
     expect(byDevice).toHaveLength(1);

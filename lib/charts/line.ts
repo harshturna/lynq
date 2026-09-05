@@ -20,8 +20,8 @@ export type LineSeries = {
   points: Point[];
   /** Same length as points, aligned by index; the previous period's values. */
   previous?: Point[];
-  /** Accent (default, D-010) or ink. */
-  color?: "ink" | "accent";
+  /** Accent (default, D-010), ink, or muted grey for a third series. */
+  color?: "ink" | "accent" | "muted";
   /** Format a value for the tooltip and axis (default: number with separators). */
   format?: (v: number) => string;
 };
@@ -50,7 +50,11 @@ export function lineOption(
   const fmt = primary?.format ?? fmtNumber;
   const seriesOptions: object[] = [];
   const stroke = (s: LineSeries) =>
-    s.color === "ink" ? TOKENS.ink : TOKENS.teal;
+    s.color === "ink"
+      ? TOKENS.ink
+      : s.color === "muted"
+        ? TOKENS.compare
+        : TOKENS.teal;
 
   series.forEach((s, i) => {
     if (s.previous) {

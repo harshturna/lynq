@@ -117,3 +117,34 @@ group by 1, 2 order by 1, 2`,
     params: q.params,
   };
 }
+
+/** Attribution targets (design §8.9): the LCP element or INP target selectors, grouped. */
+export const TARGET_COLUMNS = {
+  lcp_target: "lcp",
+  inp_target: "inp",
+} as const;
+export type TargetColumn = keyof typeof TARGET_COLUMNS;
+
+export function vitalsTargetsQuery(
+  ctx: QueryContext,
+  column: TargetColumn,
+  limit = 5,
+  w = ctx.range
+): Compiled {
+  const metric = TARGET_COLUMNS[column];
+  if (!metric) throw new Error(`unknown target column ${column}`);
+  const q = new Query();
+  const f = compileFilters(q, ctx.filters);
+  const r = rowFrom(q, ctx, w, f);
+  const n = Math.min(Math.max(limit, 1), 50);
+  return {
+    text: `${r.withClause}
+select e.${column}::text as value,
+       count(*)::int as samples,
+       percentile_cont(0.75) within group (order by e.${metric})::float8 as p75
+from ${r.from}
+where ${r.where} and e.event = 'vitals' and e.${column} is not null and e.${column} <> '' and e.${metric} is not null
+group by 1 order by samples desc, 1 limit ${q.p(n)}`,
+    params: q.params,
+  };
+}

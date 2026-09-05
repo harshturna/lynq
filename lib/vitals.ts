@@ -46,3 +46,10 @@ export const STATUS_TEXT: Record<PillStatus, string> = {
   poor: "Poor",
   none: "No data",
 };
+
+/** The five vitals the screens render, in order. */
+export const RENDERED_VITALS = ["lcp", "inp", "cls", "fcp", "ttfb"] as const;
+export const DEVICES = ["desktop", "mobile", "tablet"] as const;
+/** LCP bands in ms (design §8.9). */
+export const LCP_GOOD = 2500;
+export const LCP_POOR = 4000;
