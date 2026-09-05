@@ -233,6 +233,31 @@ export function flagEmoji(code: string): string {
   );
 }
 
+const nameByCode = new Map(
+  Object.entries(countryCentroids).map(([name, c]) => [c.code, name])
+);
+
+/**
+ * ISO 3166-1 alpha-2 code to the country name used throughout the database
+ * and dashboard. The centroid table is the primary source so names line up
+ * with the globe and flag lookups; Intl covers codes the table lacks.
+ */
+export function countryNameFromCode(code: string | null): string | null {
+  if (!code) return null;
+  const upper = code.trim().toUpperCase();
+  // Vercel and Cloudflare use XX / T1 for unknown and Tor exit nodes
+  if (upper.length !== 2 || upper === "XX" || upper === "T1") return null;
+  const fromTable = nameByCode.get(upper);
+  if (fromTable) return fromTable;
+  try {
+    const name = new Intl.DisplayNames(["en"], { type: "region" }).of(upper);
+    // Intl answers "Unknown Region" for codes it has no name for
+    return name && name !== upper && !/unknown/i.test(name) ? name : null;
+  } catch {
+    return null;
+  }
+}
+
 export function countryFlag(country: string | null): string {
   const centroid = lookupCentroid(country);
   return centroid ? flagEmoji(centroid.code) : "";

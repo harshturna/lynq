@@ -9,6 +9,7 @@ import {
   addVitals,
   getCountryAndCityFromIp,
 } from "@/lib/actions";
+import { getClientIp, getGeoFromHeaders } from "@/lib/geo/request-geo";
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
@@ -60,13 +61,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const ip = (await headers()).get("x-forwarded-for");
+    const requestHeaders = await headers();
 
     if (
       body.event === "session-start" ||
       body.event === "initial-custom-event"
     ) {
-      const geoData = await getCountryAndCityFromIp(ip);
+      // Platform geo headers first: no network call, no rate limit. The IP
+      // lookup only runs where no platform header exists (local dev).
+      const geoData =
+        getGeoFromHeaders(requestHeaders) ??
+        (await getCountryAndCityFromIp(getClientIp(requestHeaders)));
 
       if (body.event === "session-start") {
         await addVisitor(body.clientId, body.dataDomain);
