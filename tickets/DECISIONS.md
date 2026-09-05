@@ -138,3 +138,32 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   a portfolio project with one external install the owner controls.
 - **Consequences:** Two small tickets before the UI overhaul proper. The demo dashboard shows
   Lynq's own traffic as soon as TICKET-023 ships.
+
+## D-008 — Visual direction for the UI overhaul: light, Ledger-style, teal accent
+- **Status:** Accepted
+- **Date:** 2026-09-05
+- **Context:** The current dashboard is dark-only with a cyan accent and a page of cards. The
+  owner wants the whole UI replaced with a light theme and asked for mockups before any design
+  writing. Four directions were mocked on one page (Sentry-derived, "Ledger", "Studio",
+  "Console", then a Ledger + Studio hybrid) and reviewed live:
+  https://claude.ai/code/artifact/25f864fe-6a61-480a-965e-c3404eb7657f. The owner rejected the
+  Sentry-derived look, chose the hybrid, rejected a purple accent as not tasteful, and asked for
+  the Studio layer toned down.
+- **Decision:** The product UI is light-only and built on the "Ledger + Studio" hybrid as
+  finally mocked: white page, near-black type (Geist), rules instead of borders and shadows,
+  top navigation, real tables for breakdowns, one thin black trend line with the previous
+  period dotted, teal `#0f766e` as the single accent (active tab and tile underline, selected
+  rows, links, faint area under the line), semantic green, amber and red kept separate from the
+  accent. From Studio, only: delta badges on the KPI tiles, flags on countries, a goal card with
+  progress bar and funnel, a devices split bar, status pills on Web Vitals. Not carried:
+  sparklines on tiles, share bars inside tables, coloured filter chips, purple or indigo
+  anywhere, sidebar navigation, card grids.
+- **Rejected alternatives:** Sentry-derived light theme (Rubik, ink-violet, uppercase labels),
+  rejected by the owner on sight. Studio alone (warm off-white, rounded panels, bold indigo),
+  rejected as too much. Console (dense grid, mono numbers), not chosen. Keeping a dark theme or
+  a theme toggle, out of scope: light only for now. Accents blue, emerald, coral, violet, steel,
+  forest, ochre and none, all shown; teal chosen.
+- **Consequences:** TICKET-025 writes the design from these tokens and mocks the remaining
+  screens in this style before implementation tickets open. The existing dark theme, cyan
+  accent, globe card and card-grid layout go away with the overhaul. A dark theme, if ever
+  wanted, is a later decision, not a token swap.
