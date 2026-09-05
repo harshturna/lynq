@@ -12,7 +12,9 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["**/*.test.ts"],
+    // Component tests are *.test.tsx and opt into jsdom with a
+    // `// @vitest-environment jsdom` docblock; everything else stays in node.
+    include: ["**/*.test.ts", "**/*.test.tsx"],
     exclude: ["**/node_modules/**", "**/*.integration.test.ts", "packages/**"],
   },
 });
