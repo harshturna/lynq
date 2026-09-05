@@ -87,3 +87,6 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
 
 - Review and revamp roadmap: https://claude.ai/code/artifact/7b3f2d2c-4229-4642-b71e-6d94b75a7563
 - Order of work is `D-001`: quality and data layer first, then the UI overhaul, then new features.
+- Phase 0 (the data foundation, `docs/design/phase-0-data-foundation.md`) is complete as of
+  2026-09-05: `analytics.events` is the store, `/api/collect` and `/js/lynq.js` are live, the
+  dashboard still reads the old tables until Phase 1 rewires it to `lib/query`.
