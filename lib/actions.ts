@@ -41,13 +41,17 @@ async function authorizeWebsite(
   website_url: string,
   user_id: string
 ): Promise<
-  | { supabase: Awaited<ReturnType<typeof createClient>>; error: null }
-  | { supabase: null; error: string }
+  | {
+      supabase: Awaited<ReturnType<typeof createClient>>;
+      siteId: number;
+      error: null;
+    }
+  | { supabase: null; siteId: null; error: string }
 > {
   const [supabase, user] = await Promise.all([createClient(), getUser()]);
 
   if (!user?.id || user_id !== user.id) {
-    return { supabase: null, error: "Unauthorized User" };
+    return { supabase: null, siteId: null, error: "Unauthorized User" };
   }
 
   const { data: website } = await supabase
@@ -55,13 +59,14 @@ async function authorizeWebsite(
     .select("id")
     .eq("url", website_url)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (!website) {
-    return { supabase: null, error: "Unauthorized User" };
+    return { supabase: null, siteId: null, error: "Unauthorized User" };
   }
 
-  return { supabase, error: null };
+  return { supabase, siteId: Number(website.id), error: null };
 }
 
 export async function getAllWebsites(userId: string): Promise<{
@@ -76,7 +81,8 @@ export async function getAllWebsites(userId: string): Promise<{
   const { data, error } = await supabase
     .from("websites")
     .select("*")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .is("deleted_at", null);
 
   return { data, error };
 }
@@ -94,17 +100,26 @@ export async function getWebsite(
     .select("*")
     .eq("slug", website_slug)
     .eq("user_id", user_id)
+    .is("deleted_at", null)
     .single();
 
   return { data, error };
 }
 
+// The only columns a user may change through this action. The URL is the
+// analytics identity (analytics.site_hostnames) and is not editable here.
+const UPDATABLE_WEBSITE_COLUMNS = ["name", "is_first_visit"] as const;
+type UpdatableWebsiteColumn = (typeof UPDATABLE_WEBSITE_COLUMNS)[number];
+
 export async function updateWebsiteOne(
   website_slug: string,
-  column: string,
+  column: UpdatableWebsiteColumn,
   value: string,
   user_id: string
 ) {
+  if (!UPDATABLE_WEBSITE_COLUMNS.includes(column)) {
+    return "Column cannot be updated";
+  }
   const supabase = await createClient();
 
   // check if the user making the request is the resource owner
@@ -135,9 +150,11 @@ export async function deleteWebsite(website_slug: string, user_id: string) {
   if (user_id === process.env.GUEST_USER_ID)
     return "Guest user cannot perform this action";
 
+  // Soft delete: analytics.housekeeping() removes the site's events in
+  // batches overnight and then the row, so a request never runs the cascade.
   const { error } = await supabase
     .from("websites")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("slug", website_slug)
     .eq("user_id", user_id);
 

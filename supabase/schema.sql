@@ -48,6 +48,46 @@ $$;
 ALTER FUNCTION "analytics"."housekeeping"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "analytics"."normalise_hostname"("input" "text") RETURNS "text"
+    LANGUAGE "sql" IMMUTABLE
+    AS $_$
+  select case when h ~ '^[a-z0-9.-]+$' then h end from (select nullif(
+    regexp_replace(
+      regexp_replace(
+        regexp_replace(
+          split_part(
+            regexp_replace(
+              regexp_replace(lower(trim(input)), '^[a-z][a-z0-9+.-]*://', ''),
+              '^[^@]*@', ''),
+            '/', 1),
+          ':[0-9]+$', ''),
+        '\.+$', ''),
+      '^www\.', ''),
+    '') as h) n
+$_$;
+
+
+ALTER FUNCTION "analytics"."normalise_hostname"("input" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "analytics"."seed_hostnames"() RETURNS integer
+    LANGUAGE "sql"
+    AS $$
+  with rows as (
+    insert into analytics.site_hostnames (site_id, hostname)
+    select id, analytics.normalise_hostname(url)
+    from public.websites
+    where analytics.normalise_hostname(url) is not null
+    on conflict do nothing
+    returning 1
+  )
+  select count(*)::int from rows
+$$;
+
+
+ALTER FUNCTION "analytics"."seed_hostnames"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_period_summary"("p_website_url" "text", "p_from" timestamp with time zone, "p_to" timestamp with time zone) RETURNS TABLE("views_count" bigint, "visitors_count" bigint, "average_session_duration" numeric, "bounce_rate" numeric)
     LANGUAGE "sql" STABLE
     AS $$

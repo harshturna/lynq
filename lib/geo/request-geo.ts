@@ -4,21 +4,6 @@ type HeaderReader = { get(name: string): string | null };
 
 export type RequestGeo = { country: string; city: string };
 
-/**
- * Client address behind proxies. x-forwarded-for is "client, proxy1, proxy2";
- * the first entry is the client. Previously the whole header was passed to
- * the IP lookup, which fails behind any chain.
- */
-export function getClientIp(headers: HeaderReader): string | null {
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  const real = headers.get("x-real-ip")?.trim();
-  return real || null;
-}
-
 function decode(value: string | null): string | null {
   if (!value) return null;
   try {

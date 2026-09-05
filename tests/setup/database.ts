@@ -15,7 +15,7 @@ export default async function setup() {
   const root = process.cwd();
   // supabase/schema.sql is a dump of production and already contains every
   // migration applied before it was taken; only newer migrations are replayed.
-  const DUMP_INCLUDES_MIGRATIONS_THROUGH = "20260905020000";
+  const DUMP_INCLUDES_MIGRATIONS_THROUGH = "20260905030000";
   const files = [
     path.join(root, "supabase", "schema.sql"),
     ...readdirSync(path.join(root, "supabase", "migrations"))

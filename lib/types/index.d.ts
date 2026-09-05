@@ -6,6 +6,7 @@ type Website = {
   user_id: string;
   is_first_visit: boolean;
   visitors: number;
+  deleted_at: string | null;
 };
 
 type DatePickerValues =
