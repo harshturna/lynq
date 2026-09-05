@@ -147,7 +147,7 @@ create table analytics.events (
   lcp_target text, inp_target text,
 
   suspect          boolean  not null default false,          -- soft check failed (§7.2); excluded by default
-  ingest_version   smallint not null                         -- 0 backfill, 1 v1 adapter, 2 v2
+  ingest_version   smallint not null                         -- 0 backfill, 1 v1 adapter, 2 v2, 9 seeded demo rows (scripts/seed-events.ts)
 );
 
 create index events_site_ts       on analytics.events (site_id, ts);
