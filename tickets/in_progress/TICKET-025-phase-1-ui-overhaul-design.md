@@ -92,9 +92,15 @@ A reviewed design for the UI overhaul (roadmap Phase 1) in the direction chosen 
   full ARIA contract per chart type, table semantics, scoped shortcuts, contrast fixes to four
   tokens, drawer focus and history rules, responsive fixes, missing states. Sequence is now 21
   tickets. v3 is ready for owner sign-off with three decisions requested (§17).
+- 2026-09-05 — Owner: "let's not do hand-written charts, we should use library." v4: §7 and
+  §14 rewritten for Apache ECharts (SVG renderer, one theme from the tokens, one <Chart>
+  client component, option builders per chart, aria descriptions plus table equivalents as
+  the accessible path; Nivo the alternative); §16 tickets 5 and 6 re-scoped. D-009 will
+  record ECharts on sign-off.
 
 ## Handoff
-- **State:** docs/design/phase-1-ui-overhaul.md v3, all three review passes folded in.
+- **State:** docs/design/phase-1-ui-overhaul.md v4: three review passes folded in, charts
+  switched to ECharts per the owner.
 - **Blocked on:** owner sign-off on the design and the three decisions in §17 (sign-off,
   D-009 charting, viewport-size tracker change).
 - **Next:** on sign-off record D-009 (and the viewport decision in the ticket log), then open

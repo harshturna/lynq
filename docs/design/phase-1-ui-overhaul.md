@@ -1,11 +1,13 @@
 # Phase 1 design: the app shell and every screen
 
-Version 3, 2026-09-05. Owner: harsh. Status: ready for owner sign-off (TICKET-025).
+Version 4, 2026-09-05. Owner: harsh. Status: ready for owner sign-off (TICKET-025).
 
 - v1: first draft from the approved mockups.
 - v2: review pass 1 (design and information architecture) folded in.
 - v3: review passes 2 (implementation feasibility against the codebase) and 3 (accessibility,
   interaction, responsive, states) folded in. Both reviews are summarised in §18.
+- v4: owner decision, charts come from a library, not hand-written SVG. §7 and §14 rewritten
+  for Apache ECharts; §16 tickets 5 and 6 re-scoped.
 
 Phase 1 replaces the dashboard UI. It keeps the data layer built in Phase 0 and adds only the
 query primitives each screen needs. Visual direction is settled: D-008. This document turns the
@@ -60,7 +62,7 @@ From D-008 and the mockup reviews:
    dimension to one value, the lead view drops one level and says so in one line ("Filtered
    to Canada, showing regions"): Locations' heatmap shows regions, Pages' treemap gives way to
    the flow panel, Devices' split becomes browsers.
-8. No SVG is ever the only representation of a dataset. Every chart has a table beside it or
+8. No chart is ever the only representation of a dataset. Every chart has a table beside it or
    a visually hidden table of the same numbers (§7).
 9. Light only. No toggle.
 
@@ -288,51 +290,60 @@ them all off. The sheet is the one place they are documented.
 
 ## 7. Charts
 
-The mockups were drawn with hand-written SVG and read well; that is the proposal (D-009, §14).
-Each chart is a server-rendered SVG plus exactly one client component, the wrapper.
+Charts are Apache ECharts (D-009, §14), loaded through `echarts/core` with only the components
+and chart types the inventory needs, and rendered by one client component, `<Chart>`, that
+owns the instance. Nothing else imports ECharts.
 
-Rendering: every chart draws into a normalised `viewBox` (`0 0 1000 H`) with
-`preserveAspectRatio="none"` and `vector-effect="non-scaling-stroke"` on every stroke, and
-renders all text (axis labels, cell labels, values) in an absolutely positioned HTML overlay at
-percentage offsets. The server output is therefore correct at any width on first paint, with no
-guessed width, no re-layout jump and no stretched glyphs. The wrapper's `ResizeObserver` only
-thins tick density and decides whether a treemap cell can show its label.
+Theme: one ECharts theme object, `lib/charts/theme.ts`, generated from the §3 tokens (text
+`--mute` 11 px Geist, gridlines `--rule`, primary series `--ink`, accent series `--accent`,
+previous period `--compare` dotted, area fills at 4.5%, teal ramps for treemap and heatmap,
+semantic band colours for histograms, tooltip in `--ink` with white text, no shadows, no
+animation when `prefers-reduced-motion` is set and never on Realtime). Registered once with
+`echarts.registerTheme("lynq", theme)`. The renderer is SVG, so marks are DOM nodes that
+inherit the page's fonts and can be inspected, and tooltip and legend text is real text.
 
-Interaction: the wrapper owns `ResizeObserver`, tooltip state, pointer and keyboard handlers
-and a hit-test table (the marks' positions, passed as a prop from the server); the marks
-themselves are server-rendered children with no handlers, so they stay off the client bundle.
-Tooltip: ink background, white text, delta when compare is on; `aria-hidden`; dismissible with
-Escape without moving focus, hoverable, persistent until blur (WCAG 1.4.13). Every mark has a
-transparent 24 × 24 hit area (2.5.8).
+Rendering: ECharts draws after hydration, so a chart's server HTML is its `<figure>`, its
+title and description, its table equivalent (rule 8) and a fixed-height skeleton the chart
+paints over; the height is set by the section, never by the data, so nothing shifts. The
+instance resizes with a `ResizeObserver` on its container and is disposed on unmount.
 
-Accessibility contract, shared: `<figure aria-labelledby aria-describedby>` around
-`<svg role="img" focusable="false">`; the description is a generated sentence (total, range,
-min and max with dates, direction). Interactive marks live in one group with roving
-`tabindex`: one Tab stop per chart, arrows between marks, Home and End to the ends, PageUp and
-PageDown ±7 points or ±1 row. Each mark is `role="button"` whose name is the whole tooltip text
-plus the action ("Sep 1. 96 visitors. Up 14% on Aug 2. Press Enter to select."). No live region
-on focus (the name already speaks); one polite region per chart for state that is not in the
-focused mark's name ("Filtered to Canada, showing regions"). Rule 8: every chart has a table
-equivalent, visible beside it or visually hidden with the same numbers.
+Data: `<Chart>` takes a plain `option` built by a pure function per chart kind in
+`lib/charts/*.ts` (`lineOption(series, opts)`, `treemapOption(cells)`, …) from the DTO arrays;
+those functions are unit-tested and never fetch. Interaction: `<Chart>` maps ECharts `click`
+events on a mark to the screen's select-or-filter action (rule 7) through a callback prop, and
+exposes `onHover` for the screens that mirror the hovered value in a side panel.
 
-| Chart | Where | Pattern and table equivalent |
-|---|---|---|
-| `LineChart` | Overview, Realtime, small trends | one button per x, both series in the name; a "View as table" disclosure for 30-point series; previous period dotted; area at 4.5% |
-| `BarChart` | Realtime (per minute), Locations (hour) | one button per bar; last bar in accent |
-| `Sparkline` | table trend columns | `role="img"` with "Trend: up 14%"; not focusable; stroke `--compare` because it is informational |
-| `Treemap` | Pages | `role="list"` of cell buttons named "path, visitors, share, engaged"; reading-order traversal; labels in `--ink`; the Pages table below is the equivalent; below 600 px wide it is not rendered (§12) |
-| `FlowPanel` | Pages | two ranked `RowBar` lists around a node; HTML |
-| `Quadrant` | Sources | bubble buttons named with both axes, radius metric and the corner they fall in; average lines carry `<title>`; the Sources table with both axis metrics as columns is the equivalent |
-| `Heatmap` | Locations | `role="grid"` with rows per country and `gridcell` per hour named "Canada, 14:00, 42 sessions", 2-D arrows, Home/End, Ctrl+Home; the real table lives in the Show all drawer; below 640 px the columns bucket to eight 3-hour bands, below 700 px wide the table is shown instead |
-| `Histogram` | Devices (viewport width), Performance (LCP) | one button per band "1024–1280 px, 18% of sessions, 4,102 samples"; markers as `<title>` |
-| `Matrix` | Devices | a real `<table>` with row and column headers |
-| `DotPlot` | Goals | `role="list"`, one button per row named with the delta from the reference |
-| `Funnel` | Goals, Overview panel | `<ol>` of steps with count, share and drop-off as text |
-| `PathList` | Events | `<ol>` of paths, each an `<ol>` of steps; `›` hidden |
-| `SplitBar` | Overview, Devices | `role="img"` naming every segment and share; the legend is the readable form |
+Accessibility contract: ECharts' `aria: { enabled: true }` generates a description sentence
+per chart (series names, extremes, count) which is placed on the `<figure>`; the SVG itself is
+`aria-hidden` behind it. Keyboard and screen-reader users work from the table equivalent,
+which every chart must have: visible beside it (Pages, Sources, Locations, Devices,
+Performance) or a visually hidden `<table>` with the same numbers (line charts, sparklines,
+histogram bands, the dot plot). Marks are therefore not focusable; the table row is the
+accessible way to select or filter the same entity, and the two stay in sync through `sel`
+and the chips. Tooltips satisfy 1.4.13 by being hoverable and dismissed on pointer leave; they
+carry nothing the table lacks. Touch: the hit tolerance is widened so marks meet 24 × 24
+(2.5.8).
 
-Charts take data as plain arrays and never fetch. Data crossing the server boundary is JSON:
-ids as text (already the rule in `rowsQuery`), `numeric` revenue cast to `float8`.
+| Chart | ECharts type | Where | Table equivalent |
+|---|---|---|---|
+| Line | `line` with `areaStyle` on the primary, dashed previous period | Overview, Realtime, small trends | hidden table of bucket, value, previous |
+| Bar | `bar` | Realtime (per minute), Locations (hour) | hidden table |
+| Sparkline | `line`, no axes, no tooltip, `--compare` stroke | table trend columns | the row it sits in |
+| Treemap | `treemap` with `visualMap` on engaged time, labels in `--ink`, an "everything else" leaf | Pages | the Pages table |
+| Quadrant | `scatter` with `symbolSize` from revenue, `markLine` for the averages, corner labels as `graphic` text | Sources | the Sources table with both axis metrics |
+| Heatmap | `heatmap` on a 24-column category axis with `visualMap` | Locations | the Show all drawer's table |
+| Histogram | `bar` with per-bar `itemStyle` for the bands and `markLine` for breakpoints | Devices, Performance | hidden table of band, count, share |
+| Dot plot | `scatter` on a category y-axis with `markLine` for the average | Goals | hidden table of channel, rate, delta |
+
+HTML, not ECharts: `FlowPanel` (two ranked `RowBar` lists around a node), `Funnel` (an `<ol>`
+with bars and drop-off text; ECharts' funnel shape is decorative and hides the numbers),
+`PathList`, `Matrix` (a real `<table>`), `SplitBar` (`role="img"` naming every segment). Phase
+2's paths view will use ECharts `sankey`, one reason ECharts was preferred over Nivo (§14).
+
+Bundle: `echarts/core` plus `LineChart`, `BarChart`, `ScatterChart`, `TreemapChart`,
+`HeatmapChart`, the grid, tooltip, legend, visualMap and markLine components and the SVG
+renderer, loaded once through a dynamic import so the shell and tables paint before the chart
+code arrives. Measured in the chart ticket; the budget is 220 KB gzipped for the chart bundle.
 
 ## 8. Screens
 
@@ -721,31 +732,32 @@ never runs and the tests pass against the old schema. It gains a ledger,
   labels are always `--ink`; the second and third series are separated by gaps and named.
 - Reduced motion: §3.
 - The globe (`globe-card.tsx`) is removed, not restyled: drag-only rotation with no
-  single-pointer alternative fails 2.5.7 and a canvas has no accessible equivalent.
+  single-pointer alternative fails 2.5.7 and a canvas has no accessible equivalent. ECharts
+  charts sit `aria-hidden` behind their description and table (§7).
 
 ## 14. Charting decision (proposed D-009)
 
-Options considered:
+The owner's call: charts come from a library. Options:
 
-- **Hand-written SVG React components** (recommended). The mockups prove every chart in the
-  inventory in under 80 lines each. Full control of the tokens, server-renderable, no bundle
-  cost, no theming fight, and the only option under which the §7 accessibility contract is
-  implementable (a library's SVG output cannot be given roles per mark). Cost: the wrapper
-  (size, tooltip, keyboard) is ours to write once; a Sankey later is real work. The one real
-  objection, a visible jump between the server's guessed width and the measured width, is
-  removed by the normalised viewBox plus HTML text overlay in §7.
-- **Apache ECharts** (the roadmap's earlier pick). Covers everything including Sankey and
-  brush-zoom, canvas-based so it does not server-render, 300 KB+ gzipped for the modules
-  needed, theming through its own option tree that fights a token system, and its default
-  look is far from D-008.
-- **Recharts** (current). Line and bar only in practice, awkward for treemaps and heatmaps,
-  its animation caught the walkthrough screenshots mid-draw, and it would remain a second
-  system next to the hand-written charts anyway.
-- **visx**. D3 primitives with React; closest to hand-writing with less control and more
-  surface. Not worth the dependency for this inventory.
+- **Apache ECharts** (chosen). Covers the whole inventory (line, bar, scatter with bubbles,
+  treemap, heatmap, histogram as bars, dot plot as scatter) and Phase 2's Sankey, funnel and
+  calendar. Theming is one object derived from the tokens. Tooltips, legends, brush zoom and
+  `aria` descriptions are built in. SVG renderer available. Costs: renders client-side after
+  hydration (charts paint over fixed-height skeletons, not in the server HTML); about 200 KB
+  gzipped after tree-shaking; marks are not keyboard-focusable, so the table equivalent is the
+  accessible path (rule 8).
+- **Nivo**. React components, SVG that can render on the server, treemap, heatmap, scatter,
+  line and bar present, themeable. Weaker interaction and accessibility, heavier per-chart
+  packages with overlapping d3 dependencies, no Sankey of ECharts' quality for the paths
+  screen later. Second choice.
+- **Recharts** (current, 2.15; 3.x supports React 19). Line, bar, scatter and treemap; no
+  heatmap or dot plot without faking them from scatter; its animation caught the walkthrough
+  screenshots mid-draw. Rejected.
+- **visx** and **hand-written SVG**. Rejected by the owner: "let's not do hand-written charts,
+  we should use a library".
 
-Consequence: Recharts and `components/ui/chart.tsx` are removed with the old dashboard. If
-Phase 2's paths screen needs a Sankey, a library is chosen then for that chart alone.
+Consequence: Recharts and `components/ui/chart.tsx` are removed with the old dashboard;
+ECharts is added in the chart ticket with a wrapper, a theme and per-chart option builders.
 
 ## 15. What the old dashboard leaves behind
 
@@ -774,10 +786,13 @@ route; `/dashboard` keeps working until `/sites` replaces it.
 4. **Shell, part two**: KpiStrip, Section, DataTable (all §6 semantics, roving rows, Filter
    button, drawer), Badge, Pill, RowBar, skeletons, and a development-only preview route
    `/(dev)/ui`.
-5. **Chart wrapper and the simple charts**: the wrapper (size, tooltip, keyboard, hit-test),
-   LineChart, BarChart, Sparkline, with the §7 contract and unit tests on layout math.
-6. **Shape charts**: Treemap, Quadrant, Heatmap, Histogram, DotPlot, Funnel, FlowPanel,
-   PathList, SplitBar, Matrix, each with its table equivalent and width thresholds.
+5. **ECharts foundation**: dependency, `echarts/core` registration, the `lynq` theme from
+   the tokens, the `<Chart>` client component (instance, resize, dispose, click and hover
+   callbacks, reduced motion, aria), the dynamic import, the bundle measurement; line, bar and
+   sparkline option builders with unit tests and their hidden-table equivalents.
+6. **Shape charts and HTML views**: treemap, quadrant, heatmap, histogram and dot plot option
+   builders with their table equivalents and width thresholds; FlowPanel, Funnel, PathList,
+   Matrix, SplitBar in HTML.
 7. **TICKET-027**: session-entry dimensions (§9.1). Its own ticket, already filed.
 8. **Query additions and the migration**: §9.2 to §9.10 and the whole of §11, including the
    tracker's `vw`/`vh`, the test ledger, the timing harness and the budget assertions, the
@@ -795,7 +810,8 @@ route; `/dashboard` keeps working until `/sites` replaces it.
 ## 17. Owner decisions requested
 
 1. Sign off on this design as the basis for the tickets in §16.
-2. D-009, the charting decision (§14): hand-written SVG components, Recharts removed.
+2. D-009, the charting decision (§14): Apache ECharts as the one chart library, Recharts
+   removed; Nivo is the alternative if server-rendered SVG matters more than ECharts' range.
 3. The tracker change for viewport size (§8.6, §11): a small tracker, ingest and schema change
    inside Phase 1, so the Devices histogram measures what it claims to.
 
