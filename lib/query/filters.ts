@@ -40,17 +40,13 @@ export const ROW_DIMENSIONS = {
 } as const;
 export type RowDimension = keyof typeof ROW_DIMENSIONS;
 
-/** Dimensions constant within a session, so session metrics may be grouped by them. */
+/**
+ * Dimensions constant within a session, so session metrics may be grouped by
+ * them. Referrer, source, channel and UTM are not: only the first pageview
+ * carries them, so they are session dimensions (entry_*) instead.
+ */
 export const SESSION_CONSTANT: readonly RowDimension[] = [
   "hostname",
-  "referrer",
-  "source",
-  "channel",
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
   "country",
   "region",
   "city",
@@ -63,13 +59,32 @@ export const SESSION_CONSTANT: readonly RowDimension[] = [
   "screen_size",
 ];
 
-/** Session dimensions: columns of the session CTE. */
+/** Session dimensions: columns of the session CTE, or fields of its `entry` jsonb. */
 export const SESSION_DIMENSIONS = {
   entry_path: "entry_path",
   exit_path: "exit_path",
   bounced: "bounced",
+  entry_referrer: "entry ->> 'referrer'",
+  entry_source: "entry ->> 'source'",
+  entry_channel: "entry ->> 'channel'",
+  entry_utm_source: "entry ->> 'utm_source'",
+  entry_utm_medium: "entry ->> 'utm_medium'",
+  entry_utm_campaign: "entry ->> 'utm_campaign'",
+  entry_utm_term: "entry ->> 'utm_term'",
+  entry_utm_content: "entry ->> 'utm_content'",
 } as const;
 export type SessionDimension = keyof typeof SESSION_DIMENSIONS;
+
+/** Session dimensions read from the CTE's `entry` column (design §9.1). */
+export function isEntryDimension(d: string): boolean {
+  return isSessionDimension(d) && SESSION_DIMENSIONS[d].startsWith("entry ->>");
+}
+
+/** The SQL expression for a session dimension on the CTE alias. */
+export function sessionExpr(dimension: SessionDimension, alias = "s"): string {
+  const col = SESSION_DIMENSIONS[dimension];
+  return col.includes("->>") ? `(${alias}.${col})` : `${alias}.${col}`;
+}
 
 export type Compiled = {
   /** predicate on an events row, alias `e` */
@@ -78,6 +93,8 @@ export type Compiled = {
   sessionHaving: string;
   hasRow: boolean;
   hasSession: boolean;
+  /** a session filter reads the entry column, so the CTE must compute it */
+  needsEntry: boolean;
 };
 
 export function isRowDimension(d: string): d is RowDimension {
@@ -144,7 +161,7 @@ function oneSession(
   op: FilterOp,
   values: string[]
 ): string {
-  const col = `s.${SESSION_DIMENSIONS[dimension]}`;
+  const col = sessionExpr(dimension);
   if (dimension === "bounced") {
     const want = values.some((v) => v === "true" || v === "1");
     return op === "is_not"
@@ -164,6 +181,7 @@ function oneSession(
 export function compileFilters(q: Query, filters: Filter[]): Compiled {
   const row: string[] = [];
   const session: string[] = [];
+  let needsEntry = false;
   for (const f of filters) {
     if (!f.values.length) continue;
     const values = f.values.map((v) => String(v).slice(0, 512));
@@ -171,15 +189,17 @@ export function compileFilters(q: Query, filters: Filter[]): Compiled {
     if (key) row.push(oneProp(q, key, f.op, values));
     else if (isRowDimension(f.dimension))
       row.push(oneRow(q, f.dimension, f.op, values));
-    else if (isSessionDimension(f.dimension))
+    else if (isSessionDimension(f.dimension)) {
       session.push(oneSession(q, f.dimension, f.op, values));
-    else throw new Error(`unknown dimension ${f.dimension}`);
+      if (isEntryDimension(f.dimension)) needsEntry = true;
+    } else throw new Error(`unknown dimension ${f.dimension}`);
   }
   return {
     rowWhere: row.length ? row.join(" and ") : "true",
     sessionHaving: session.length ? session.join(" and ") : "true",
     hasRow: row.length > 0,
     hasSession: session.length > 0,
+    needsEntry,
   };
 }
 

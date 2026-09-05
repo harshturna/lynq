@@ -85,7 +85,9 @@ beforeAll(async () => {
   siteId = Number(site.id);
   // Session A: visitor 1, one pageview, 3 s engaged -> bounce
   // Session B: visitor 2, three pageviews over a minute, one custom event with a prop, 60 s engaged
-  // Session C: visitor 2, second session same day, mobile, from Google, entry /pricing
+  // Session C: visitor 2, second session same day, mobile, direct, entry /pricing
+  // As ingest produces it, only session B's first pageview carries the
+  // referrer, source and channel; later rows are '' / '' / Direct (TICKET-027).
   await sql`insert into analytics.events ${sql([
     row({
       ts: at(0),
@@ -123,9 +125,6 @@ beforeAll(async () => {
       session_id: 22,
       pageview_id: 202,
       path: "/pricing",
-      source: "Google",
-      channel: "Organic Search",
-      referrer: "google.com",
     }),
     row({
       ts: at(131),
@@ -137,9 +136,6 @@ beforeAll(async () => {
       name: "signup",
       props: sql.json({ plan: "pro" }),
       revenue: "4900",
-      source: "Google",
-      channel: "Organic Search",
-      referrer: "google.com",
     }),
     row({
       ts: at(160),
@@ -148,9 +144,6 @@ beforeAll(async () => {
       session_id: 22,
       pageview_id: 203,
       path: "/docs",
-      source: "Google",
-      channel: "Organic Search",
-      referrer: "google.com",
     }),
     row({
       ts: at(161),
@@ -160,9 +153,6 @@ beforeAll(async () => {
       pageview_id: 203,
       event: "engagement",
       engaged_ms: 60000,
-      source: "Google",
-      channel: "Organic Search",
-      referrer: "google.com",
     }),
 
     row({
@@ -351,6 +341,23 @@ describe("breakdown", () => {
     expect(bounce.rows.find((r) => r.value === "desktop")?.metric).toBe(50);
     expect(bounce.rows.find((r) => r.value === "mobile")?.metric).toBe(0);
   });
+  it("attributes sources by session entry, counting each session once", async () => {
+    const channel = await q.breakdown(ctx(), "entry_channel", "sessions");
+    expect(channel.rows).toEqual([
+      { value: "Direct", metric: 2 },
+      { value: "Organic Search", metric: 1 },
+    ]);
+    const source = await q.breakdown(ctx(), "entry_source", "visitors");
+    expect(source.rows).toEqual([
+      { value: "", metric: 2 },
+      { value: "Google", metric: 1 },
+    ]);
+    const referrer = await q.breakdown(ctx(), "entry_referrer", "pageviews");
+    expect(referrer.rows.find((r) => r.value === "google.com")?.metric).toBe(3);
+    await expect(q.breakdown(ctx(), "channel", "sessions")).rejects.toThrow(
+      /cannot be broken down/
+    );
+  });
   it("custom event names and prop values", async () => {
     expect(
       (await q.breakdown(ctx(), "event_name", "custom_events")).rows
@@ -379,6 +386,23 @@ describe("filters", () => {
       })
     );
     expect(entry.current).toMatchObject({ sessions: 1, pageviews: 1 });
+    // an entry filter keeps the whole session, including its Direct rows
+    const organic = await q.summary(
+      ctx({
+        filters: [
+          { dimension: "entry_channel", op: "is", values: ["Organic Search"] },
+        ],
+      })
+    );
+    expect(organic.current).toMatchObject({ sessions: 1, pageviews: 3 });
+    const notOrganic = await q.summary(
+      ctx({
+        filters: [
+          { dimension: "entry_source", op: "is_not", values: ["Google"] },
+        ],
+      })
+    );
+    expect(notOrganic.current).toMatchObject({ sessions: 2, pageviews: 2 });
     const contains = await q.breakdown(
       ctx({
         filters: [{ dimension: "path", op: "contains", values: ["doc"] }],
@@ -419,9 +443,16 @@ describe("rows", () => {
       session_id: string;
       bounced: boolean;
       entry_path: string;
+      source: string;
+      channel: string;
     }>(ctx(), "sessions");
     expect(sessions.map((s) => s.session_id)).toEqual(["23", "22", "11"]);
     expect(sessions[2]).toMatchObject({ bounced: true, entry_path: "/" });
+    expect(sessions[1]).toMatchObject({
+      source: "Google",
+      channel: "Organic Search",
+    });
+    expect(sessions[0]).toMatchObject({ source: "", channel: "Direct" });
   });
 });
 

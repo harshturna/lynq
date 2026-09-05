@@ -3,14 +3,15 @@ import {
   type Compiled,
   compileFilters,
   type Filter,
+  isEntryDimension,
   isRowDimension,
   isSessionDimension,
   propKey,
   type RowDimension,
   rowExpr,
   SESSION_CONSTANT,
-  SESSION_DIMENSIONS,
   type SessionDimension,
+  sessionExpr,
 } from "./filters";
 import { buckets, type Granularity } from "./ranges";
 import { sessionCte, sessionWhere } from "./sessions";
@@ -170,8 +171,8 @@ export function breakdownQuery(
 
   if (isSessionMetric(metric)) {
     if (isSessionDimension(dimension)) {
-      const col = `s.${SESSION_DIMENSIONS[dimension as SessionDimension]}`;
-      const text = `with ${sessionCte(q, cteScope(ctx, w), f)}
+      const col = sessionExpr(dimension as SessionDimension);
+      const text = `with ${sessionCte(q, cteScope(ctx, w), f, [], { entry: isEntryDimension(dimension) })}
 select ${col}::text as value, ${SESSION_METRIC_SQL[metric]} as metric, count(*) over ()::int as total
 from sess s
 where ${sessionWhere(f)} and ${col} is not null
@@ -192,9 +193,9 @@ group by 1 order by 2 desc, 1 limit ${q.p(limit)} offset ${q.p(offset)}`;
   }
 
   if (isSessionDimension(dimension)) {
-    // entry/exit page with a row metric: rows of sessions grouped by the session's page
-    const col = `s.${SESSION_DIMENSIONS[dimension as SessionDimension]}`;
-    const text = `with ${sessionCte(q, cteScope(ctx, w), f)}
+    // entry/exit page or entry attribution with a row metric: rows of sessions grouped by the session's value
+    const col = sessionExpr(dimension as SessionDimension);
+    const text = `with ${sessionCte(q, cteScope(ctx, w), f, [], { entry: isEntryDimension(dimension) })}
 select ${col}::text as value, ${ROW_METRIC_SQL[metric]} as metric, count(*) over ()::int as total
 from analytics.events e join sess s using (visitor_id, session_id)
 where ${scope(q, ctx, w)} and ${f.rowWhere} and ${sessionWhere(f)} and ${col} is not null
@@ -308,15 +309,20 @@ order by e.ts, e.seq, e.pageview_id limit ${q.p(limit)} offset ${q.p(offset)}`,
     };
   }
   return {
-    text: `with ${sessionCte(q, cteScope(ctx, w), f, [
-      { name: "country", expr: "e.country" },
-      { name: "device", expr: "e.device" },
-      { name: "browser", expr: "e.browser" },
-      { name: "source", expr: "e.source" },
-      { name: "channel", expr: "e.channel" },
-    ])}
+    text: `with ${sessionCte(
+      q,
+      cteScope(ctx, w),
+      f,
+      [
+        { name: "country", expr: "e.country" },
+        { name: "device", expr: "e.device" },
+        { name: "browser", expr: "e.browser" },
+      ],
+      { entry: true }
+    )}
 select s.visitor_id::text as visitor_id, s.session_id::text as session_id, s.started, s.duration_ms::int as duration_ms,
-       s.pageviews, s.customs, s.entry_path, s.exit_path, s.bounced, s.country, s.device, s.browser, s.source, s.channel
+       s.pageviews, s.customs, s.entry_path, s.exit_path, s.bounced, s.country, s.device, s.browser,
+       (s.entry ->> 'source') as source, (s.entry ->> 'channel') as channel
 from sess s
 where ${sessionWhere(f)}
 order by s.started desc, s.visitor_id, s.session_id limit ${q.p(limit)} offset ${q.p(offset)}`,

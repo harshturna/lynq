@@ -17,14 +17,38 @@ export type SessionScope = {
   includeSuspect: boolean;
 };
 
-/** `extra` adds session-constant dimension columns as `min(col) as <name>`. */
+/**
+ * The session's entry attribution (design §9.1): the referrer, source, channel
+ * and UTM fields of its first pageview, as one jsonb column so the CTE pays
+ * one ordered aggregate for all eight. `min()` over these columns would return
+ * '' for every session, because only the first pageview carries them.
+ */
+export const ENTRY_FIELDS = [
+  "referrer",
+  "source",
+  "channel",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+] as const;
+const ENTRY_COLUMN = `(array_agg(jsonb_build_object(${ENTRY_FIELDS.map((f) => `'${f}', e.${f}`).join(", ")}) order by e.ts, e.seq, e.pageview_id) filter (where e.event = 'pageview'))[1] as entry`;
+
+/**
+ * `extra` adds session-constant dimension columns as `min(col) as <name>`.
+ * The entry column is added when a session filter needs it or `entry` is set.
+ */
 export function sessionCte(
   q: Query,
   scope: SessionScope,
   filters: Compiled,
-  extra: { name: string; expr: string }[] = []
+  extra: { name: string; expr: string }[] = [],
+  opts: { entry?: boolean } = {}
 ): string {
-  const extraCols = extra.map((x) => `, min(${x.expr}) as ${x.name}`).join("");
+  const extraCols =
+    extra.map((x) => `, min(${x.expr}) as ${x.name}`).join("") +
+    (opts.entry || filters.needsEntry ? `,\n    ${ENTRY_COLUMN}` : "");
   return `sess as materialized (
   select e.visitor_id, e.session_id,
     min(e.ts) as started,

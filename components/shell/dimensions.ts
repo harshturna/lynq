@@ -9,7 +9,7 @@ import type { FilterOp } from "@/lib/query/filters";
 export type DimensionInfo = {
   label: string;
   scope: "row" | "session";
-  /** Shown in the filter builder; entry_* become live with TICKET-027. */
+  /** Shown in the filter builder. */
   group:
     | "Pages"
     | "Sources"

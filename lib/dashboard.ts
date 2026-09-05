@@ -12,7 +12,7 @@ import type {
 import { BREAKDOWN_KEYS } from "@/lib/dashboard-types";
 import { authorize, buildContext } from "@/lib/query/authorize";
 import type { Filter } from "@/lib/query/filters";
-import type { QueryContext } from "@/lib/query/primitives";
+import type { Metric } from "@/lib/query/primitives";
 import type { Range } from "@/lib/query/ranges";
 import { breakdown, rows, summary, timeseries, vitals } from "@/lib/query/run";
 import { getUser } from "@/lib/user/server";
@@ -30,6 +30,29 @@ const RANGES: Record<DatePickerValues, Range> = {
   "Last 12 months": "last_12mo",
 };
 
+/**
+ * The Referrers and Sources cards count sessions by the referrer and source
+ * the session arrived with (TICKET-027); the other cards count pageviews.
+ */
+const QUERY_DIMENSION: Record<BreakdownKey, string> = {
+  path: "path",
+  referrer: "entry_referrer",
+  source: "entry_source",
+  device: "device",
+  browser: "browser",
+  os: "os",
+  country: "country",
+};
+const QUERY_METRIC: Record<BreakdownKey, Metric> = {
+  path: "pageviews",
+  referrer: "sessions",
+  source: "sessions",
+  device: "pageviews",
+  browser: "pageviews",
+  os: "pageviews",
+  country: "pageviews",
+};
+
 /** UI chips (one value each) to query filters: OR within a dimension, AND across. */
 function toQueryFilters(chips: UiFilter[]): Filter[] {
   const byDim = new Map<BreakdownKey, string[]>();
@@ -40,7 +63,7 @@ function toQueryFilters(chips: UiFilter[]): Filter[] {
     byDim.set(c.dimension, list);
   }
   return [...byDim].map(([dimension, values]) => ({
-    dimension,
+    dimension: QUERY_DIMENSION[dimension],
     op: "is" as const,
     values,
   }));
@@ -48,38 +71,6 @@ function toQueryFilters(chips: UiFilter[]): Filter[] {
 
 const toPoints = (series: { bucket: Date; value: number }[]): Point[] =>
   series.map((p) => ({ t: p.bucket.toISOString(), v: p.value }));
-
-/**
- * Breakdowns leave out the empty value, so direct traffic (no referrer, no
- * source) would vanish from those two cards. Count it separately: pageviews
- * whose referrer/source is '' grouped by channel, summed. Exact, and a chip
- * on the '' value filters the same way.
- */
-async function directCount(
-  ctx: QueryContext,
-  dimension: "referrer" | "source"
-): Promise<number> {
-  const { rows } = await breakdown(
-    {
-      ...ctx,
-      filters: [...ctx.filters, { dimension, op: "is", values: [""] }],
-    },
-    "channel",
-    "pageviews",
-    { limit: 10 }
-  );
-  return rows.reduce((sum, r) => sum + r.metric, 0);
-}
-
-const withDirect = (b: Breakdown, direct: number): Breakdown =>
-  direct > 0
-    ? {
-        rows: [...b.rows, { value: "", metric: direct }].sort(
-          (a, z) => z.metric - a.metric
-        ),
-        total: b.total + 1,
-      }
-    : b;
 
 export async function getDashboard(
   websiteUrl: string,
@@ -102,32 +93,20 @@ export async function getDashboard(
       compare: "previous_period",
       filters: toQueryFilters(chips),
     });
-    const [
-      sum,
-      pageviews,
-      sessions,
-      vit,
-      events,
-      directReferrer,
-      directSource,
-      ...breaks
-    ] = await Promise.all([
-      summary(ctx),
-      timeseries(ctx, "pageviews", ctx.granularity),
-      timeseries(ctx, "sessions", ctx.granularity),
-      vitals(ctx),
-      rows<DashboardEvent & { ts: Date }>(ctx, "events", { limit: 200 }),
-      directCount(ctx, "referrer"),
-      directCount(ctx, "source"),
-      ...BREAKDOWN_KEYS.map((key) =>
-        breakdown(ctx, key, "pageviews", { limit: 50 })
-      ),
-    ]);
+    const [sum, pageviews, sessions, vit, events, ...breaks] =
+      await Promise.all([
+        summary(ctx),
+        timeseries(ctx, "pageviews", ctx.granularity),
+        timeseries(ctx, "sessions", ctx.granularity),
+        vitals(ctx),
+        rows<DashboardEvent & { ts: Date }>(ctx, "events", { limit: 200 }),
+        ...BREAKDOWN_KEYS.map((key) =>
+          breakdown(ctx, QUERY_DIMENSION[key], QUERY_METRIC[key], { limit: 50 })
+        ),
+      ]);
     const breakdowns = Object.fromEntries(
       BREAKDOWN_KEYS.map((key, i) => [key, breaks[i] as Breakdown])
     ) as Record<BreakdownKey, Breakdown>;
-    breakdowns.referrer = withDirect(breakdowns.referrer, directReferrer);
-    breakdowns.source = withDirect(breakdowns.source, directSource);
     return {
       data: {
         timeFrame,
