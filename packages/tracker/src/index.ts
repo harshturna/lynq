@@ -136,6 +136,8 @@ import {
   const ctx = (): Ctx => ({
     sw: screen?.width,
     sh: screen?.height,
+    vw: w.innerWidth || undefined,
+    vh: w.innerHeight || undefined,
     lang: nav.language,
   });
 

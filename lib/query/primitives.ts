@@ -28,6 +28,8 @@ export type QueryContext = {
   timezone: string;
   filters: Filter[];
   includeSuspect?: boolean;
+  /** statement timeout for every query run with this context; run() defaults to 1.5 s (design §9) */
+  timeoutMs?: number;
 };
 
 export const ROW_METRICS = ["pageviews", "visitors", "custom_events"] as const;
@@ -62,13 +64,13 @@ const SESSION_METRIC_SQL: Record<SessionMetric, string> = {
     "coalesce(round(avg(extract(epoch from s.time_on_site)) * 1000), 0)::float8",
 };
 
-type Window = { from: Date; toExclusive: Date };
+export type Window = { from: Date; toExclusive: Date };
 
-function scope(q: Query, ctx: QueryContext, w: Window) {
+export function scope(q: Query, ctx: QueryContext, w: Window) {
   return `e.site_id = ${q.p(ctx.siteId)} and e.ts >= ${q.p(w.from)} and e.ts < ${q.p(w.toExclusive)}${ctx.includeSuspect ? "" : " and not e.suspect"}`;
 }
 
-function cteScope(ctx: QueryContext, w: Window) {
+export function cteScope(ctx: QueryContext, w: Window) {
   return {
     siteId: ctx.siteId,
     from: w.from,
@@ -78,7 +80,7 @@ function cteScope(ctx: QueryContext, w: Window) {
 }
 
 /** FROM clause for row metrics: events, joined to sessions only when a session filter exists. */
-function rowFrom(
+export function rowFrom(
   q: Query,
   ctx: QueryContext,
   w: Window,
@@ -98,7 +100,12 @@ function rowFrom(
   };
 }
 
-function bucketExpr(q: Query, col: string, g: Granularity, tz: string): string {
+export function bucketExpr(
+  q: Query,
+  col: string,
+  g: Granularity,
+  tz: string
+): string {
   return `(date_trunc(${q.p(g)}, ${col} at time zone ${q.p(tz)}) at time zone ${q.p(tz)})`;
 }
 

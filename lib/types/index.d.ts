@@ -4,7 +4,6 @@ type Website = {
   url: string;
   slug: string;
   user_id: string;
-  is_first_visit: boolean;
   deleted_at: string | null;
 };
 

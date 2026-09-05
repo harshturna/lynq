@@ -86,6 +86,7 @@ beforeAll(async () => {
   // Session A: visitor 1, one pageview, 3 s engaged -> bounce
   // Session B: visitor 2, three pageviews over a minute, one custom event with a prop, 60 s engaged
   // Session C: visitor 2, second session same day, mobile, direct, entry /pricing
+  // Engagement, custom and vitals rows carry their pageview's path, as ingest writes them.
   // As ingest produces it, only session B's first pageview carries the
   // referrer, source and channel; later rows are '' / '' / Direct (TICKET-027).
   await sql`insert into analytics.events ${sql([
@@ -132,6 +133,7 @@ beforeAll(async () => {
       visitor_id: 2,
       session_id: 22,
       pageview_id: 202,
+      path: "/pricing",
       event: "custom",
       name: "signup",
       props: sql.json({ plan: "pro" }),
@@ -151,6 +153,7 @@ beforeAll(async () => {
       visitor_id: 2,
       session_id: 22,
       pageview_id: 203,
+      path: "/docs",
       event: "engagement",
       engaged_ms: 60000,
     }),
@@ -171,6 +174,7 @@ beforeAll(async () => {
       visitor_id: 2,
       session_id: 23,
       pageview_id: 301,
+      path: "/pricing",
       event: "engagement",
       engaged_ms: 20000,
       device: "mobile",
@@ -186,6 +190,7 @@ beforeAll(async () => {
       session_id: 23,
       pageview_id: 301,
       event: "vitals",
+      path: "/pricing",
       device: "mobile",
       country: "US",
       lcp: 1000,
@@ -201,6 +206,7 @@ beforeAll(async () => {
       session_id: 23,
       pageview_id: 301,
       event: "vitals",
+      path: "/pricing",
       device: "mobile",
       country: "US",
       lcp: 2000,
@@ -215,6 +221,7 @@ beforeAll(async () => {
       session_id: 23,
       pageview_id: 301,
       event: "vitals",
+      path: "/pricing",
       device: "mobile",
       country: "US",
       lcp: 4000,
@@ -453,6 +460,243 @@ describe("rows", () => {
       channel: "Organic Search",
     });
     expect(sessions[0]).toMatchObject({ source: "", channel: "Direct" });
+  });
+});
+
+describe("phase 1 primitives (TICKET-034)", () => {
+  const signup = { id: 1, kind: "event" as const, match: "signup" };
+  const pricing = { id: 2, kind: "pageview" as const, match: "/pric*" };
+
+  it("multi-metric breakdown groups row and session metrics separately", async () => {
+    const { rows, total } = await q.breakdownMulti(ctx(), "path", [
+      "pageviews",
+      "visitors",
+      "sessions",
+      "bounce_rate",
+    ]);
+    expect(total).toBe(3);
+    expect(rows).toEqual([
+      {
+        value: "/",
+        pageviews: 2,
+        visitors: 2,
+        sessions: 2,
+        bounce_rate: 50,
+        total: 3,
+      },
+      {
+        value: "/pricing",
+        pageviews: 2,
+        visitors: 1,
+        sessions: 2,
+        bounce_rate: 0,
+        total: 3,
+      },
+      {
+        value: "/docs",
+        pageviews: 1,
+        visitors: 1,
+        sessions: 1,
+        bounce_rate: 0,
+        total: 3,
+      },
+    ]);
+    const asc = await q.breakdownMulti(ctx(), "path", ["pageviews"], {
+      orderBy: "pageviews",
+      dir: "asc",
+      limit: 1,
+    });
+    expect(asc.rows[0].value).toBe("/docs");
+  });
+
+  it("two dimensions, revenue metrics and goal metrics", async () => {
+    const matrix = await q.breakdownMulti(
+      ctx(),
+      ["browser", "os"],
+      ["pageviews"]
+    );
+    expect(matrix.rows).toEqual([
+      { value: "Chrome", value2: "Mac OS", pageviews: 5, total: 1 },
+    ]);
+    const money = await q.breakdownMulti(ctx(), "event_name", [
+      "custom_events",
+      "revenue",
+      "payments",
+      "last_seen",
+    ]);
+    expect(money.rows).toEqual([
+      {
+        value: "signup",
+        custom_events: 1,
+        revenue: 4900,
+        payments: 1,
+        last_seen: at(131).toISOString(),
+        total: 1,
+      },
+    ]);
+    const goals = await q.breakdownMulti(ctx(), "entry_channel", [
+      "sessions",
+      { kind: "goal_completions", goal: signup },
+      { kind: "conversion", goal: signup },
+    ]);
+    expect(goals.rows).toEqual([
+      {
+        value: "Direct",
+        sessions: 2,
+        goal_completions: 0,
+        conversion: 0,
+        total: 2,
+      },
+      {
+        value: "Organic Search",
+        sessions: 1,
+        goal_completions: 1,
+        conversion: 100,
+        total: 2,
+      },
+    ]);
+  });
+
+  it("goal stats and funnels order steps within a session", async () => {
+    expect(await q.goalStats(ctx(), signup)).toEqual({
+      completions: 1,
+      converting_sessions: 1,
+      sessions: 3,
+      conversion: 33.33,
+      revenue: 4900,
+      median_seconds: 31,
+    });
+    const byPage = await q.goalStats(ctx(), pricing);
+    expect(byPage).toMatchObject({
+      completions: 2,
+      converting_sessions: 2,
+      median_seconds: 15,
+    });
+    expect(
+      await q.funnel(ctx(), [
+        { kind: "any" },
+        { kind: "pageview", match: "/pricing" },
+        { kind: "event", match: "signup" },
+      ])
+    ).toEqual([3, 2, 1]);
+    // /docs comes after signup in session B, so it counts one way and not the other
+    expect(
+      await q.funnel(ctx(), [
+        { kind: "event", match: "signup" },
+        { kind: "pageview", match: "/docs" },
+      ])
+    ).toEqual([1, 1]);
+    expect(
+      await q.funnel(ctx(), [
+        { kind: "pageview", match: "/docs" },
+        { kind: "event", match: "signup" },
+      ])
+    ).toEqual([1, 0]);
+  });
+
+  it("page flow, heatmap, histogram and paths", async () => {
+    const flow = await q.pageFlow(ctx(), "/pricing");
+    expect(flow).toHaveLength(4);
+    expect(flow).toEqual(
+      expect.arrayContaining([
+        { side: "from", kind: "page", value: "/", count: 1 },
+        { side: "from", kind: "referrer", value: "", count: 1 },
+        { side: "to", kind: "page", value: "/docs", count: 1 },
+        { side: "to", kind: "exit", value: "", count: 1 },
+      ])
+    );
+    const heat = await q.heatmap(ctx(), "country");
+    expect(heat.map((r) => r.value)).toEqual(["CA", "US"]);
+    expect(heat[0].hours[10]).toBe(2);
+    expect(heat[1].hours[12]).toBe(1);
+    expect(heat[0].hours.reduce((a, b) => a + b, 0)).toBe(2);
+    expect(
+      await q.histogram(ctx(), "screen_width", [0, 1000, 1500, 2000])
+    ).toEqual([
+      { from: 0, to: 1000, count: 0 },
+      { from: 1000, to: 1500, count: 5 },
+      { from: 1500, to: 2000, count: 0 },
+      { from: 2000, to: null, count: 0 },
+    ]);
+    // the fixture has no viewport, and 0 is "unknown", never a band
+    expect(
+      (await q.histogram(ctx(), "viewport_width", [0, 640])).map((b) => b.count)
+    ).toEqual([0, 0]);
+    expect(await q.pathsTo(ctx(), "signup")).toEqual([
+      { steps: ["/", "/pricing"], count: 1 },
+    ]);
+  });
+
+  it("vitals by dimension and over time", async () => {
+    const byDevice = await q.vitalsBreakdown(ctx(), "device");
+    expect(byDevice).toHaveLength(1);
+    expect(byDevice[0]).toMatchObject({
+      value: "mobile",
+      lcp: 3000,
+      inp: 250,
+      fcp: 950,
+      ttfb: null,
+      samples: 3,
+    });
+    expect(byDevice[0].cls).toBeCloseTo(0.125, 5);
+    const series = await q.vitalsTimeseries(ctx(), "hour");
+    expect(series).toHaveLength(1);
+    expect(series[0]).toMatchObject({
+      device: "mobile",
+      samples: 3,
+      lcp: 3000,
+    });
+  });
+
+  it("realtime reads the last 30 minutes by received_at", async () => {
+    const now = new Date();
+    const live = (over: Record<string, unknown>) =>
+      row({
+        ts: now,
+        received_at: now,
+        visitor_id: 9,
+        session_id: 99,
+        pageview_id: 901,
+        ...over,
+      });
+    await sql`insert into analytics.events ${sql([
+      live({ seq: 1, path: "/live", country: "DE" }),
+      live({
+        seq: 2,
+        event: "custom",
+        name: "ping",
+        path: "/live",
+        country: "DE",
+      }),
+    ])}`;
+    try {
+      const r = await q.realtime(ctx(), now);
+      expect(r.visitors_now).toBe(1);
+      expect(r.pages).toEqual([{ value: "/live", visitors: 1 }]);
+      expect(r.sources).toEqual([{ value: "", sessions: 1 }]);
+      expect(r.countries).toEqual([{ value: "DE", visitors: 1 }]);
+      expect(r.per_minute).toHaveLength(30);
+      expect(r.per_minute.reduce((a, m) => a + m.pageviews, 0)).toBe(1);
+      expect(r.events.map((e) => e.event)).toEqual(["custom", "pageview"]);
+      // a session chip composes over the same window: the live session has a
+      // custom event, so it is not a bounce
+      const bounced = await q.realtime(
+        ctx({
+          filters: [{ dimension: "bounced", op: "is", values: ["true"] }],
+        }),
+        now
+      );
+      expect(bounced.visitors_now).toBe(0);
+      const engaged = await q.realtime(
+        ctx({
+          filters: [{ dimension: "bounced", op: "is", values: ["false"] }],
+        }),
+        now
+      );
+      expect(engaged.visitors_now).toBe(1);
+    } finally {
+      await sql`delete from analytics.events where site_id = ${siteId} and visitor_id = 9`;
+    }
   });
 });
 

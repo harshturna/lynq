@@ -8,6 +8,7 @@ type Batch = {
   uid?: string;
   page: { url: string; title?: string };
   session: { ref?: string; url?: string };
+  ctx: { sw?: number; sh?: number; vw?: number; vh?: number; lang?: string };
   events: {
     t: string;
     ts: number;
@@ -72,6 +73,10 @@ test("a page load sends one pageview with page and session context, and drains t
   expect(b.pid).toMatch(/^[0-9a-f]{16}$/);
   expect(b.page.url).toContain("/?utm_source=test");
   expect(b.session.url).toContain("utm_source=test");
+  // viewport size, not screen size, is what the Devices histogram measures (design §8.6)
+  const vp = page.viewportSize();
+  expect(b.ctx).toMatchObject({ vw: vp?.width, vh: vp?.height });
+  expect(b.ctx.sw).toBeGreaterThan(0);
   const evs = events(got);
   expect(evs.find((e) => e.t === "pageview")).toBeTruthy();
   const queued = evs.find(

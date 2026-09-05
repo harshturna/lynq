@@ -30,7 +30,7 @@ export function batch(over: Record<string, unknown> = {}, now = Date.now()) {
       ref: "https://www.google.com/search?q=lynq",
       url: "https://aivia.byharsh.com/?utm_source=newsletter&utm_medium=email",
     },
-    ctx: { sw: 1440, sh: 900, lang: "en-GB" },
+    ctx: { sw: 1440, sh: 900, vw: 1280, vh: 720, lang: "en-GB" },
     events: [
       { t: "pageview", ts: now - 3000, seq: 1 },
       {

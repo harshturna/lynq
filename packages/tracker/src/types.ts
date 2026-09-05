@@ -41,7 +41,7 @@ export type Batch = {
   uid?: string;
   page: { url: string; title?: string };
   session: { ref?: string; url?: string };
-  ctx: { sw?: number; sh?: number; lang?: string };
+  ctx: { sw?: number; sh?: number; vw?: number; vh?: number; lang?: string };
   events: BatchEvent[];
 };
 

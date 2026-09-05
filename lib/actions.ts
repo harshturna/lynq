@@ -99,7 +99,7 @@ export async function getWebsite(
 
 // The only columns a user may change through this action. The URL is the
 // analytics identity (analytics.site_hostnames) and is not editable here.
-const UPDATABLE_WEBSITE_COLUMNS = ["name", "is_first_visit"] as const;
+const UPDATABLE_WEBSITE_COLUMNS = ["name"] as const;
 type UpdatableWebsiteColumn = (typeof UPDATABLE_WEBSITE_COLUMNS)[number];
 
 export async function updateWebsiteOne(

@@ -14,13 +14,14 @@ beforeAll(() => {
 afterAll(() => sql.end());
 
 describe("analytics schema", () => {
-  it("has the events table, its three indexes, and the supporting tables", async () => {
+  it("has the events table, its indexes, and the supporting tables", async () => {
     const tables = await sql<{ table_name: string }[]>`
       select table_name from information_schema.tables where table_schema = 'analytics' order by 1`;
     expect(tables.map((t) => t.table_name)).toEqual([
       "events",
       "identified_users",
       "ingest_log",
+      "schema_migrations",
       "site_hostnames",
       "site_settings",
       "visitor_salts",
@@ -30,15 +31,46 @@ describe("analytics schema", () => {
     expect(indexes.map((i) => i.indexname)).toEqual([
       "events_custom_name",
       "events_pkey",
+      "events_site_received",
       "events_site_session",
       "events_site_ts",
+      "events_site_ts_custom",
     ]);
+  });
+
+  it("has the Phase 1 schema: goals locked down, settings and viewport columns, no first-visit flag (TICKET-034)", async () => {
+    const [goals] = await sql<{ rls: boolean; grants: number }[]>`
+      select c.relrowsecurity as rls,
+             (select count(*)::int from information_schema.role_table_grants
+               where table_schema = 'public' and table_name = 'goals'
+                 and grantee in ('anon', 'authenticated')) as grants
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relname = 'goals'`;
+    expect(goals).toEqual({ rls: true, grants: 0 });
+    const cols = async (schema: string, table: string) =>
+      (
+        await sql<{ column_name: string }[]>`
+          select column_name from information_schema.columns
+          where table_schema = ${schema} and table_name = ${table} order by 1`
+      ).map((c) => c.column_name);
+    expect(await cols("analytics", "site_settings")).toEqual(
+      expect.arrayContaining([
+        "kpi_goal_id",
+        "retention_months",
+        "breakpoints",
+        "shortcuts",
+      ])
+    );
+    expect(await cols("analytics", "events")).toEqual(
+      expect.arrayContaining(["viewport_width", "viewport_height"])
+    );
+    expect(await cols("public", "websites")).not.toContain("is_first_visit");
   });
 
   it("has no v1 tables, RPC or counter column left in public (TICKET-024)", async () => {
     const tables = await sql<{ table_name: string }[]>`
       select table_name from information_schema.tables where table_schema = 'public' order by 1`;
-    expect(tables.map((t) => t.table_name)).toEqual(["websites"]);
+    expect(tables.map((t) => t.table_name)).toEqual(["goals", "websites"]);
     const [{ n: fns }] = await sql<{ n: number }[]>`
       select count(*)::int as n from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.proname = 'get_period_summary'`;

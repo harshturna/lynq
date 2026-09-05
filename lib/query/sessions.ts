@@ -15,6 +15,8 @@ export type SessionScope = {
   from: Date;
   toExclusive: Date;
   includeSuspect: boolean;
+  /** the window column: ts (default) or received_at for the realtime screen (design §9.4) */
+  column?: "ts" | "received_at";
 };
 
 /**
@@ -63,7 +65,7 @@ export function sessionCte(
       and count(*) filter (where e.event = 'custom') = 0) as bounced${extraCols}
   from analytics.events e
   where e.site_id = ${q.p(scope.siteId)}
-    and e.ts >= ${q.p(scope.from)} and e.ts < ${q.p(scope.toExclusive)}
+    and e.${scope.column ?? "ts"} >= ${q.p(scope.from)} and e.${scope.column ?? "ts"} < ${q.p(scope.toExclusive)}
     ${scope.includeSuspect ? "" : "and not e.suspect"}
   group by 1, 2
   having bool_or(${filters.rowWhere})

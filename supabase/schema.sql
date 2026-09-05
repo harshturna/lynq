@@ -147,6 +147,8 @@ CREATE TABLE IF NOT EXISTS "analytics"."events" (
     "inp_target" "text",
     "suspect" boolean DEFAULT false NOT NULL,
     "ingest_version" smallint NOT NULL,
+    "viewport_width" smallint DEFAULT 0 NOT NULL,
+    "viewport_height" smallint DEFAULT 0 NOT NULL,
     CONSTRAINT "events_event_check" CHECK (("event" = ANY (ARRAY['pageview'::"text", 'engagement'::"text", 'custom'::"text", 'vitals'::"text", 'identify'::"text"])))
 );
 
@@ -203,7 +205,11 @@ CREATE TABLE IF NOT EXISTS "analytics"."site_settings" (
     "store_titles" boolean DEFAULT false NOT NULL,
     "store_user_ids" boolean DEFAULT false NOT NULL,
     "excluded_ips" "cidr"[] DEFAULT '{}'::"cidr"[] NOT NULL,
-    "excluded_paths" "text"[] DEFAULT '{}'::"text"[] NOT NULL
+    "excluded_paths" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
+    "kpi_goal_id" bigint,
+    "retention_months" smallint DEFAULT 24 NOT NULL,
+    "breakpoints" smallint[] DEFAULT '{640,1024,1280}'::smallint[] NOT NULL,
+    "shortcuts" boolean DEFAULT true NOT NULL
 );
 
 
@@ -220,13 +226,39 @@ CREATE TABLE IF NOT EXISTS "analytics"."visitor_salts" (
 ALTER TABLE "analytics"."visitor_salts" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."goals" (
+    "id" bigint NOT NULL,
+    "site_id" bigint NOT NULL,
+    "name" "text" NOT NULL,
+    "kind" "text" NOT NULL,
+    "match" "text" NOT NULL,
+    "revenue" boolean DEFAULT false NOT NULL,
+    "target" integer,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "goals_kind_check" CHECK (("kind" = ANY (ARRAY['pageview'::"text", 'event'::"text"])))
+);
+
+
+ALTER TABLE "public"."goals" OWNER TO "postgres";
+
+
+ALTER TABLE "public"."goals" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."goals_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."websites" (
     "id" bigint NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "name" "text" NOT NULL,
     "url" "text" NOT NULL,
     "user_id" "uuid" NOT NULL,
-    "is_first_visit" boolean DEFAULT true NOT NULL,
     "slug" "text" NOT NULL,
     "deleted_at" timestamp with time zone
 );
@@ -276,6 +308,11 @@ ALTER TABLE ONLY "analytics"."visitor_salts"
 
 
 
+ALTER TABLE ONLY "public"."goals"
+    ADD CONSTRAINT "goals_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."websites"
     ADD CONSTRAINT "websites_pkey" PRIMARY KEY ("id");
 
@@ -295,11 +332,19 @@ CREATE INDEX "events_custom_name" ON "analytics"."events" USING "btree" ("site_i
 
 
 
+CREATE INDEX "events_site_received" ON "analytics"."events" USING "btree" ("site_id", "received_at");
+
+
+
 CREATE INDEX "events_site_session" ON "analytics"."events" USING "btree" ("site_id", "visitor_id", "session_id");
 
 
 
 CREATE INDEX "events_site_ts" ON "analytics"."events" USING "btree" ("site_id", "ts");
+
+
+
+CREATE INDEX "events_site_ts_custom" ON "analytics"."events" USING "btree" ("site_id", "ts") WHERE ("event" = 'custom'::"text");
 
 
 
@@ -323,7 +368,28 @@ ALTER TABLE ONLY "analytics"."site_hostnames"
 
 
 ALTER TABLE ONLY "analytics"."site_settings"
+    ADD CONSTRAINT "site_settings_kpi_goal_id_fkey" FOREIGN KEY ("kpi_goal_id") REFERENCES "public"."goals"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "analytics"."site_settings"
     ADD CONSTRAINT "site_settings_site_id_fkey" FOREIGN KEY ("site_id") REFERENCES "public"."websites"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."goals"
+    ADD CONSTRAINT "goals_site_id_fkey" FOREIGN KEY ("site_id") REFERENCES "public"."websites"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE "public"."goals" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "goals: owner all" ON "public"."goals" TO "authenticated" USING (("site_id" IN ( SELECT "websites"."id"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"())))) WITH CHECK (("site_id" IN ( SELECT "websites"."id"
+   FROM "public"."websites"
+  WHERE ("websites"."user_id" = "auth"."uid"()))));
 
 
 
@@ -382,6 +448,15 @@ GRANT ALL ON TABLE "analytics"."site_settings" TO "service_role";
 
 
 GRANT ALL ON TABLE "analytics"."visitor_salts" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."goals" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."goals_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."goals_id_seq" TO "service_role";
 
 
 

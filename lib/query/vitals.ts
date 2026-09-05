@@ -1,6 +1,12 @@
 import { type Compiled, Query } from "./builder";
-import { compileFilters } from "./filters";
-import type { QueryContext } from "./primitives";
+import {
+  compileFilters,
+  isRowDimension,
+  type RowDimension,
+  rowExpr,
+} from "./filters";
+import { bucketExpr, type QueryContext, rowFrom } from "./primitives";
+import type { Granularity } from "./ranges";
 import { sessionCte, sessionWhere } from "./sessions";
 
 /**
@@ -48,6 +54,66 @@ select ${cols},
        count(*)::int as samples
 from ${from}
 where ${where}`,
+    params: q.params,
+  };
+}
+
+/** The five vitals the screens render (design §8.9). */
+export const RENDERED_VITALS = ["lcp", "cls", "inp", "fcp", "ttfb"] as const;
+export type RenderedVital = (typeof RENDERED_VITALS)[number];
+export type VitalsRow = Record<RenderedVital, number | null> & {
+  samples: number;
+};
+
+const renderedCols = () =>
+  RENDERED_VITALS.map(
+    (c) =>
+      `percentile_cont(0.75) within group (order by e.${c})::float8 as ${c}`
+  ).join(",\n       ");
+
+/** p75 per rendered vital by a row dimension, largest sample counts first (design §9.10). */
+export function vitalsBreakdownQuery(
+  ctx: QueryContext,
+  dimension: string,
+  limit = 20,
+  w = ctx.range
+): Compiled {
+  if (!isRowDimension(dimension))
+    throw new Error(`vitals breakdown takes a row dimension, not ${dimension}`);
+  const q = new Query();
+  const f = compileFilters(q, ctx.filters);
+  const r = rowFrom(q, ctx, w, f);
+  const expr = rowExpr(dimension as RowDimension, "e");
+  const n = Math.min(Math.max(limit, 1), 200);
+  return {
+    text: `${r.withClause}
+select ${expr}::text as value,
+       ${renderedCols()},
+       count(*)::int as samples
+from ${r.from}
+where ${r.where} and e.event = 'vitals' and ${expr} is not null and ${expr}::text <> ''
+group by 1 order by samples desc, 1 limit ${q.p(n)}`,
+    params: q.params,
+  };
+}
+
+/** p75 per rendered vital per bucket, split by device (design §9.10). */
+export function vitalsTimeseriesQuery(
+  ctx: QueryContext,
+  granularity: Granularity,
+  w = ctx.range
+): Compiled {
+  const q = new Query();
+  const f = compileFilters(q, ctx.filters);
+  const r = rowFrom(q, ctx, w, f);
+  return {
+    text: `${r.withClause}
+select ${bucketExpr(q, "e.ts", granularity, ctx.timezone)} as bucket, e.device,
+       ${renderedCols()},
+       count(*)::int as samples
+from ${r.from}
+where ${r.where} and e.event = 'vitals'
+group by 1, 2 order by 1, 2`,
     params: q.params,
   };
 }

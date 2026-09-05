@@ -12,7 +12,13 @@ import {
  * event and byte caps (design §7.1).
  */
 export type PageContext = { pid: string; url: string; title?: string };
-export type Ctx = { sw?: number; sh?: number; lang?: string };
+export type Ctx = {
+  sw?: number;
+  sh?: number;
+  vw?: number;
+  vh?: number;
+  lang?: string;
+};
 
 export function envelope(
   site: string,

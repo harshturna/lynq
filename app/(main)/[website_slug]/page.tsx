@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import ErrorAlert from "@/components/error";
-import { getWebsite, updateWebsiteOne } from "@/lib/actions";
+import { getWebsite } from "@/lib/actions";
 import { getDashboard } from "@/lib/dashboard";
 import { getUser } from "@/lib/user/server";
 import WebsiteDashboard from "./_components/website-dashboard";
@@ -45,22 +45,8 @@ const WebsitePage = async (props: WebsitePageProps) => {
     );
   }
 
-  // Setting the is_first_visit flag to false after visiting the dashboard for
-  // the first time. Skipped for the guest user, whose writes are always
-  // rejected — awaiting it just added a blocking round-trip to every load.
-  const isGuest = user.id === process.env.GUEST_USER_ID;
-  if (website.is_first_visit && !isGuest) {
-    await updateWebsiteOne(
-      params.website_slug,
-      "is_first_visit",
-      "false",
-      user.id
-    );
-  }
-
   return (
     <WebsiteDashboard
-      isFirstVisit={website.is_first_visit}
       websiteName={website.name}
       websiteUrl={website.url}
       initialData={initialData}

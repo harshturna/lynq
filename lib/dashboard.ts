@@ -88,11 +88,15 @@ export async function getDashboard(
   if (!range) return { data: null, error: "Invalid time frame" };
 
   try {
-    const ctx = buildContext(site, {
-      range,
-      compare: "previous_period",
-      filters: toQueryFilters(chips),
-    });
+    const ctx = {
+      ...buildContext(site, {
+        range,
+        compare: "previous_period",
+        filters: toQueryFilters(chips),
+      }),
+      // the old dashboard's sixteen queries share the pool; TICKET-035 replaces it (design §9)
+      timeoutMs: 10_000,
+    };
     const [sum, pageviews, sessions, vit, events, ...breaks] =
       await Promise.all([
         summary(ctx),

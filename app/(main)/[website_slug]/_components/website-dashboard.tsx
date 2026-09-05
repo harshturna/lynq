@@ -15,7 +15,6 @@ import PerformanceDashboard from "./performance-dashboard";
 import SetupDialog from "./setup-dialog";
 
 interface WebsiteDashboardProps {
-  isFirstVisit: boolean;
   websiteName: string;
   websiteUrl: string;
   initialData: DashboardData;
@@ -30,7 +29,6 @@ const DashboardBody = ({
   websiteName,
   websiteUrl,
   initialData,
-  isFirstVisit,
 }: WebsiteDashboardProps) => {
   const [data, setData] = useState(initialData);
   const [timeFrame, setTimeFrame] = useState<DatePickerValues>(
@@ -39,7 +37,6 @@ const DashboardBody = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openSetupModal, setOpenSetupModal] = useState(false);
-  const [isUserFirstVisit, setIsUserFirstVisit] = useState(isFirstVisit);
   const tab = useSearchParams().get("tab");
   const { filters } = useFilters();
   const requestId = useRef(0);
@@ -107,9 +104,8 @@ const DashboardBody = ({
       <SetupDialog
         title="Add Script"
         siteUrl={websiteUrl}
-        open={isUserFirstVisit || openSetupModal}
+        open={openSetupModal}
         setClose={() => {
-          setIsUserFirstVisit(false);
           setOpenSetupModal(false);
         }}
       />

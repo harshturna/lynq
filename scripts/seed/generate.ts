@@ -623,6 +623,8 @@ export function generate(opts: SeedOptions): {
     os_version: "",
     screen_width: 0,
     screen_height: 0,
+    viewport_width: 0,
+    viewport_height: 0,
     language: "",
     engaged_ms: 0,
     scroll_depth: 0,
@@ -674,6 +676,15 @@ export function generate(opts: SeedOptions): {
       const browserVersion = f.helpers.arrayElement(b.versions);
       const osVersion = f.helpers.arrayElement(osPick.versions);
       const [sw, sh] = pick(SCREENS[device]);
+      // The viewport is what the histogram measures (design §8.6): browser
+      // chrome and a window that is not always maximised on desktop.
+      const [vw, vh] =
+        device === "desktop"
+          ? [
+              sw - f.number.int({ min: 0, max: 140 }),
+              sh - f.number.int({ min: 90, max: 180 }),
+            ]
+          : [sw, sh];
       const ip = user?.ip ?? f.internet.ipv4();
       const ua = `${b.browser}/${browserVersion} (${osPick.os} ${osVersion}; ${device})`;
       const visitor = visitorId(salt, opts.siteId, ip, ua);
@@ -728,6 +739,8 @@ export function generate(opts: SeedOptions): {
         os_version: osVersion,
         screen_width: sw,
         screen_height: sh,
+        viewport_width: vw,
+        viewport_height: vh,
         language: country.lang,
       };
       const push = (r: EventRow) => {

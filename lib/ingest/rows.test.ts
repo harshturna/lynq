@@ -64,6 +64,8 @@ describe("buildRows", () => {
         device: "desktop",
         browser: "Chrome",
         screen_width: 1440,
+        viewport_width: 1280,
+        viewport_height: 720,
         language: "en-GB",
         session_id: hexToBigInt("8f3c1a2b3c4d5e6f"),
         pageview_id: hexToBigInt("a91e0b1c2d3e4f50"),

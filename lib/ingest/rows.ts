@@ -43,6 +43,8 @@ export type EventRow = {
   os_version: string;
   screen_width: number;
   screen_height: number;
+  viewport_width: number;
+  viewport_height: number;
   language: string;
   engaged_ms: number;
   scroll_depth: number;
@@ -99,6 +101,8 @@ export const EVENT_COLUMNS = [
   "os_version",
   "screen_width",
   "screen_height",
+  "viewport_width",
+  "viewport_height",
   "language",
   "engaged_ms",
   "scroll_depth",
@@ -229,6 +233,8 @@ export function buildRows(input: BuildInput): BuildOutput {
     os_version: cleanText(ua.os_version, 32),
     screen_width: batch.ctx?.sw ?? 0,
     screen_height: batch.ctx?.sh ?? 0,
+    viewport_width: batch.ctx?.vw ?? 0,
+    viewport_height: batch.ctx?.vh ?? 0,
     language: cleanText(batch.ctx?.lang, 35),
     suspect,
     ingest_version: 2,

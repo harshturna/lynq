@@ -66,6 +66,8 @@ export const batchSchema = z.object({
     .object({
       sw: z.number().int().min(0).max(65535).optional(),
       sh: z.number().int().min(0).max(65535).optional(),
+      vw: z.number().int().min(0).max(32767).optional(),
+      vh: z.number().int().min(0).max(32767).optional(),
       lang: z.string().max(35).optional(),
     })
     .optional(),
