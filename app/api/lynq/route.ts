@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { isbot } from "isbot";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -12,6 +13,7 @@ import {
   getCountryAndCityFromIp,
 } from "@/lib/ingest";
 import { getClientIp } from "@/lib/ingest/client-ip";
+import { adaptAndInsertV1 } from "@/lib/ingest/v1";
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
@@ -90,13 +92,16 @@ export async function POST(req: Request) {
           body.dataDomain,
           body.userAgentData
         );
-        // capture the page view from initial session
-        addPageView(
-          body.dataDomain,
-          body.url,
-          body.sessionId,
-          body.pathname,
-          body.referrer
+        // capture the page view from initial session; waitUntil keeps the
+        // instance alive for the write without holding the response
+        waitUntil(
+          addPageView(
+            body.dataDomain,
+            body.url,
+            body.sessionId,
+            body.pathname,
+            body.referrer
+          )
         );
       } else {
         await addVisitor(body.clientId, body.dataDomain);
@@ -107,20 +112,24 @@ export async function POST(req: Request) {
           body.dataDomain,
           body.userAgentData
         );
-        addCustomEvent(
-          body.dataDomain,
-          body.sessionId,
-          body.eventData,
-          body.pathname
+        waitUntil(
+          addCustomEvent(
+            body.dataDomain,
+            body.sessionId,
+            body.eventData,
+            body.pathname
+          )
         );
       }
     } else if (body.event === "page-view") {
-      addPageView(
-        body.dataDomain,
-        body.url,
-        body.sessionId,
-        body.pathname,
-        body.referrer
+      waitUntil(
+        addPageView(
+          body.dataDomain,
+          body.url,
+          body.sessionId,
+          body.pathname,
+          body.referrer
+        )
       );
     } else if (body.event === "session-end") {
       await addSessionDuration(
@@ -130,13 +139,19 @@ export async function POST(req: Request) {
       );
       await addVitals(body.sessionId, body.dataDomain, body.eventData.metrics);
     } else if (body.event === "custom-event") {
-      addCustomEvent(
-        body.dataDomain,
-        body.sessionId,
-        body.eventData,
-        body.pathname
+      waitUntil(
+        addCustomEvent(
+          body.dataDomain,
+          body.sessionId,
+          body.eventData,
+          body.pathname
+        )
       );
     }
+
+    // Dual-write into analytics.events (TICKET-015). Awaited, with its own
+    // 2 s timeout, so the new table gets the same durability as the response.
+    await adaptAndInsertV1(body, requestHeaders, new Date());
 
     return NextResponse.json(
       { success: true },

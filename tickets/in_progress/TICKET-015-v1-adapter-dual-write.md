@@ -1,8 +1,8 @@
 # TICKET-015: v1 adapter dual-write and durable Supabase writes
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-05
-**Started:** —
+**Started:** 2026-09-05
 **Completed:** —
 **Area:** infra
 
@@ -27,13 +27,21 @@ Make the existing v1 route also write events rows so existing installs feed the 
 
 ## Progress log
 - 2026-09-05 — Created from the Phase 0 design v6 (TICKET-022, D-004 to D-006).
+- 2026-09-05 — Started. Decision: the legacy visitor salt is HMAC(LYNQ_IDENTITY_SECRET,
+  "lynq-legacy-salt") rather than a new env var, so the adapter and the backfill derive the
+  same value with nothing new to configure. Out-of-window v1 timestamps fall back to the receive
+  time and mark the row suspect rather than dropping, because v1 sends one event per request
+  and a dropped session-start would orphan the session.
 
 ## Handoff
-Kept current while the ticket is in progress. Overwrite, do not append.
-- **State:** what is built and working right now, what is half-done
-- **Blocked on:** nothing | what
-- **Next:** the next one to three concrete actions
-- **Read first:** files to open before touching anything
+- **State:** lib/ingest/v1-adapter.ts (pure mapping with per-instance session memory, legacy
+  visitor salt derived from LYNQ_IDENTITY_SECRET) with unit tests; lib/ingest/v1.ts wires site
+  resolution, enrichment and the insert; app/api/lynq/route.ts wraps the fire-and-forget writes
+  in waitUntil and awaits the adapter after the old-table writes.
+- **Blocked on:** nothing
+- **Next:** verify, integration, build, push, wait for the deploy, send a live v1 beacon, confirm
+  ingest_version = 1 rows, record the deploy timestamp as --until here and in TICKET-017, close.
+- **Read first:** lib/ingest/v1-adapter.ts, app/api/lynq/route.ts
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.
