@@ -1,8 +1,8 @@
 # TICKET-080: Attention and influence, a layer over the numbers Lynq already has
 
-**Status:** pending
+**Status:** in-progress
 **Created:** 2026-09-06
-**Started:** —
+**Started:** 2026-09-06
 **Completed:** —
 **Area:** feature
 
@@ -19,8 +19,24 @@ Without changing what Lynq counts today, add a second reading of the same rows t
   attention.ts: split of pageviews across the top pages, concentration, longest and shortest
   engaged) and the Engaged time metric (avg per session, §6.3). This ticket extends both into
   named metrics with definitions, not a new screen.
-- Metric definitions to fix in the design section, then record as a D-NNN (they are the
-  product's vocabulary and expensive to rename):
+- **Done on start: the design section is `docs/design/attention-and-influence.md` and the
+  definitions are D-016.** Everything below was the plan before measuring; the design document is
+  now the source of truth for the definitions and the layout.
+- Measured on production before fixing anything (2026-09-06). `engaged_ms` and `scroll_depth` are
+  **not on pageview rows**; they arrive on `engagement` events, which carry the page's `path` and
+  `pageview_id`. Every one of the 8,735 engagement rows in the last 30 days has both. So attention
+  and read-through are a grouped scan of engagement rows, not of pageviews.
+- Attention already separates pages that pageviews cannot: `/docs/getting-started` has 1,034
+  pageviews and 1,546 minutes, `/` has 1,716 pageviews and 859 minutes.
+- Read-through is computable but flat on the seeded data (27.8% to 37%, average scroll 58 to 65
+  everywhere) because the generator draws scroll depth without regard to page type. The metric is
+  sound; the seed needs the shape, which is a plan step.
+- Influence needed a design decision that only the data could settle. Crediting every page a
+  converting session saw puts `/dashboard` first at 3.16×, which is backwards: people reach the
+  dashboard **by** converting. Crediting only pages seen before the session's first completion
+  drops it from the list entirely and gives `/pricing` 1.5×, `/customers` 1.39×, `/features`
+  1.29×, `/` 0.71×. That rule is part of D-016.
+- Superseded plan notes, kept for the reasoning:
   - **Attention**: engaged_ms summed over the pageviews of a page in the range, shown as
     minutes; **attention share** = a page's attention / the site's. Different from Engaged time
     (an average per session): attention is a total, and it is the number that ranks pages.
@@ -52,23 +68,24 @@ Without changing what Lynq counts today, add a second reading of the same rows t
   definitions; a docs page on reading the Attention view.
 
 ## Plan
-- [ ] Design section (docs/design, a Phase 2 or standalone doc): the three definitions, the thresholds, the minimum counts, the Attention view layout; mock at 1280 and 375.
-- [ ] Decision (decide skill): the definitions and the read-through threshold, as a D-NNN.
-- [ ] Query: attention and read-through per page from the rows; influence from sessions and the KPI goal; rollup columns or goal-row computation; budgets on the seed fixture.
-- [ ] Seed: scroll depth and engaged time with a plausible shape per page type so the demo shows real spread.
-- [ ] Pages screen: the Attention view and the extended attention line; Overview ranking option; hover definitions; announcements.
-- [ ] Landing panel and docs pages; the hero table ranks by attention.
+- [x] Design section (`docs/design/attention-and-influence.md`): the three definitions, the thresholds, the minimum counts, the Attention view layout.
+- [x] Decision: D-016, taken on measured evidence.
+- [ ] Query: `attention(ctx)` and read-through per page from engagement rows; `influence(ctx, goal)` from the sessions CTE with the before-conversion rule; budgets on the seed fixture.
+- [ ] Seed: scroll depth and engaged time shaped per page type so read-through has real spread.
+- [ ] Pages screen: the Attention view (Attention, Share, Read-through, Influence), the attention line reworded in minutes, the em dash under each minimum, one-sentence descriptions where the numbers are.
+- [ ] Mock the view at 1280 and 375 with the measured numbers, and look before wiring (D-010).
+- [ ] Landing panel and docs pages; the docs' counting page carries the three definitions verbatim.
 - [ ] Verify: npm run verify; npm run test:integration; npm run test:e2e; measure on production.
 
 ## Progress log
 - 2026-09-06 — Created from the owner's differentiation question; keep today's metrics, add the layer.
+- 2026-09-06 — Started by measuring all three metrics on production. That moved attention and read-through off pageview rows onto engagement rows, and settled the influence rule against the evidence (see Context). Design section and D-016 written before any code.
 
 ## Handoff
-Kept current while the ticket is in progress. Overwrite, do not append.
-- **State:** not started
-- **Blocked on:** the design section and the definitions decision
-- **Next:** write the definitions, mock the view
-- **Read first:** app/(main)/[website_slug]/pages/_pages/attention.ts, lib/query/sessions.ts, docs/design/phase-1-ui-overhaul.md §8.3
+- **State:** measured, designed and decided. `docs/design/attention-and-influence.md` and D-016 are written; no code yet.
+- **Blocked on:** nothing
+- **Next:** the query primitives, then the seed's scroll shape, then the Attention view.
+- **Read first:** docs/design/attention-and-influence.md, tickets/DECISIONS.md D-016
 
 ## Verification
 Filled in on completion. The command that was run, in a code block, and its result.

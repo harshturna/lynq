@@ -358,3 +358,32 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   (the TypeScript CTE for filtered reads, the SQL function for unfiltered reads) and an
   integration test pins them equal; an identified session that crosses UTC midnight counts
   twice on the rollup side; a new dimension needs a column in the function and a backfill.
+
+## D-016 — Attention, read-through and influence, and how each is defined
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** TICKET-080 adds a second reading of rows Lynq already stores, so that the Pages
+  screen can answer which page holds people and which page helps them convert. The definitions
+  become the product's vocabulary and appear in the UI and the docs, so renaming or redefining
+  them later is expensive. Each was measured on the seeded production site before being fixed.
+- **Decision:** **Attention** is the engaged milliseconds a page accumulated in the range, shown
+  in minutes, with attention share as its portion of the site; it is a total and is distinct from
+  the existing Engaged time, which stays an average per session. **Read-through** is the share of
+  a page's pageviews whose deepest scroll reached 75% of the document with at least 10 seconds of
+  engaged time, the same floor as bounce, shown only above 30 pageviews. **Influence** is the
+  ratio of the KPI goal's conversion rate among sessions that saw the page to the rate among
+  sessions that did not, crediting a page only when it was seen **before** the session's first
+  completion, shown only when both sides have at least 50 sessions, and described in the UI as
+  association rather than cause.
+- **Rejected alternatives:** Crediting every page a converting session saw, rejected on evidence:
+  it puts the post-signup `/dashboard` top at 3.16× and buries `/pricing`, because reaching the
+  dashboard is a consequence of converting. Read-through at 100% of the document, rejected as
+  almost nobody reaches the last pixel. Read-through per session rather than per pageview,
+  rejected because a return visit is a second chance to read. Reusing the existing Engaged time
+  as the ranking metric, rejected because an average per session cannot rank pages by how much
+  attention they hold in total.
+- **Consequences:** Easier: the Pages screen answers a question no cookieless competitor answers,
+  with no new collection and no privacy change; the definitions are written once and cited by the
+  UI and the docs. Harder: three more definitions to keep true, minimum thresholds that must be
+  explained wherever an em dash appears, and a metric (influence) that people will read as
+  causal however it is labelled.
