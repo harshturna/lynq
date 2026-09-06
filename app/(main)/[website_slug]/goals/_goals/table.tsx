@@ -138,7 +138,7 @@ export function GoalsTable({
                     aria-current={selected ? "true" : undefined}
                     className={cn(
                       "border-b border-rule",
-                      selected && "bg-teal-soft/60"
+                      selected && "bg-teal-bar"
                     )}
                   >
                     <td className="w-full max-w-0 truncate py-[9px]">

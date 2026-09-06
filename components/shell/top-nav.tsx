@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AccountMenu, MENU_CONTENT, MENU_ITEM } from "./account-menu";
+import { CommandMenu } from "./command-menu";
+import { SECTIONS, type SiteSummary } from "./sections";
 
 /**
  * The top navigation (design §4, §6): the nine sections with the active one
@@ -12,28 +14,19 @@ import { AccountMenu, MENU_CONTENT, MENU_ITEM } from "./account-menu";
  * Under 768 px only Overview stays inline and the rest sit under More;
  * above that the row scrolls when it must.
  */
-export const SECTIONS = [
-  { key: "", label: "Overview" },
-  { key: "realtime", label: "Realtime" },
-  { key: "pages", label: "Pages" },
-  { key: "sources", label: "Sources" },
-  { key: "locations", label: "Locations" },
-  { key: "devices", label: "Devices" },
-  { key: "events", label: "Events" },
-  { key: "goals", label: "Goals" },
-  { key: "performance", label: "Performance" },
-] as const;
-
-export type SiteSummary = { slug: string; name: string; url: string };
+export { SECTIONS, type SiteSummary };
 
 export function TopNav({
   site,
   sites,
   userEmail,
+  shortcuts,
 }: {
   site: SiteSummary;
   sites: SiteSummary[];
   userEmail: string;
+  /** The site's keyboard-shortcuts setting; it gates ⌘K, not the button. */
+  shortcuts: boolean;
 }) {
   const pathname = usePathname();
   const base = `/${site.slug}`;
@@ -110,6 +103,7 @@ export function TopNav({
       </nav>
 
       <div className="flex shrink-0 items-center gap-4 text-[13px] text-ink-2">
+        <CommandMenu site={site} sites={sites} enabled={shortcuts} />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button

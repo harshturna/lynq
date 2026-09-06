@@ -122,7 +122,7 @@ export function RangePicker({ timezone }: { timezone: string }) {
   );
 }
 
-const COMPARES: { value: Compare; label: string }[] = [
+export const COMPARES: { value: Compare; label: string }[] = [
   { value: "previous_period", label: "Previous period" },
   { value: "previous_year", label: "Same period last year" },
   { value: "none", label: "No comparison" },

@@ -51,6 +51,7 @@ export function useShortcuts({
 }
 
 const SHORTCUTS: [string, string][] = [
+  ["⌘ K or Ctrl + K", "Open the command menu"],
   ["[ and ]", "Previous or next period, while the controls have focus"],
   ["/", "Focus search, when no text field has focus"],
   ["Delete or Backspace", "Remove the focused filter chip"],
@@ -71,7 +72,7 @@ export function ShortcutSheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/20" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[420px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 rounded-card border border-rule bg-canvas p-5 shadow-[0_8px_24px_-12px_rgba(10,10,10,0.35)] outline-none">
           <Dialog.Title className="text-[14px] font-medium text-ink">
             Keyboard shortcuts

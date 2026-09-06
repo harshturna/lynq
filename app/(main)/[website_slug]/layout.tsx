@@ -14,7 +14,7 @@ export default async function SiteLayout({
   params: Promise<{ website_slug: string }>;
 }) {
   const { website_slug } = await params;
-  const { website, sites, userEmail } = await resolveSite(website_slug);
+  const { website, site, sites, userEmail } = await resolveSite(website_slug);
   return (
     <div className="min-h-screen bg-canvas font-sans text-ink">
       <Suspense>
@@ -23,6 +23,7 @@ export default async function SiteLayout({
             site={{ slug: website.slug, name: website.name, url: website.url }}
             sites={sites}
             userEmail={userEmail}
+            shortcuts={site.shortcuts}
           />
           {children}
           <SessionDrawer load={sessionTimeline.bind(null, website.slug)} />

@@ -34,7 +34,7 @@ export function Drawer({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/20" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim" />
         <Dialog.Content
           className="fixed inset-y-0 right-0 z-50 flex w-[560px] max-w-[calc(100vw-24px)] flex-col border-l border-rule bg-canvas shadow-[0_8px_24px_-12px_rgba(10,10,10,0.35)] outline-none"
           onCloseAutoFocus={(e) => {

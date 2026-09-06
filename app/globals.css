@@ -29,6 +29,10 @@
     --poor: #b31e18;
     --poor-soft: #fbe4e2;
     --compare: #8a8a93;
+    /* Modal scrim. The alpha is baked in because Tailwind 3 cannot apply an
+       opacity modifier to a colour defined as a bare var(): `bg-ink/20`
+       silently computes to transparent (TICKET-079). */
+    --scrim: rgb(10 10 10 / 0.2);
   }
 }
 

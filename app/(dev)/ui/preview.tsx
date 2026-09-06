@@ -655,7 +655,12 @@ export function UiPreview() {
     <div className="min-h-screen bg-canvas font-sans text-ink">
       <Suspense>
         <ShellProvider>
-          <TopNav site={SITE} sites={SITES} userEmail="harsh@example.com" />
+          <TopNav
+            site={SITE}
+            sites={SITES}
+            userEmail="harsh@example.com"
+            shortcuts
+          />
           <Body />
         </ShellProvider>
       </Suspense>

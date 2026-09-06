@@ -31,6 +31,7 @@ const config: Config = {
         warn: { DEFAULT: "var(--warn)", soft: "var(--warn-soft)" },
         poor: { DEFAULT: "var(--poor)", soft: "var(--poor-soft)" },
         compare: "var(--compare)",
+        scrim: "var(--scrim)",
       },
       borderRadius: {
         // design §3 radius scale
