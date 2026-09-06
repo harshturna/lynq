@@ -81,6 +81,42 @@ function columnsFor(kpi: Kpi, withBounce: boolean, visitors: number): Column[] {
   return cols;
 }
 
+/** What the table shows (D-013); `columnsFor` is the drawer's and the CSV's full set. */
+function shownFor(region: string, kpi: Kpi): Column[] {
+  const visitors: Column = { key: "visitors", header: "Visitors" };
+  if (region === "channels") return [visitors];
+  const conversion: Column = {
+    key: "conversion",
+    header: "Conv.",
+    points: true,
+    format: pct,
+  };
+  if (region === "sources")
+    return [
+      visitors,
+      ...(kpi.goal ? [conversion] : []),
+      ...(kpi.hasRevenue
+        ? [{ key: "revenue", header: "Revenue", format: money } as Column]
+        : []),
+    ];
+  return [
+    visitors,
+    ...(kpi.goal
+      ? [{ key: "goal_completions", header: "Completions" }, conversion]
+      : []),
+  ];
+}
+
+const LABEL: Record<string, string> = {
+  channels: "Channel",
+  sources: "Source",
+  referrers: "Referrer",
+  campaign: "Campaign",
+  medium: "Medium",
+  term: "Term",
+  content: "Content",
+};
+
 function toRows(t: SourcesTable): TableRow[] {
   const numeric = (r: BreakdownMultiRow) =>
     Object.fromEntries(
@@ -195,6 +231,7 @@ function Region({
   if (!data.ok) return <SectionError title={title} />;
   const t = data.data;
   const columns = columnsFor(kpi, withBounce, t.visitors);
+  const shown = shownFor(region, kpi);
   const rows = toRows(t);
   const filter = (row: TableRow) => {
     update(
@@ -225,8 +262,11 @@ function Region({
         }
         views={views}
         defaultView={views?.[0]?.key}
-        columns={columns}
+        labelHeader={LABEL[t.view] ?? LABEL[region] ?? title}
+        columns={shown}
         rows={rows.slice(0, SHOWN)}
+        bar={region === "channels" ? "visitors" : undefined}
+        fill={region !== "campaigns"}
         defaultSort={{ col: "visitors", dir: "desc" }}
         onFilter={filter}
         total={t.total}

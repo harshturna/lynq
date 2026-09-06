@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pill } from "@/components/shell/badge";
+import type { PillStatus } from "@/components/shell/badge";
 import {
   type Column,
   DataTable,
@@ -17,47 +17,38 @@ import { withFilter, withParam } from "@/lib/url-state";
 import {
   fmtVital,
   RENDERED_VITALS as RENDERED,
+  STATUS_TEXT,
   VITAL_LABELS,
   vitalStatus,
 } from "@/lib/vitals";
 
 const SHOWN = 12;
 
+/** Core vitals carry a status slot; FCP and TTFB are plain (D-013). */
+const CORE = new Set(["lcp", "inp", "cls"]);
 const COLUMNS: Column[] = [
   ...RENDERED.map(
     (k): Column => ({
       key: k,
       header: VITAL_LABELS[k],
-      align: "right",
-      width: "120px",
       lowerIsBetter: true,
       secondary: k === "fcp" || k === "ttfb",
-      format: (v) => {
-        const n = v === null ? null : Number(v);
-        const status = vitalStatus(k, n);
-        return (
-          <span className="inline-flex items-center gap-2">
-            <span>{fmtVital(k, n)}</span>
-            <Pill status={status}>
-              <span className="sr-only">
-                {status === "none" ? "no data" : status}
-              </span>
-            </Pill>
-          </span>
-        );
-      },
+      format: (v) => fmtVital(k, v === null ? null : Number(v)),
+      ...(CORE.has(k)
+        ? {
+            status: (v: string | number | null) => {
+              const status = vitalStatus(k, v === null ? null : Number(v));
+              return status === "none" ? null : status;
+            },
+            statusLabel: (status: PillStatus) => STATUS_TEXT[status],
+          }
+        : {}),
     })
   ),
-  {
-    key: "samples",
-    header: "Samples",
-    align: "right",
-    width: "84px",
-    secondary: true,
-  },
+  { key: "samples", header: "Samples", secondary: true },
 ];
 
-/** Pages sorted worst first, a pill after every value (design §8.9). */
+/** Pages sorted worst first; a pill only where a core vital is not good (design §8.9, D-013). */
 export function VitalsPages({
   pages,
   hasFilters,
@@ -112,6 +103,7 @@ export function VitalsPages({
             </span>
           </>
         }
+        labelHeader="Page"
         columns={COLUMNS}
         rows={rows.slice(0, SHOWN)}
         defaultSort={{ col: "lcp", dir: "desc" }}

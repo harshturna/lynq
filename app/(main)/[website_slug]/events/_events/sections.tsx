@@ -9,13 +9,12 @@ export async function TableSection({
   screen: EventsScreen;
   hasFilters: boolean;
 }) {
-  const [table, trends] = await Promise.all([screen.table, screen.trends]);
+  const table = await screen.table;
   return (
     <EventsTable
       compare={screen.compare}
       hasFilters={hasFilters}
       table={table}
-      trends={trends.ok ? trends.data : {}}
     />
   );
 }

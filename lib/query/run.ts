@@ -42,7 +42,6 @@ import {
 import { buckets, type Granularity } from "./ranges";
 import { fillMinutes, type RealtimeRow, realtimeQuery } from "./realtime";
 import { type Revenue, revenueQuery } from "./revenue";
-import { type TrendMetric, trendsQuery } from "./trends";
 import {
   type TargetColumn,
   type VitalsRow,
@@ -339,37 +338,6 @@ export async function goalTimeseries(
 }
 
 /** Visitors per bucket for a few values of a row dimension, zero-filled, keyed by value (design §8.3). */
-export async function trends(
-  ctx: QueryContext,
-  dimension: string,
-  values: string[],
-  granularity: Granularity,
-  metric: TrendMetric = "visitors"
-): Promise<Map<string, number[]>> {
-  const rows = await run<{ value: string; bucket: Date; n: number }>(
-    trendsQuery(ctx, dimension, values, granularity, metric),
-    ctx.timeoutMs
-  );
-  const times = buckets(
-    ctx.range.from,
-    ctx.range.toExclusive,
-    granularity,
-    ctx.timezone
-  ).map((b) => b.getTime());
-  const out = new Map<string, number[]>();
-  for (const v of values)
-    out.set(
-      v,
-      times.map(() => 0)
-    );
-  for (const r of rows) {
-    const series = out.get(r.value);
-    const i = times.indexOf(new Date(r.bucket).getTime());
-    if (series && i >= 0) series[i] = Number(r.n);
-  }
-  return out;
-}
-
 /** Revenue and payments over the range (design §8.0). */
 export async function revenue(ctx: QueryContext): Promise<Revenue> {
   const [r] = await run<Record<string, unknown>>(

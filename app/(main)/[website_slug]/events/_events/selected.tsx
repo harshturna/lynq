@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { LineChart } from "@/components/charts/charts";
 import { displayValue } from "@/components/shell/dimensions";
 import { RowBar, Section } from "@/components/shell/section";
@@ -20,6 +22,9 @@ const GRAIN: Record<Granularity, string> = {
   month: "per month",
 };
 
+/** Occurrences shown before Show all (D-013). */
+const RECENT_SHOWN = 10;
+
 /** The selected event (design §8.7): trend, properties, recent occurrences, paths. */
 export function SelectedEventPanel({
   compare,
@@ -32,6 +37,7 @@ export function SelectedEventPanel({
   timezone: string;
   selected: Settled<SelectedEvent | null>;
 }) {
+  const [allRecent, setAllRecent] = useState(false);
   const { state, update } = useViewState();
   if (!selected.ok) return <SectionError title="Selected event" strong />;
   const s = selected.data;
@@ -125,41 +131,54 @@ export function SelectedEventPanel({
         <Section title="Recent occurrences" qualifier="newest first" strong>
           {s.recent.length ? (
             <ol className="flex flex-col">
-              {s.recent.map((o) => (
-                <li
-                  key={o.id}
-                  className="grid grid-cols-[92px_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-rule py-[7px] text-[12.5px]"
-                >
-                  <span className="text-mute tabular">
-                    {fmtAgo(new Date(o.ts))}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-ink">
-                      {displayValue("country", o.country)} ·{" "}
-                      {displayValue("device", o.device)} · {o.path}
+              {(allRecent ? s.recent : s.recent.slice(0, RECENT_SHOWN)).map(
+                (o) => (
+                  <li
+                    key={o.id}
+                    className="grid grid-cols-[92px_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-rule py-[7px] text-[12.5px]"
+                  >
+                    <span className="text-mute tabular">
+                      {fmtAgo(new Date(o.ts))}
                     </span>
-                    {Object.keys(o.props).length > 0 && (
-                      <span className="block truncate text-[12px] text-mute">
-                        {Object.entries(o.props)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(" · ")}
+                    <span className="min-w-0">
+                      <span className="block truncate text-ink">
+                        {displayValue("country", o.country)} ·{" "}
+                        {displayValue("device", o.device)} · {o.path}
                       </span>
-                    )}
-                  </span>
+                      {Object.keys(o.props).length > 0 && (
+                        <span className="block truncate text-[12px] text-mute">
+                          {Object.entries(o.props)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(" · ")}
+                        </span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openSession(update, state, {
+                          visitorId: o.visitorId,
+                          sessionId: o.sessionId,
+                        })
+                      }
+                      className="text-[12px] font-medium text-teal-ink hover:underline"
+                    >
+                      Session
+                    </button>
+                  </li>
+                )
+              )}
+              {!allRecent && s.recent.length > RECENT_SHOWN && (
+                <li className="pt-[10px] text-[12px] text-mute">
                   <button
                     type="button"
-                    onClick={() =>
-                      openSession(update, state, {
-                        visitorId: o.visitorId,
-                        sessionId: o.sessionId,
-                      })
-                    }
-                    className="text-[12px] font-medium text-teal-ink hover:underline"
+                    onClick={() => setAllRecent(true)}
+                    className="font-medium text-teal-ink hover:underline"
                   >
-                    Session
+                    Show all {s.recent.length}
                   </button>
                 </li>
-              ))}
+              )}
             </ol>
           ) : (
             <p className="text-[12.5px] text-mute">

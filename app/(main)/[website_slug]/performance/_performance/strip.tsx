@@ -1,6 +1,6 @@
 "use client";
 
-import { DeltaBadge, Pill } from "@/components/shell/badge";
+import { Pill } from "@/components/shell/badge";
 import { KpiStrip, type KpiTile } from "@/components/shell/kpi-strip";
 import { SectionError } from "@/components/shell/section-error";
 import { fmtInt } from "@/lib/format";
@@ -14,7 +14,7 @@ import {
   vitalStatus,
 } from "@/lib/vitals";
 
-/** p75 per vital with a status pill and the change (design §8.9). Lower is better. */
+/** p75 per vital with a status pill and the previous value (design §8.9, D-013). */
 export function VitalsStrip({
   strip,
   compare,
@@ -32,14 +32,7 @@ export function VitalsStrip({
       key: k,
       label: `${VITAL_LABELS[k]} p75`,
       value: fmtVital(k, v),
-      delta: (
-        <span className="flex items-center gap-2">
-          <Pill status={status}>{STATUS_TEXT[status]}</Pill>
-          {compare && v !== null && p !== null && (
-            <DeltaBadge current={v} previous={p} lowerIsBetter />
-          )}
-        </span>
-      ),
+      delta: <Pill status={status}>{STATUS_TEXT[status]}</Pill>,
       note: compare && p !== null ? `vs ${fmtVital(k, p)}` : undefined,
     };
   });

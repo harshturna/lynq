@@ -18,8 +18,8 @@ export function LcpDistribution({
 }) {
   if (!distribution.ok) return <SectionError title="LCP distribution" />;
   const { bins, samples } = distribution.data;
-  const tone = (from: number) =>
-    from < LCP_GOOD ? "good" : from < LCP_POOR ? "warn" : "poor";
+  // Bands in the teal ramp; the status colours live in the legend only (D-013).
+  const tone = (from: number) => (from < LCP_GOOD ? "accent" : "muted");
   const band = (lo: number, hi: number | null) =>
     bins
       .filter((b) => b.from >= lo && (hi === null || b.from < hi))

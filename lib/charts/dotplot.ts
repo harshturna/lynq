@@ -1,6 +1,6 @@
 /**
  * The dot plot (design §7): one value per row on a shared axis against a
- * reference line; a row above the reference is teal, below is outlined.
+ * reference line; a row above the reference is teal, below a lighter teal (D-013).
  */
 import type { ChartOption } from "./echarts";
 import { TOKENS } from "./theme";
@@ -71,11 +71,11 @@ export function dotplotOption(
           color: (p: unknown) =>
             (p as { data: { above: boolean } }).data.above
               ? TOKENS.teal
-              : TOKENS.canvas,
+              : TOKENS.teal2,
           borderColor: (p: unknown) =>
             (p as { data: { above: boolean } }).data.above
               ? TOKENS.teal
-              : TOKENS.mute,
+              : TOKENS.teal2,
           borderWidth: 1.5,
         },
         label: {

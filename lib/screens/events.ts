@@ -10,7 +10,6 @@ import {
   rows,
   summary,
   timeseries,
-  trends,
 } from "@/lib/query/run";
 import type { ViewState } from "@/lib/url-state";
 import type { Kpi } from "./kpi";
@@ -22,7 +21,6 @@ import { type Section, settle } from "./settle";
  * occurrences and the paths that end in it.
  */
 export const EVENT_LIMIT = 200;
-export const TREND_ROWS = 10;
 export const PROPERTY_KEYS = 5;
 export const PROPERTY_VALUES = 5;
 export const RECENT = 20;
@@ -62,7 +60,6 @@ export type EventsScreen = {
   timezone: string;
   sel: string | undefined;
   table: Promise<Section<EventsTable>>;
-  trends: Promise<Section<Record<string, number[]>>>;
   selected: Promise<Section<SelectedEvent | null>>;
 };
 
@@ -104,20 +101,6 @@ export function getEventsScreen(
     };
   };
   const tablePromise = table();
-
-  const trendsFor = async () => {
-    const t = await tablePromise;
-    const names = t.rows.slice(0, TREND_ROWS).map((r) => r.value);
-    if (!names.length) return {};
-    const series = await trends(
-      ctx,
-      "event_name",
-      names,
-      ctx.granularity,
-      "custom_events"
-    );
-    return Object.fromEntries([...series]);
-  };
 
   const selected = async (): Promise<SelectedEvent | null> => {
     const name = state.sel;
@@ -190,7 +173,6 @@ export function getEventsScreen(
     timezone: ctx.timezone,
     sel: state.sel,
     table: settle("events.table", tablePromise),
-    trends: settle("events.trends", trendsFor()),
     selected: settle("events.selected", selected()),
   };
 }

@@ -613,22 +613,6 @@ describe("phase 1 primitives (TICKET-034)", () => {
     ).toEqual({ revenue: 0, payments: 0 });
   });
 
-  it("trends for a few values in one statement", async () => {
-    const t = await q.trends(ctx(), "path", ["/", "/pricing", "/nope"], "hour");
-    expect(t.get("/")?.reduce((a, b) => a + b, 0)).toBe(2);
-    expect(t.get("/pricing")?.[10]).toBe(1);
-    expect(t.get("/pricing")?.[12]).toBe(1);
-    expect(t.get("/nope")?.every((v) => v === 0)).toBe(true);
-    const ev = await q.trends(
-      ctx(),
-      "event_name",
-      ["signup"],
-      "hour",
-      "custom_events"
-    );
-    expect(ev.get("signup")?.[10]).toBe(1);
-  });
-
   it("goal completions per bucket", async () => {
     const series = await q.goalTimeseries(ctx(), signup, "hour");
     expect(series).toHaveLength(24);

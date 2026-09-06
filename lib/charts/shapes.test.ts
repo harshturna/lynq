@@ -74,7 +74,7 @@ describe("dot plot", () => {
     expect(o.series[1].markLine.data[0].xAxis).toBe(3);
     expect(o.series[1].data.map((d: Any) => d.above)).toEqual([true, false]);
     expect(o.series[1].itemStyle.color({ data: { above: false } })).toBe(
-      "#ffffff"
+      "#7fbdb6"
     );
   });
   it("scales the axis past the largest value", () => {

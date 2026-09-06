@@ -18,6 +18,12 @@ import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter, withParam } from "@/lib/url-state";
 
 const SHOWN = 10;
+const LABEL: Record<string, string> = {
+  countries: "Country",
+  regions: "Region",
+  cities: "City",
+  languages: "Language",
+};
 const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
 
 function columnsFor(kpi: Kpi, visitors: number, withBounce: boolean): Column[] {
@@ -207,11 +213,17 @@ function Region({
   if (!data.ok) return <SectionError title={title} />;
   const t = data.data;
   const columns = columnsFor(kpi, t.visitors, withBounce);
-  // three tables share the width: the geo tables show visitors, share and
-  // the KPI column; pageviews and bounce stay in the drawer and the CSV
-  const shown = withBounce
-    ? columns.filter((c) => !["pageviews", "bounce_rate"].includes(c.key))
-    : columns;
+  // Countries is the regular table (visitors and the KPI); the narrower
+  // tables rank visitors with the bar column (D-013). The drawer and the
+  // CSV keep every column.
+  const shown: Column[] = selectable
+    ? [
+        { key: "visitors", header: "Visitors" },
+        ...(kpi.goal
+          ? [{ key: "goal_completions", header: kpi.goal.name }]
+          : []),
+      ]
+    : [{ key: "visitors", header: "Visitors" }];
   const rows = toRows(t);
   const filter = (row: TableRow) => {
     update(
@@ -242,8 +254,11 @@ function Region({
             title
           )
         }
+        labelHeader={LABEL[region] ?? title}
         columns={shown}
         rows={rows.slice(0, SHOWN)}
+        bar={selectable ? undefined : "visitors"}
+        fill
         defaultSort={{ col: "visitors", dir: "desc" }}
         selectedId={selectable ? state.sel : undefined}
         onSelect={selectable ? select : undefined}

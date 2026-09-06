@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Sparkline, trendLabel } from "@/components/charts/charts";
 import {
   type Column,
   DataTable,
@@ -18,17 +17,15 @@ import { withFilter, withParam } from "@/lib/url-state";
 
 const SHOWN = 12;
 
-/** The events table (design §8.7): count, visitors, "1 in N sessions", last seen, trend. */
+/** The events table (design §8.7, D-013): count, visitors, "1 in N sessions", last seen. */
 export function EventsTable({
   compare,
   hasFilters,
   table,
-  trends,
 }: {
   compare: boolean;
   hasFilters: boolean;
   table: Settled<EventsTableData>;
-  trends: Record<string, number[]>;
 }) {
   const { state, update, pending } = useViewState();
   const announce = useAnnounce();
@@ -36,19 +33,11 @@ export function EventsTable({
   const columns = useMemo<Column[]>(() => {
     const sessions = table.ok ? table.data.sessions : 0;
     return [
-      { key: "custom_events", header: "Count", align: "right", width: "90px" },
-      {
-        key: "visitors",
-        header: "Visitors",
-        align: "right",
-        width: "90px",
-        secondary: true,
-      },
+      { key: "custom_events", header: "Count" },
+      { key: "visitors", header: "Visitors" },
       {
         key: "sessions",
         header: "Frequency",
-        align: "right",
-        width: "130px",
         format: (v) => {
           const n = Number(v ?? 0);
           if (!n || !sessions) return "—";
@@ -61,32 +50,12 @@ export function EventsTable({
       {
         key: "last_seen",
         header: "Last seen",
-        align: "right",
-        width: "110px",
         sortable: false,
         secondary: true,
         format: (v) => (v ? fmtAgo(new Date(String(v))) : "—"),
       },
-      {
-        key: "trend",
-        header: "Trend",
-        align: "right",
-        width: "84px",
-        sortable: false,
-        secondary: true,
-        format: (_, row) => {
-          const values = trends[row.id];
-          return values ? (
-            <Sparkline
-              values={values}
-              label={trendLabel(values)}
-              accent={row.id === state.sel}
-            />
-          ) : null;
-        },
-      },
     ];
-  }, [table, trends, state.sel]);
+  }, [table]);
   const rows = useMemo<TableRow[]>(() => {
     if (!table.ok) return [];
     const t = table.data;
@@ -131,6 +100,7 @@ export function EventsTable({
       <DataTable
         region="events"
         title="Events"
+        labelHeader="Event"
         columns={columns}
         rows={rows.slice(0, SHOWN)}
         defaultSort={{ col: "custom_events", dir: "desc" }}
@@ -151,7 +121,7 @@ export function EventsTable({
         open={drawer}
         onOpenChange={setDrawer}
         title="Events"
-        columns={columns.filter((c) => c.key !== "trend")}
+        columns={columns}
         rows={rows}
         onPick={(row) => {
           setDrawer(false);

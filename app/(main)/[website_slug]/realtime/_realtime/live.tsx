@@ -39,6 +39,7 @@ export function Live({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const feed = useFeed(data?.events ?? []);
+  const [allFeed, setAllFeed] = useState(false);
   const announced = useThrottledStatus(data?.visitors_now ?? 0);
   const windowLabel = windowMin === 60 ? "last hour" : "last 30 min";
 
@@ -233,7 +234,7 @@ export function Live({
       >
         {feed.rows.length ? (
           <ol className="flex flex-col">
-            {feed.rows.map((e) => (
+            {(allFeed ? feed.rows : feed.rows.slice(0, FEED_SHOWN)).map((e) => (
               <li
                 key={`${e.ts}-${e.visitor_id}-${e.session_id}-${e.event}-${e.name}-${e.path}`}
                 className="grid grid-cols-[64px_24px_minmax(0,1fr)_auto] items-center gap-3 border-b border-rule py-[7px] text-[12.5px]"
@@ -277,6 +278,17 @@ export function Live({
                 </button>
               </li>
             ))}
+            {!allFeed && feed.rows.length > FEED_SHOWN && (
+              <li className="pt-[10px] text-[12px] text-mute">
+                <button
+                  type="button"
+                  onClick={() => setAllFeed(true)}
+                  className="font-medium text-teal-ink hover:underline"
+                >
+                  Show earlier, {feed.rows.length - FEED_SHOWN} more
+                </button>
+              </li>
+            )}
           </ol>
         ) : (
           <p className="text-[12.5px] text-mute">
@@ -342,6 +354,9 @@ function ListPanel({
     </Section>
   );
 }
+
+/** Feed rows shown before Show earlier (D-013). */
+const FEED_SHOWN = 20;
 
 /** New rows wait behind a button (design §8.2): the feed is not a live region. */
 function useFeed(latest: RealtimeRow["events"]) {

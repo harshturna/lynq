@@ -39,6 +39,9 @@ const COLUMNS: Column[] = [
   },
 ];
 
+/** The table ranks visitors with the bar (D-013); the drawer and the CSV keep every column. */
+const SHOWN_COLUMNS: Column[] = [{ key: "visitors", header: "Visitors" }];
+
 function toRows(t: DeviceTable, versionPrefix: string): TableRow[] {
   const numeric = (r: BreakdownMultiRow) =>
     Object.fromEntries(
@@ -153,8 +156,11 @@ function Region({
             </span>
           </>
         }
-        columns={COLUMNS}
+        labelHeader={region === "browsers" ? "Browser" : "System"}
+        columns={SHOWN_COLUMNS}
         rows={rows.slice(0, SHOWN)}
+        bar="visitors"
+        fill
         defaultSort={{ col: "visitors", dir: "desc" }}
         onFilter={filter}
         total={t.total}

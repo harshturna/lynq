@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Sparkline, trendLabel } from "@/components/charts/charts";
 import { ChangeSlot } from "@/components/shell/badge";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
@@ -15,7 +14,7 @@ import { withParam } from "@/lib/url-state";
 import { cn } from "@/lib/utils";
 import { GoalForm } from "./form";
 
-/** The goals table (design §8.8): name, definition, completions, conversion, revenue, trend, KPI star. */
+/** The goals table (design §8.8, D-013): name, definition, completions, conversion, revenue when any goal has it, KPI star. */
 export function GoalsTable({
   slug,
   isGuest,
@@ -44,6 +43,7 @@ export function GoalsTable({
       announce(on ? "KPI set." : "KPI cleared.");
       router.refresh();
     });
+  const anyRevenue = rows.some((g) => g.revenue);
   const th =
     "whitespace-nowrap border-b border-rule py-2 pl-4 text-right text-[11.5px] font-normal text-mute";
   const newGoal = (
@@ -115,15 +115,11 @@ export function GoalsTable({
                 <th scope="col" className={th}>
                   Conv.
                 </th>
-                <th scope="col" className={cn(th, "hidden sm:table-cell")}>
-                  Revenue
-                </th>
-                <th
-                  scope="col"
-                  className={cn(th, "hidden min-[1000px]:table-cell")}
-                >
-                  <span className="sr-only">Trend</span>
-                </th>
+                {anyRevenue && (
+                  <th scope="col" className={cn(th, "hidden sm:table-cell")}>
+                    Revenue
+                  </th>
+                )}
                 <th scope="col" className={cn(th, "w-[32px]")}>
                   <span className="sr-only">KPI</span>
                 </th>
@@ -183,18 +179,11 @@ export function GoalsTable({
                     <td className="whitespace-nowrap pl-4 text-right text-ink-2 tabular">
                       {fmtRatio(g.stats.converting_sessions, g.stats.sessions)}
                     </td>
-                    <td className="hidden whitespace-nowrap pl-4 text-right text-ink-2 tabular sm:table-cell">
-                      {g.revenue ? fmtRevenue(g.stats.revenue) : "—"}
-                    </td>
-                    <td className="hidden pl-4 text-right min-[1000px]:table-cell">
-                      {g.spark.some((v) => v > 0) && (
-                        <Sparkline
-                          values={g.spark}
-                          label={trendLabel(g.spark)}
-                          accent={selected}
-                        />
-                      )}
-                    </td>
+                    {anyRevenue && (
+                      <td className="hidden whitespace-nowrap pl-4 text-right text-ink-2 tabular sm:table-cell">
+                        {g.revenue ? fmtRevenue(g.stats.revenue) : "—"}
+                      </td>
+                    )}
                     <td className="pl-3 text-right">
                       <button
                         type="button"
