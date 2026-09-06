@@ -290,3 +290,29 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   screens differ by which columns they show, not by how a table looks. Harder: every screen
   is touched once more (TICKET-054 onward); the Overview's D-010 tables are rebuilt on the
   new form.
+
+## D-014 — The landing page stages the product inside panels, on the light base
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** The landing page was dark, gradient-text and Poppins while the product had
+  become light, Geist and teal; the two no longer looked like one thing. Four rounds of
+  mocks: a section-per-feature page with small product fragments in boxes (rejected as
+  cheap), full-page screenshots of the app (rejected as lazy), hand-drawn hairline diagrams
+  (rejected as generated-looking), and finally the pattern the well-regarded product pages
+  share (Attio, Vercel, Cursor, Stripe, Linear): real product UI staged as an object inside
+  a soft rounded panel, oversized and bleeding off the panel's edge, with one secondary
+  element lifted over it, beside a short two-tone sentence.
+- **Decision:** Light only, the app's tokens and Geist. Hero: left headline with one
+  highlighted phrase, two buttons, three reassurances, a live visitor count, and the ranked
+  Pages table as the product fragment with one row lifted. A band under the hero draws the
+  demo site's last 30 days. Then staged panels for the Overview, Filters, Performance and
+  Realtime; the privacy ledger (one pageview as stored, and what is never stored); four
+  true numbers on one rule; three setup steps beside the onboarding's check list; a
+  two-line close. Copy is plain and declarative; every line says what the reader gets.
+- **Rejected alternatives:** the three above; a dark hero with a 3D object (needs an artist
+  and hands the visitor a light app one click later); logo rows, testimonials and ratings
+  (nothing true to put there yet); a dotted world map (a separate asset, maybe later).
+- **Consequences:** Easier: the landing page and the product share one look and one
+  component vocabulary; the panels are presentational React in the app's tokens, so they
+  follow the tokens. Harder: the panels' contents are fixed demo numbers and must be kept
+  believable by hand; the hero band and live count depend on the demo site existing.

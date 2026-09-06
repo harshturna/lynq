@@ -294,3 +294,37 @@ h6 {
   height: 2px;
   background: var(--teal);
 }
+
+/* Landing page motion (TICKET-057): sections arrive, the live dot pulses. */
+.reveal {
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.reveal.pending {
+  opacity: 0;
+  transform: translateY(8px);
+}
+@keyframes lynq-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(15, 118, 110, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0);
+  }
+}
+.pulse-dot {
+  animation: lynq-pulse 2.4s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal.pending {
+    opacity: 1;
+    transform: none;
+  }
+  .pulse-dot {
+    animation: none;
+  }
+}
