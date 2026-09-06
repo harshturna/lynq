@@ -419,3 +419,32 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   which has to be said plainly in the UI and the docs; scopes are one more thing to get right at
   creation; and every keyed endpoint must check the scope rather than merely that the key exists.
 
+
+## D-018 — Bot traffic: only classified crawlers are reported, from a documented snippet
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** TICKET-075 adds a server-side reporter, because crawlers never run the browser
+  tracker. As filed, the ticket also had that reporter count every human request by route and
+  status, and assumed a published npm package. Writing the design (`docs/design/bot-traffic.md`)
+  showed the first would collect from people who opted out, and the second is a release process
+  for thirty lines of code. Owner confirmed both recommendations on 2026-09-06.
+- **Decision:** The middleware reports **only requests Lynq classifies as a bot**. A request from
+  a person is never sent, so a visitor who opted out with `lynq.optOut()` or who sends Global
+  Privacy Control stays invisible on this path too, and the privacy page stays true. Crawler hits
+  are stored in their own daily counter (`analytics.crawler_days`), never in `analytics.events`,
+  so no visitor number moves because a crawler visited. Classification happens at the collector,
+  so a crawler that appears after a customer installs is not missed until they upgrade. The
+  reporter ships as a **copy-paste middleware snippet in the docs**, one per framework, the way
+  the tracking snippet does; a published `@lynq/next` waits until someone asks for it.
+- **Rejected alternatives:** Server-side analytics for humans on the same path, rejected because
+  it would count people the tracker deliberately does not, and any such feature needs its own
+  consent story before it exists. An npm package first, rejected as an account, releases and a
+  support surface for code that fits in a doc page, with nothing about the endpoint or the table
+  changing when a package is published later. Storing one row per hit, rejected because a crawl
+  of ten thousand pages would be ten thousand rows per hour instead of per day, for a screen that
+  only ever shows daily counts.
+- **Consequences:** Easier: the privacy promise is unchanged and the docs can say so in one line;
+  the endpoint, the table and the screen are small; a package can come later without a migration.
+  Harder: a crawler is what its user agent claims, since v1 does no reverse-DNS check, and the
+  docs must say so; and anyone who wants server-side request counts for humans gets a "no" until
+  a separate decision is taken.

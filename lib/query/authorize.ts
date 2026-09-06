@@ -28,6 +28,8 @@ export type Site = {
   /** Viewport breakpoints for the Devices histogram. */
   breakpoints: number[];
   shortcuts: boolean;
+  /** Whether any crawler hit has been reported, which is what shows the Bots screen (D-018). */
+  bots: boolean;
 };
 
 export async function authorize(
@@ -52,9 +54,11 @@ export async function authorize(
       kpi_goal_id: number | null;
       breakpoints: number[];
       shortcuts: boolean;
+      bots: boolean;
     }[]
   >`
-    select timezone, kpi_goal_id, breakpoints, shortcuts
+    select timezone, kpi_goal_id, breakpoints, shortcuts,
+      exists (select 1 from analytics.crawler_days c where c.site_id = ${siteId}) as bots
     from analytics.site_settings where site_id = ${siteId}`;
   return {
     siteId,
@@ -65,6 +69,7 @@ export async function authorize(
         : Number(settings.kpi_goal_id),
     breakpoints: settings?.breakpoints?.map(Number) ?? [640, 1024, 1280],
     shortcuts: settings?.shortcuts ?? true,
+    bots: settings?.bots ?? false,
   };
 }
 

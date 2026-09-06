@@ -24,6 +24,7 @@ export default async function SiteLayout({
             sites={sites}
             userEmail={userEmail}
             shortcuts={site.shortcuts}
+            bots={site.bots}
           />
           {children}
           <SessionDrawer load={sessionTimeline.bind(null, website.slug)} />

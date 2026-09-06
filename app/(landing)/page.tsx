@@ -6,6 +6,7 @@ import { Hero } from "./_landing/hero";
 import { LandingNav } from "./_landing/nav";
 import {
   AttentionPanel,
+  BotsPanel,
   Eyebrow,
   Feature,
   FiltersPanel,
@@ -53,6 +54,14 @@ export default async function LandingPage() {
           rest="Time held, how far people read, and which pages help them convert. Not just how often a page was opened."
         >
           <AttentionPanel />
+        </Feature>
+
+        <Feature
+          eyebrow="Bots"
+          lead="See which AI assistants read your site."
+          rest="ChatGPT, Claude and Perplexity fetch pages to answer people. GPTBot and ClaudeBot collect them for a model. Lynq tells the two apart, page by page, from a few lines on your server."
+        >
+          <BotsPanel />
         </Feature>
 
         <Feature

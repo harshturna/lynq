@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { filterSentence } from "./dimensions";
 import { COMPARES } from "./range-picker";
 import { PRESETS, rangeLabel } from "./ranges";
-import { SECTIONS, type SiteSummary } from "./sections";
+import { type SiteSummary, sectionsFor } from "./sections";
 import { ShortcutSheet } from "./shortcuts";
 import { useAnnounce, useViewState } from "./view-state";
 
@@ -93,11 +93,14 @@ export function CommandMenu({
   site,
   sites,
   enabled,
+  bots = false,
 }: {
   site: SiteSummary;
   sites: SiteSummary[];
   /** The site's keyboard-shortcuts setting; the button works either way. */
   enabled: boolean;
+  /** Whether the site has crawler hits, which adds the Bots screen. */
+  bots?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [help, setHelp] = useState(false);
@@ -117,7 +120,7 @@ export function CommandMenu({
     const base = `/${site.slug}`;
     const go = (href: string) => () => router.push(href);
     const out: Command[] = [];
-    for (const s of SECTIONS)
+    for (const s of sectionsFor(bots))
       out.push({
         id: `go:${s.key || "overview"}`,
         group: "Go to",
@@ -243,7 +246,7 @@ export function CommandMenu({
         window.open("https://docs-lynq.byharsh.com", "_blank", "noopener"),
     });
     return out;
-  }, [site, sites, state, update, announce, router]);
+  }, [site, sites, state, update, announce, router, bots]);
 
   const shown = useMemo(() => {
     const found = commands

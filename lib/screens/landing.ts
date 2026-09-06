@@ -48,6 +48,7 @@ function contextFor(site: DemoSite, now = new Date()) {
       kpiGoalId: null,
       breakpoints: [],
       shortcuts: false,
+      bots: false,
     },
     { range: "last_30d", now }
   );

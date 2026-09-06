@@ -18,6 +18,7 @@ import {
 import type { VitalsSummary } from "@/lib/query/vitals";
 import type { ViewState } from "@/lib/url-state";
 import type { Kpi } from "./kpi";
+import { periodPhrase } from "./period";
 import { type Section, settle } from "./settle";
 
 /**
@@ -111,23 +112,6 @@ function viewsFor(
     },
     exit: { dimension: "exit_path", metrics: session },
   };
-}
-
-/** The range as a phrase that follows "104 hours of attention …". */
-function poolPeriod(range: ViewState["range"]): string {
-  if (typeof range !== "string") return "in this range";
-  const phrases: Record<string, string> = {
-    last_24h: "in the last 24 hours",
-    today: "today",
-    yesterday: "yesterday",
-    last_7d: "in the last 7 days",
-    last_30d: "in the last 30 days",
-    last_90d: "in the last 90 days",
-    this_week: "this week",
-    this_month: "this month",
-    last_12mo: "in the last 12 months",
-  };
-  return phrases[range] ?? "in this range";
 }
 
 const toPoints = (s: { bucket: Date; value: number }[]): Point[] =>
@@ -241,7 +225,7 @@ export function getPagesScreen(
 
   return {
     view,
-    rangeLabel: poolPeriod(state.range),
+    rangeLabel: periodPhrase(state.range),
     granularity: ctx.granularity,
     timezone: ctx.timezone,
     compare: prev !== null,

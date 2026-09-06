@@ -19,6 +19,7 @@ describe("analytics schema", () => {
       select table_name from information_schema.tables where table_schema = 'analytics' order by 1`;
     expect(tables.map((t) => t.table_name)).toEqual([
       "api_keys",
+      "crawler_days",
       "events",
       "identified_users",
       "ingest_log",
@@ -130,6 +131,8 @@ describe("analytics schema", () => {
       { ...base, ts: new Date(Date.now() - 25 * 30 * 24 * 3600 * 1000) }, // older than 24 months
       { ...base, ts: new Date() },
     ])}`;
+    // a warm container may already hold today's salt from an earlier suite
+    await sql`delete from analytics.visitor_salts`;
     await sql`insert into analytics.visitor_salts (day, salt) values (current_date - 5, '\\x00'), (current_date, '\\x00')`;
     await sql`select analytics.housekeeping()`;
     const [{ events }] = await sql<

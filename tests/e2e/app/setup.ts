@@ -14,6 +14,7 @@ const SCREENS = [
   "goals",
   "performance",
   "realtime",
+  "bots",
   "settings",
 ];
 

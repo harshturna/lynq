@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AccountMenu, MENU_CONTENT, MENU_ITEM } from "./account-menu";
 import { CommandMenu } from "./command-menu";
-import { SECTIONS, type SiteSummary } from "./sections";
+import { SECTIONS, type SiteSummary, sectionsFor } from "./sections";
 
 /**
  * The top navigation (design §4, §6): the nine sections with the active one
@@ -21,12 +21,15 @@ export function TopNav({
   sites,
   userEmail,
   shortcuts,
+  bots = false,
 }: {
   site: SiteSummary;
   sites: SiteSummary[];
   userEmail: string;
   /** The site's keyboard-shortcuts setting; it gates ⌘K, not the button. */
   shortcuts: boolean;
+  /** Whether the site has crawler hits, which adds the Bots section. */
+  bots?: boolean;
 }) {
   const pathname = usePathname();
   const base = `/${site.slug}`;
@@ -38,8 +41,9 @@ export function TopNav({
         : null;
   const isSettings = active === "settings";
   // Under md only Overview stays inline; the rest sit under More (design §4).
-  const inline = SECTIONS.slice(0, 1);
-  const overflow = SECTIONS.slice(1);
+  const sections = sectionsFor(bots);
+  const inline = sections.slice(0, 1);
+  const overflow = sections.slice(1);
 
   return (
     <header className="flex h-[54px] items-center gap-3 border-b border-rule-strong px-4 md:gap-6 md:px-8">
@@ -58,7 +62,7 @@ export function TopNav({
         aria-label="Sections"
         className="flex min-w-0 flex-1 items-stretch gap-4 self-stretch overflow-x-auto [scroll-padding-inline:16px] [scrollbar-width:none] md:gap-5"
       >
-        {SECTIONS.map((s, i) => (
+        {sections.map((s, i) => (
           <NavLink
             key={s.key}
             href={s.key ? `${base}/${s.key}` : base}
@@ -103,7 +107,12 @@ export function TopNav({
       </nav>
 
       <div className="flex shrink-0 items-center gap-4 text-[13px] text-ink-2">
-        <CommandMenu site={site} sites={sites} enabled={shortcuts} />
+        <CommandMenu
+          site={site}
+          sites={sites}
+          enabled={shortcuts}
+          bots={bots}
+        />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button

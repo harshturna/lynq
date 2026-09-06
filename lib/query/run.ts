@@ -13,6 +13,16 @@ import {
   type MetricSpec,
 } from "./breakdown";
 import type { Compiled } from "./builder";
+import {
+  type CrawlerPageRow,
+  type CrawlerRow,
+  crawlerFamiliesQuery,
+  crawlerOrientationQuery,
+  crawlerPagesQuery,
+  crawlersQuery,
+  type FamilyRow,
+  type OrientationRow,
+} from "./crawlers";
 import { type FlowRow, pageFlowQuery } from "./flow";
 import {
   type FunnelStep,
@@ -430,5 +440,67 @@ export async function vitalsTargets(
     value: r.value,
     samples: num(r.samples),
     p75: numOrNull(r.p75),
+  }));
+}
+
+/** The Bots screen (D-018): crawler hits by family, crawler and page over UTC days. */
+export async function crawlerFamilies(ctx: QueryContext): Promise<FamilyRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    crawlerFamiliesQuery(ctx),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    family: r.family as FamilyRow["family"],
+    hits: num(r.hits),
+    crawlers: num(r.crawlers),
+    pages: num(r.pages),
+  }));
+}
+
+export async function crawlers(
+  ctx: QueryContext,
+  opts: { family?: FamilyRow["family"] | null; limit?: number } = {}
+): Promise<CrawlerRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    crawlersQuery(ctx, opts),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    crawler: String(r.crawler),
+    family: r.family as CrawlerRow["family"],
+    hits: num(r.hits),
+    pages: num(r.pages),
+    last_seen: new Date(r.last_seen as string),
+    total: num(r.total),
+  }));
+}
+
+export async function crawlerPages(
+  ctx: QueryContext,
+  opts: { family?: FamilyRow["family"] | null; limit?: number } = {}
+): Promise<CrawlerPageRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    crawlerPagesQuery(ctx, opts),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    path: String(r.path),
+    hits: num(r.hits),
+    crawlers: num(r.crawlers),
+    total: num(r.total),
+  }));
+}
+
+export async function crawlerOrientation(
+  ctx: QueryContext
+): Promise<OrientationRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    crawlerOrientationQuery(ctx),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    path: String(r.path),
+    hits: num(r.hits),
+    crawlers: num(r.crawlers),
   }));
 }

@@ -1,16 +1,19 @@
 /**
  * Seed demo traffic into analytics.events for one site (TICKET-026).
  *
- *   npm run seed -- [--site aivia.byharsh.com] [--days 365] [--visitors 40] [--seed 1] [--dry-run] [--wipe-only]
+ *   npm run seed -- [--site aivia.byharsh.com] [--days 365] [--visitors 40] [--seed 1] [--dry-run] [--wipe-only] [--no-bots]
  *
  * Re-runnable: every run first deletes the site's rows with ingest_version 9
  * (only ever written by this script), then inserts a fresh year and rebuilds
  * the site's daily rollup. Real tracker
- * rows (ingest_version 2) are never touched. Needs LYNQ_DB_POOLER_URL; uses
+ * rows (ingest_version 2) are never touched. The site's crawler days
+ * (TICKET-075) are replaced wholesale, since a demo site has no middleware
+ * reporting real ones; pass --no-bots to leave them alone. Needs LYNQ_DB_POOLER_URL; uses
  * LYNQ_IDENTITY_SECRET for user hashes when set.
  */
 import postgres from "postgres";
 import { EVENT_COLUMNS, type EventRow } from "../lib/ingest/rows";
+import { CRAWLER_DAY_COLUMNS, generateCrawlerDays } from "./seed/crawlers";
 import { generate, SEED_INGEST_VERSION } from "./seed/generate";
 
 const args = new Map<string, string | true>();
@@ -38,6 +41,7 @@ const visitorsPerDay = num("visitors", 40);
 const seed = num("seed", 1);
 const dryRun = args.get("dry-run") === true;
 const wipeOnly = args.get("wipe-only") === true;
+const noBots = args.get("no-bots") === true;
 
 const dbUrl = process.env.LYNQ_DB_POOLER_URL;
 if (!dbUrl) {
@@ -111,6 +115,23 @@ async function main() {
   console.log(
     `analytics.events now holds ${check.n} seeded rows for the site, ${check.first?.toISOString()} to ${check.last?.toISOString()}`
   );
+  if (!noBots) {
+    const crawlerRows = generateCrawlerDays({
+      siteId,
+      days: Math.min(days, 120),
+      seed,
+    });
+    await sql`delete from analytics.crawler_days where site_id = ${siteId}`;
+    for (let i = 0; i < crawlerRows.length; i += 1000) {
+      await sql`insert into analytics.crawler_days ${sql(
+        crawlerRows.slice(i, i + 1000) as unknown as Record<string, unknown>[],
+        ...([...CRAWLER_DAY_COLUMNS] as string[])
+      )}`;
+    }
+    console.log(
+      `analytics.crawler_days now holds ${crawlerRows.length} rows for the site`
+    );
+  }
   // The daily rollup (D-015) was built from the old rows; rebuild it now
   // rather than waiting for the nightly housekeeping.
   await sql`delete from analytics.rollup_daily where site_id = ${siteId}`;

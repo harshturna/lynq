@@ -366,6 +366,77 @@ export function AttentionPanel() {
   );
 }
 
+/** The Bots screen (D-018): hits by family, then crawlers ranked. */
+const BOT_FAMILIES: [string, number][] = [
+  ["Answers", 35.3],
+  ["Training", 28],
+  ["Search", 22.4],
+  ["Social", 8.1],
+  ["SEO", 4.6],
+  ["Other", 1.6],
+];
+const BOTS: [string, string, string, string][] = [
+  ["ChatGPT-User", "Answers", "612", "148"],
+  ["Googlebot", "Search", "541", "203"],
+  ["GPTBot", "Training", "438", "211"],
+  ["PerplexityBot", "Answers", "344", "96"],
+  ["ClaudeBot", "Training", "302", "187"],
+];
+
+export function BotsPanel() {
+  return (
+    <Panel className="h-[400px]">
+      <Ui style={{ left: 48, top: 40, width: 980 }}>
+        <p className="mb-[10px] text-[12.5px] text-mute">
+          <b className="mr-[6px] text-[24px] font-medium tracking-[-0.02em] text-ink">
+            3,412
+          </b>
+          crawler hits in the last 30 days
+        </p>
+        <div
+          aria-hidden
+          className="mb-[10px] flex h-3 w-full gap-px overflow-hidden rounded-[3px] bg-soft"
+        >
+          {BOT_FAMILIES.map(([name, share], i) => (
+            <span
+              key={name}
+              className="h-full"
+              style={{
+                width: `${share}%`,
+                background: `color-mix(in oklab, var(--teal) ${100 - i * 16}%, var(--teal-3))`,
+              }}
+            />
+          ))}
+        </div>
+        <p className="mb-[14px] text-[12.5px] leading-[1.5] text-ink-2">
+          Answer engines fetched pages{" "}
+          <b className="font-medium text-ink">1,204 times</b> to answer someone,
+          more than the 956 that training crawlers took for a model.{" "}
+          <b className="font-medium text-ink">ChatGPT-User</b> alone came 612
+          times, and <b className="font-medium text-ink">llms.txt</b> was read
+          by 4 crawlers.
+        </p>
+        <div className="grid grid-cols-[1fr_90px_70px_70px] gap-x-[14px] text-[13px] max-md:grid-cols-[1fr_64px_64px]">
+          <Th>Crawler</Th>
+          <Th className="max-md:hidden" />
+          <Th right>Hits</Th>
+          <Th right>Pages</Th>
+          {BOTS.map(([name, family, hits, pages]) => (
+            <Fragment key={name}>
+              <Td className="truncate">{name}</Td>
+              <Td className="text-[12px] text-mute max-md:hidden">{family}</Td>
+              <Td right className="font-medium text-ink">
+                {hits}
+              </Td>
+              <Td right>{pages}</Td>
+            </Fragment>
+          ))}
+        </div>
+      </Ui>
+    </Panel>
+  );
+}
+
 export function FiltersPanel() {
   return (
     <Panel>

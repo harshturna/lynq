@@ -11,4 +11,13 @@ export const SECTIONS = [
   { key: "performance", label: "Performance" },
 ] as const;
 
+/** Shown only once a site has reported a crawler hit (D-018), so nobody carries an empty tab. */
+export const BOTS_SECTION = { key: "bots", label: "Bots" } as const;
+
+export type Section = (typeof SECTIONS)[number] | typeof BOTS_SECTION;
+
+export function sectionsFor(bots: boolean): readonly Section[] {
+  return bots ? [...SECTIONS, BOTS_SECTION] : SECTIONS;
+}
+
 export type SiteSummary = { slug: string; name: string; url: string };

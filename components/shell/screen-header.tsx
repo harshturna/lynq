@@ -19,6 +19,7 @@ export function ScreenHeader({
   extra,
   controls,
   pickers = true,
+  filters = true,
   subtitle,
 }: {
   title: string;
@@ -31,6 +32,8 @@ export function ScreenHeader({
   controls?: ReactNode;
   /** Range and compare pickers; Realtime replaces them with its own segment. */
   pickers?: boolean;
+  /** The filter builder and chips; Bots has nothing they could apply to. */
+  filters?: boolean;
   /** Replaces the range sentence in the subtitle when the pickers are off. */
   subtitle?: ReactNode;
 }) {
@@ -74,11 +77,11 @@ export function ScreenHeader({
             {controls}
             {pickers && <RangePicker timezone={timezone} />}
             {pickers && <ComparePicker />}
-            <FilterBuilder id="add-filter" suggest={suggest} />
+            {filters && <FilterBuilder id="add-filter" suggest={suggest} />}
           </>
         }
       />
-      <FilterChips addButtonId="add-filter" />
+      {filters && <FilterChips addButtonId="add-filter" />}
     </>
   );
 }

@@ -3,6 +3,10 @@
 // minutes for Realtime. Re-runnable: the site is recreated on every run.
 import postgres from "postgres";
 import { EVENT_COLUMNS, type EventRow } from "@/lib/ingest/rows";
+import {
+  CRAWLER_DAY_COLUMNS,
+  generateCrawlerDays,
+} from "../../../scripts/seed/crawlers";
 import { generate } from "../../../scripts/seed/generate";
 import { POSTGREST_URL, USERS } from "./env.mjs";
 
@@ -77,6 +81,16 @@ export async function createFixture(databaseUrl: string): Promise<{
       >[];
       await sql`insert into analytics.events ${sql(chunk, ...([...EVENT_COLUMNS] as string[]))}`;
     }
+    // Crawler hits for the Bots screen (D-018), as the middleware would have reported them.
+    const crawlerRows = generateCrawlerDays({
+      siteId,
+      days: SEED.days,
+      seed: SEED.seed,
+    });
+    await sql`insert into analytics.crawler_days ${sql(
+      crawlerRows as unknown as Record<string, unknown>[],
+      ...([...CRAWLER_DAY_COLUMNS] as string[])
+    )}`;
     // Fresh statistics and the daily rollup, as production has them.
     await sql`analyze analytics.events`;
     await sql`select analytics.rollup_refresh()`;

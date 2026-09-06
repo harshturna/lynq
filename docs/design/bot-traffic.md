@@ -1,6 +1,6 @@
 # Bot traffic
 
-**Status:** designed, not started
+**Status:** built (TICKET-075)
 **Written:** 2026-09-06
 **Ticket:** TICKET-075 · **Keys:** D-017
 
@@ -21,8 +21,8 @@ Crawler requests reach the customer's server, not a browser, so the reporter has
 
 ```
 customer's app  ──▶  middleware snippet  ──▶  /api/bots  ──▶  analytics.crawler_days
-   (a request)        classifies nothing      API key with        one row per
-                      sends UA + path         the ingest scope    site, day, crawler, path
+   (a request)        coarse bot-shaped       API key with        one row per
+                      filter; sends UA+path   the ingest scope    site, day, crawler, path
 ```
 
 The middleware never blocks the response. It reports after the response is sent (`waitUntil` on
@@ -61,6 +61,13 @@ The snippet sends the user agent and the path; Lynq decides what they mean. If t
 classified, every crawler that appeared after a customer installed it would be missed until they
 upgraded. The referrer map already works this way and for the same reason.
 
+The snippet does carry one **coarse, bot-shaped filter** (a permissive regular expression:
+`bot`, `crawl`, `spider`, `-user`, the link-preview names, the HTTP libraries), so that a request
+from a person never leaves the customer's server (§3.1). Anything the filter lets through that
+Lynq does not recognise as a bot is dropped at the collector. A new crawler with an ordinary
+crawler-shaped name is caught; one that disguises itself as a browser is not, and would not be
+by a stricter snippet either.
+
 ## 4. What is stored
 
 `analytics.crawler_days`, one row per site, day, crawler and path, with a counter:
@@ -77,7 +84,7 @@ Primary key on (site, day, crawler, path), and the endpoint upserts with `hits =
 crawl of ten thousand pages is ten thousand rows for the day, not ten thousand rows per hour, and
 it never touches `analytics.events`, so no visitor number can move because a crawler visited.
 
-Retention follows the site's own setting, trimmed by `housekeeping()`.
+Retention is the same fixed 24 months as `analytics.events`, trimmed by `housekeeping()`.
 
 ## 5. Families, and why the split is the point
 
