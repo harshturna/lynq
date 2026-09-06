@@ -286,7 +286,7 @@ export function DataTable({
             <div
               role="tablist"
               aria-label={`${typeof title === "string" ? title : region} view`}
-              className="-mb-px flex gap-3"
+              className="flex gap-3 self-stretch"
             >
               {views.map((v) => {
                 const on = v.key === activeView;
@@ -303,8 +303,8 @@ export function DataTable({
                       update(withView(state, region, v.key), { replace: true });
                     }}
                     className={cn(
-                      "border-b-2 border-transparent pb-[6px] text-[12.5px] font-normal text-mute hover:text-ink",
-                      on && "border-teal text-ink"
+                      "tab-mark inline-flex items-end pb-[7px] text-[12.5px] font-normal text-mute hover:text-ink",
+                      on && "text-ink"
                     )}
                   >
                     {v.label}

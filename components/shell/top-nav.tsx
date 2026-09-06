@@ -63,7 +63,7 @@ export function TopNav({
 
       <nav
         aria-label="Sections"
-        className="flex min-w-0 flex-1 items-stretch gap-4 overflow-x-auto [scroll-padding-inline:16px] [scrollbar-width:none] md:gap-5"
+        className="flex min-w-0 flex-1 items-stretch gap-4 self-stretch overflow-x-auto [scroll-padding-inline:16px] [scrollbar-width:none] md:gap-5"
       >
         {SECTIONS.map((s, i) => (
           <NavLink
@@ -79,7 +79,7 @@ export function TopNav({
           <DropdownMenu.Trigger asChild>
             <button
               type="button"
-              className="inline-flex items-center gap-1 whitespace-nowrap border-b-2 border-transparent pb-[16px] pt-[18px] text-[13.5px] text-ink-2 md:hidden"
+              className="inline-flex h-full items-center gap-1 self-stretch whitespace-nowrap text-[13.5px] text-ink-2 md:hidden"
               aria-label="More sections"
             >
               More{" "}
@@ -197,11 +197,9 @@ function NavLink({
       href={href}
       aria-current={current ? "page" : undefined}
       className={cn(
-        "inline-flex items-center whitespace-nowrap border-b-2 pb-[16px] pt-[18px] text-[13.5px] transition-colors",
+        "tab-mark inline-flex h-full items-center self-stretch whitespace-nowrap text-[13.5px] transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal",
-        current
-          ? "border-teal font-medium text-ink"
-          : "border-transparent text-ink-2 hover:text-ink",
+        current ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
         className
       )}
     >

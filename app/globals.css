@@ -276,3 +276,21 @@ h6 {
     @apply bg-background text-foreground;
   }
 }
+
+/* The active mark under a nav item or view tab (TICKET-056): a 2 px bar whose
+   bottom edge is the container rule's bottom edge, so the rule and the mark
+   read as one line that changes colour. The element must sit flush with the
+   container's content box (stretch or align to the end). */
+.tab-mark {
+  position: relative;
+}
+.tab-mark[aria-current="page"]::after,
+.tab-mark[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--teal);
+}
