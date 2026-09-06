@@ -56,7 +56,7 @@ setup("warm every route", async ({ page }) => {
 
 setup("sign in as the guest", async ({ page }) => {
   await page.goto("/login");
-  await page.getByRole("button", { name: /explore app as guest/i }).click();
+  await page.getByRole("button", { name: /see lynq in action/i }).click();
   await page.waitForURL(/\/sites$/, { timeout: 60_000 });
   await page.context().storageState({ path: GUEST_STATE });
 });

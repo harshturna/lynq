@@ -11,8 +11,9 @@ export const FIELD =
   "h-9 w-full rounded-control border border-rule bg-canvas px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal disabled:bg-soft disabled:text-mute";
 export const PRIMARY =
   "inline-flex h-9 w-full items-center justify-center rounded-control bg-teal px-4 text-[14px] font-medium text-canvas hover:bg-teal-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:opacity-50";
-export const QUIET =
-  "inline-flex h-9 w-full items-center justify-center rounded-control border border-rule px-4 text-[14px] hover:bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:opacity-50";
+/** The second call to action: a teal outline, a choice beside the primary. */
+export const SECONDARY =
+  "inline-flex h-9 w-full items-center justify-center rounded-control border border-teal px-4 text-[14px] font-medium text-teal-ink hover:bg-teal-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:opacity-50";
 
 export function AuthCard({
   title,

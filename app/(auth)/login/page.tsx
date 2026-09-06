@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
-import { AuthCard, Field, FormError, QUIET, SubmitButton } from "../_auth/form";
+import {
+  AuthCard,
+  Field,
+  FormError,
+  SECONDARY,
+  SubmitButton,
+} from "../_auth/form";
 import { login } from "../actions";
 
 const initialState = { error: null, success: false };
@@ -56,9 +62,9 @@ export default function LoginPage() {
         type="button"
         onClick={guest}
         disabled={guestPending}
-        className={QUIET}
+        className={SECONDARY}
       >
-        {guestPending ? "Opening a live site…" : "Explore app as guest →"}
+        {guestPending ? "Opening the live site…" : "See Lynq in action →"}
       </button>
       <p className="mt-8 text-[13.5px] text-ink-2">
         New to Lynq?{" "}
