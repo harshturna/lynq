@@ -52,6 +52,15 @@ describe("analytics schema", () => {
       from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relname = 'goals'`;
     expect(goals).toEqual({ rls: true, grants: 0 });
+    // notes (TICKET-076) are locked down the same way
+    const [notes] = await sql<{ rls: boolean; grants: number }[]>`
+      select c.relrowsecurity as rls,
+             (select count(*)::int from information_schema.role_table_grants
+               where table_schema = 'public' and table_name = 'notes'
+                 and grantee in ('anon', 'authenticated')) as grants
+      from pg_class c join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relname = 'notes'`;
+    expect(notes).toEqual({ rls: true, grants: 0 });
     const cols = async (schema: string, table: string) =>
       (
         await sql<{ column_name: string }[]>`
@@ -75,7 +84,11 @@ describe("analytics schema", () => {
   it("has no v1 tables, RPC or counter column left in public (TICKET-024)", async () => {
     const tables = await sql<{ table_name: string }[]>`
       select table_name from information_schema.tables where table_schema = 'public' order by 1`;
-    expect(tables.map((t) => t.table_name)).toEqual(["goals", "websites"]);
+    expect(tables.map((t) => t.table_name)).toEqual([
+      "goals",
+      "notes",
+      "websites",
+    ]);
     const [{ n: fns }] = await sql<{ n: number }[]>`
       select count(*)::int as n from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.proname = 'get_period_summary'`;

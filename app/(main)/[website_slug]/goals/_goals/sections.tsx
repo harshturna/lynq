@@ -23,10 +23,20 @@ export async function GoalsSection({
   );
 }
 
-export async function SelectedSection({ screen }: { screen: GoalsScreen }) {
+export async function SelectedSection({
+  screen,
+  slug,
+  isGuest,
+}: {
+  screen: GoalsScreen;
+  slug: string;
+  isGuest: boolean;
+}) {
   const selected = await screen.selected;
   return (
     <SelectedGoalPanel
+      slug={slug}
+      isGuest={isGuest}
       compare={screen.compare}
       granularity={screen.granularity}
       timezone={screen.timezone}

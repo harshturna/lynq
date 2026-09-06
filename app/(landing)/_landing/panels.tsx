@@ -240,7 +240,27 @@ export function OverviewPanel() {
             vectorEffect="non-scaling-stroke"
           />
           <circle cx="1100" cy="76" r="3.5" fill="#0f766e" />
+          {/* a note marker (TICKET-076): the spike has a sentence */}
+          <line
+            x1="600"
+            x2="600"
+            y1="12"
+            y2="150"
+            stroke="#0a0a0a"
+            strokeWidth="1"
+            strokeDasharray="2 3"
+            opacity=".55"
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle cx="600" cy="10" r="3" fill="#0a0a0a" />
         </svg>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute text-[11px] text-ink"
+          style={{ left: "calc(56.5% + 8px)", top: 118 }}
+        >
+          Launched on Product Hunt
+        </span>
       </Ui>
       <Ui lift style={{ right: 64, top: 196, width: 330 }}>
         <SectionTitle note="KPI goal" className="mt-0">

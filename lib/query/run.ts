@@ -39,6 +39,7 @@ import {
   type HistogramRow,
   histogramQuery,
 } from "./histogram";
+import { type NoteRow, notesQuery } from "./notes";
 import { type PathRow, pathsToQuery } from "./paths";
 import {
   type BreakdownOptions,
@@ -502,5 +503,19 @@ export async function crawlerOrientation(
     path: String(r.path),
     hits: num(r.hits),
     crawlers: num(r.crawlers),
+  }));
+}
+
+/** Notes inside the range, oldest first (TICKET-076). */
+export async function notes(ctx: QueryContext): Promise<NoteRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    notesQuery(ctx),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    id: Number(r.id),
+    at: new Date(r.at as string),
+    text: String(r.text),
+    author: String(r.author ?? ""),
   }));
 }

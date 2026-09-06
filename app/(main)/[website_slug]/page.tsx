@@ -29,8 +29,12 @@ export default async function OverviewPage(props: {
     props.params,
     props.searchParams,
   ]);
-  const { site, website, state, ctx, kpi } = await screenContext(slug, sp);
+  const { site, website, state, ctx, kpi, userId } = await screenContext(
+    slug,
+    sp
+  );
   const screen = getOverviewScreen(ctx, state, kpi);
+  const isGuest = userId === process.env.GUEST_USER_ID;
 
   return (
     <main className="mx-auto flex max-w-[1320px] flex-col gap-7 px-4 py-6 md:px-8">
@@ -53,6 +57,7 @@ export default async function OverviewPage(props: {
           slug={slug}
           siteUrl={website.url}
           hasFilters={state.filters.length > 0}
+          isGuest={isGuest}
         />
       </Suspense>
       <Suspense

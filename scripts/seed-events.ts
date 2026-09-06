@@ -15,6 +15,7 @@ import postgres from "postgres";
 import { EVENT_COLUMNS, type EventRow } from "../lib/ingest/rows";
 import { CRAWLER_DAY_COLUMNS, generateCrawlerDays } from "./seed/crawlers";
 import { generate, SEED_INGEST_VERSION } from "./seed/generate";
+import { seedNotes } from "./seed/notes";
 
 const args = new Map<string, string | true>();
 for (let i = 2; i < process.argv.length; i++) {
@@ -132,6 +133,11 @@ async function main() {
       `analytics.crawler_days now holds ${crawlerRows.length} rows for the site`
     );
   }
+  // Notes at the launch spikes (TICKET-076); the seed's own are replaced, a person's are kept.
+  const notes = seedNotes({ siteId, days });
+  await sql`delete from public.notes where site_id = ${siteId} and author in ('seed', 'key:Deploy pipeline')`;
+  await sql`insert into public.notes ${sql(notes, "site_id", "at", "text", "author")}`;
+  console.log(`public.notes holds ${notes.length} seeded notes for the site`);
   // The daily rollup (D-015) was built from the old rows; rebuild it now
   // rather than waiting for the nightly housekeeping.
   await sql`delete from analytics.rollup_daily where site_id = ${siteId}`;

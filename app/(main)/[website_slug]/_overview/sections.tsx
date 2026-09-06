@@ -13,11 +13,13 @@ export async function LeadSection({
   slug,
   siteUrl,
   hasFilters,
+  isGuest,
 }: {
   screen: OverviewScreen;
   slug: string;
   siteUrl: string;
   hasFilters: boolean;
+  isGuest: boolean;
 }) {
   const [summary, series, goal, devices] = await Promise.all([
     screen.summary,
@@ -30,6 +32,7 @@ export async function LeadSection({
       slug={slug}
       siteUrl={siteUrl}
       hasFilters={hasFilters}
+      isGuest={isGuest}
       kpi={screen.kpi}
       metric={screen.metric}
       granularity={screen.granularity}

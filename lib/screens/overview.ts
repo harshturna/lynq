@@ -1,5 +1,6 @@
 import "server-only";
 import type { Point } from "@/lib/charts/format";
+import type { ChartNote } from "@/lib/charts/notes";
 import type { BuiltContext } from "@/lib/query/authorize";
 import type { BreakdownMultiRow, MetricSpec } from "@/lib/query/breakdown";
 import type { GoalStats } from "@/lib/query/goals";
@@ -10,6 +11,7 @@ import {
   funnel,
   goalStats,
   goalTimeseries,
+  notes as notesOf,
   summary,
   timeseries,
   vitals,
@@ -100,6 +102,8 @@ export type SeriesData = {
   label: string;
   current: Point[];
   previous: Point[] | null;
+  /** Notes inside the range, for the markers (TICKET-076). */
+  notes: ChartNote[];
 };
 
 export type GoalData = {
@@ -142,6 +146,11 @@ const METRIC_LABEL: Record<OverviewMetric, string> = {
 const toPoints = (s: { bucket: Date; value: number }[]): Point[] =>
   s.map((p) => ({ t: p.bucket.toISOString(), v: p.value }));
 
+export const toNotes = (
+  rows: { id: number; at: Date; text: string }[]
+): ChartNote[] =>
+  rows.map((n) => ({ id: n.id, at: n.at.toISOString(), text: n.text }));
+
 const byValue = (rows: BreakdownMultiRow[]) =>
   Object.fromEntries(rows.map((r) => [r.value, r]));
 
@@ -182,29 +191,34 @@ export function getOverviewScreen(
 
   const series = async (): Promise<SeriesData> => {
     const g = ctx.granularity;
+    const notesP = notesOf(ctx).then(toNotes);
     if (metric === "kpi" && kpi.goal) {
       const goal = kpi.goal;
-      const [cur, before] = await Promise.all([
+      const [cur, before, n] = await Promise.all([
         goalTimeseries(ctx, goal, g),
         prev ? goalTimeseries(prev, goal, g) : null,
+        notesP,
       ]);
       return {
         metric,
         label: goal.name,
         current: toPoints(cur),
         previous: before ? toPoints(before) : null,
+        notes: n,
       };
     }
     const m = metric as Metric;
-    const [cur, before] = await Promise.all([
+    const [cur, before, n] = await Promise.all([
       timeseries(ctx, m, g),
       prev ? timeseries(prev, m, g) : null,
+      notesP,
     ]);
     return {
       metric,
       label: METRIC_LABEL[metric],
       current: toPoints(cur),
       previous: before ? toPoints(before) : null,
+      notes: n,
     };
   };
 

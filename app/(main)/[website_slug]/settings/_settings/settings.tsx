@@ -1,8 +1,10 @@
 "use client";
 
+import { formatInTimeZone } from "date-fns-tz";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useTransition } from "react";
 import { Pill } from "@/components/shell/badge";
+import { NoteForm } from "@/components/shell/note-form";
 import { deleteWebsite } from "@/lib/actions";
 import { SCOPE_LABEL, SCOPES } from "@/lib/api-key-scopes";
 import { fmtAgo, fmtInt } from "@/lib/format";
@@ -26,6 +28,7 @@ const SECTIONS = [
   { id: "exclusions", label: "Exclusions" },
   { id: "kpi", label: "Goals and KPI" },
   { id: "data", label: "Data" },
+  { id: "notes", label: "Notes" },
   { id: "keys", label: "API keys" },
 ] as const;
 
@@ -90,6 +93,7 @@ export function SettingsPage({
           isGuest={isGuest}
           userId={userId}
         />
+        <Notes slug={slug} data={data} isGuest={isGuest} />
         <ApiKeys slug={slug} data={data} isGuest={isGuest} />
       </div>
     </div>
@@ -668,6 +672,92 @@ function DataSection({
 }
 
 /** API keys (D-017): created here, shown once, revoked here. */
+/** Every note on the site, newest first; edit and delete through the same popover that adds one (TICKET-076). */
+function Notes({ slug, data, isGuest }: SectionProps) {
+  return (
+    <Block
+      id="notes"
+      title="Notes"
+      lede="Dated sentences pinned to the site and drawn as markers on the Overview and goal charts, so a change in the numbers can be read against what happened. A deploy pipeline can add one through the API."
+    >
+      <div className="flex items-center gap-4">
+        <NoteForm
+          slug={slug}
+          timezone={data.timezone}
+          isGuest={isGuest}
+          align="start"
+          trigger={
+            <button
+              type="button"
+              className="h-8 rounded-control border border-rule bg-canvas px-3 text-[13px] hover:bg-soft"
+            >
+              Add note
+            </button>
+          }
+        />
+        <span className="text-[12.5px] text-mute">
+          {data.notes.length === 0
+            ? "No notes yet."
+            : `${fmtInt(data.notes.length)} ${data.notes.length === 1 ? "note" : "notes"}`}
+        </span>
+      </div>
+      {data.notes.length > 0 && (
+        <table className="max-w-[720px] border-collapse text-[13px]">
+          <thead>
+            <tr>
+              {["When", "Note", "By", "Actions"].map((h) => (
+                <th
+                  key={h}
+                  scope="col"
+                  className="border-rule border-b py-[6px] pr-4 text-left text-[11.5px] font-medium text-mute"
+                >
+                  {h === "Actions" ? <span className="sr-only">{h}</span> : h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.notes.map((n) => (
+              <tr key={n.id} className="border-rule border-b align-top">
+                <td className="whitespace-nowrap py-[9px] pr-4 text-mute tabular">
+                  {formatInTimeZone(
+                    new Date(n.at),
+                    data.timezone,
+                    "MMM d, yyyy, HH:mm"
+                  )}
+                </td>
+                <td className="py-[9px] pr-4">{n.text}</td>
+                <td className="py-[9px] pr-4 text-mute">
+                  {n.author.startsWith("key:")
+                    ? `key: ${n.author.slice(4)}`
+                    : n.author || "—"}
+                </td>
+                <td className="py-[9px] text-right">
+                  <NoteForm
+                    slug={slug}
+                    timezone={data.timezone}
+                    isGuest={isGuest}
+                    note={n}
+                    trigger={
+                      <button
+                        type="button"
+                        aria-label={`Edit note: ${n.text}`}
+                        className="text-[12.5px] text-teal-ink hover:underline"
+                      >
+                        Edit
+                      </button>
+                    }
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Block>
+  );
+}
+
 function ApiKeys({
   slug,
   data,
@@ -725,13 +815,13 @@ function ApiKeys({
         <table className="max-w-[720px] border-collapse text-[13px]">
           <thead>
             <tr>
-              {["Name", "Key", "Can", "Last used", ""].map((h) => (
+              {["Name", "Key", "Can", "Last used", "Actions"].map((h) => (
                 <th
                   key={h}
                   scope="col"
                   className="border-rule border-b py-[6px] pr-4 text-left text-[11.5px] font-medium text-mute"
                 >
-                  {h}
+                  {h === "Actions" ? <span className="sr-only">{h}</span> : h}
                 </th>
               ))}
             </tr>

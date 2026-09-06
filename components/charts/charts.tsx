@@ -8,6 +8,7 @@ import {
   type LineSeries,
   lineOption,
 } from "@/lib/charts/line";
+import { type ChartNote, noteMarkers } from "@/lib/charts/notes";
 import { sparklineOption } from "@/lib/charts/sparkline";
 import { Chart, type MarkClick } from "./chart";
 import { HiddenTable } from "./hidden-table";
@@ -21,18 +22,33 @@ export function LineChart({
   series,
   height = 240,
   onMarkClick,
+  notes,
   ...opts
 }: {
   title: string;
   series: LineSeries[];
   height?: number;
   onMarkClick?: (m: MarkClick) => void;
-} & LineOptions) {
+  /** Notes inside the range; folded to the primary series' buckets here. */
+  notes?: ChartNote[];
+} & Omit<LineOptions, "notes">) {
   const { granularity, timezone, max, threshold, animation } = opts;
+  const primary = series[0];
+  const markers = useMemo(
+    () => (notes?.length && primary ? noteMarkers(notes, primary.points) : []),
+    [notes, primary]
+  );
   // biome-ignore lint/correctness/useExhaustiveDependencies: opts is a fresh rest object each render; its fields are the real inputs
   const option = useMemo(
     () =>
-      lineOption(series, { granularity, timezone, max, threshold, animation }),
+      lineOption(series, {
+        granularity,
+        timezone,
+        max,
+        threshold,
+        animation,
+        notes: markers,
+      }),
     [
       series,
       granularity,
@@ -41,17 +57,22 @@ export function LineChart({
       threshold?.value,
       threshold?.label,
       animation,
+      markers,
     ]
   );
-  const primary = series[0];
   const description = primary
-    ? describeSeries(primary.name, primary.points, granularity, timezone)
+    ? describeSeries(primary.name, primary.points, granularity, timezone) +
+      (markers.length
+        ? ` ${notes?.length ?? 0} ${notes?.length === 1 ? "note" : "notes"} marked.`
+        : "")
     : `${title}: no data.`;
+  const byIndex = new Map(markers.map((m) => [m.index, m.texts.join("; ")]));
   const columns = [
     "Period",
     ...series.flatMap((s) =>
       s.previous ? [s.name, `${s.name}, previous period`] : [s.name]
     ),
+    ...(markers.length ? ["Notes"] : []),
   ];
   const rows = (primary?.points ?? []).map((p, i) => [
     bucketTitle(p.t, granularity, timezone),
@@ -60,6 +81,7 @@ export function LineChart({
       const cur = f(s.points[i]?.v ?? 0);
       return s.previous ? [cur, f(s.previous[i]?.v ?? 0)] : [cur];
     }),
+    ...(markers.length ? [byIndex.get(i) ?? ""] : []),
   ]);
   return (
     <Chart

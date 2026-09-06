@@ -5,6 +5,8 @@ import { LineChart } from "@/components/charts/charts";
 import { DeltaBadge } from "@/components/shell/badge";
 import { displayValue } from "@/components/shell/dimensions";
 import { KpiStrip, type KpiTile } from "@/components/shell/kpi-strip";
+import { NoteForm } from "@/components/shell/note-form";
+import { NotesSlot } from "@/components/shell/notes-slot";
 import { RowBar, Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
@@ -37,6 +39,7 @@ export function Lead({
   slug,
   siteUrl,
   hasFilters,
+  isGuest,
   kpi,
   metric,
   granularity,
@@ -50,6 +53,7 @@ export function Lead({
   slug: string;
   siteUrl: string;
   hasFilters: boolean;
+  isGuest: boolean;
   kpi: Kpi;
   metric: OverviewMetric;
   granularity: Granularity;
@@ -100,7 +104,28 @@ export function Lead({
 
       <div className="mt-7 grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         {series.ok ? (
-          <Section title={series.data.label} qualifier={GRAIN[granularity]}>
+          <Section
+            title={series.data.label}
+            qualifier={GRAIN[granularity]}
+            right={
+              <NotesSlot
+                slug={slug}
+                count={series.data.notes.length}
+                form={
+                  <NoteForm
+                    slug={slug}
+                    timezone={timezone}
+                    isGuest={isGuest}
+                    trigger={
+                      <button type="button" className="hover:text-ink">
+                        + Add note
+                      </button>
+                    }
+                  />
+                }
+              />
+            }
+          >
             <LineChart
               title={`${series.data.label} ${GRAIN[granularity]}`}
               series={[
@@ -117,6 +142,7 @@ export function Lead({
               granularity={granularity}
               timezone={timezone}
               height={220}
+              notes={series.data.notes}
             />
           </Section>
         ) : (

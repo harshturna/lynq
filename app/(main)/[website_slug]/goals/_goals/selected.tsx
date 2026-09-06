@@ -4,6 +4,8 @@ import { LineChart } from "@/components/charts/charts";
 import { DotPlot } from "@/components/charts/shapes";
 import { DeltaBadge } from "@/components/shell/badge";
 import { KpiStrip, type KpiTile } from "@/components/shell/kpi-strip";
+import { NoteForm } from "@/components/shell/note-form";
+import { NotesSlot } from "@/components/shell/notes-slot";
 import { Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
 import { useViewState } from "@/components/shell/view-state";
@@ -23,11 +25,15 @@ const GRAIN: Record<Granularity, string> = {
 
 /** The selected goal (design §8.8): four tiles, funnel, conversion by channel, trend. */
 export function SelectedGoalPanel({
+  slug,
+  isGuest,
   compare,
   granularity,
   timezone,
   selected,
 }: {
+  slug: string;
+  isGuest: boolean;
   compare: boolean;
   granularity: Granularity;
   timezone: string;
@@ -136,7 +142,29 @@ export function SelectedGoalPanel({
           )}
         </Section>
       </div>
-      <Section title="Completions" qualifier={GRAIN[granularity]} strong>
+      <Section
+        title="Completions"
+        qualifier={GRAIN[granularity]}
+        strong
+        right={
+          <NotesSlot
+            slug={slug}
+            count={s.trend.notes.length}
+            form={
+              <NoteForm
+                slug={slug}
+                timezone={timezone}
+                isGuest={isGuest}
+                trigger={
+                  <button type="button" className="hover:text-ink">
+                    + Add note
+                  </button>
+                }
+              />
+            }
+          />
+        }
+      >
         <LineChart
           title={`${goal.name} completions ${GRAIN[granularity]}`}
           series={[
@@ -150,6 +178,7 @@ export function SelectedGoalPanel({
           granularity={granularity}
           timezone={timezone}
           height={180}
+          notes={s.trend.notes}
         />
       </Section>
     </div>

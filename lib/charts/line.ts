@@ -13,6 +13,7 @@ import {
   type Point,
   pctChange,
 } from "./format";
+import type { NoteMarker } from "./notes";
 import { TOKENS } from "./theme";
 
 export type LineSeries = {
@@ -35,6 +36,8 @@ export type LineOptions = {
   max?: number;
   /** A horizontal threshold with a label, drawn in the poor colour. */
   threshold?: { value: number; label: string };
+  /** Notes folded to buckets (notes.ts): a dashed ink hairline and a label per bucket. */
+  notes?: NoteMarker[];
   animation?: boolean;
 };
 
@@ -109,27 +112,89 @@ export function lineOption(
     });
   });
 
-  const markLine = opts.threshold
-    ? {
+  // Marks ride on a series' single markLine, each item carrying its own
+  // style: the threshold (poor, on the last series) and the notes (D-010,
+  // docs/design/notes-on-charts.md §4: a dashed ink hairline per bucket with
+  // a dot at the top and the text as label, on the primary). Silent, so a
+  // mark never takes the tooltip from the line.
+  const attach = (target: object, items: object[], symbol: unknown) => {
+    const existing = (target as { markLine?: { data?: object[] } }).markLine;
+    Object.assign(target, {
+      markLine: {
         silent: true,
-        symbol: "none",
-        lineStyle: { color: TOKENS.poor, type: [3, 3], width: 1, opacity: 0.7 },
-        label: {
-          formatter: opts.threshold.label,
-          color: TOKENS.poor,
-          fontSize: 11,
-          position: "insideEndTop",
+        animation: false,
+        // ECharts reads the end symbols from the markLine, not the item
+        symbol,
+        symbolSize: 6,
+        data: [...(existing?.data ?? []), ...items],
+      },
+    });
+  };
+  if (opts.threshold && seriesOptions.length)
+    attach(
+      seriesOptions[seriesOptions.length - 1],
+      [
+        {
+          yAxis: opts.threshold.value,
+          symbol: "none",
+          lineStyle: {
+            color: TOKENS.poor,
+            type: [3, 3],
+            width: 1,
+            opacity: 0.7,
+          },
+          label: {
+            formatter: opts.threshold.label,
+            color: TOKENS.poor,
+            fontSize: 11,
+            position: "insideEndTop",
+          },
         },
-        data: [{ yAxis: opts.threshold.value }],
-      }
-    : undefined;
-  if (markLine && seriesOptions.length)
-    Object.assign(seriesOptions[seriesOptions.length - 1], { markLine });
+      ],
+      "none"
+    );
+  const notes = (opts.notes ?? []).filter(
+    (n) => n.index >= 0 && n.index < labels.length
+  );
+  const primaryIndex = seriesOptions.findIndex(
+    (s) => (s as { name?: string }).name === primary?.name
+  );
+  // A label needs room: it is dropped (the dot and the tooltip remain) when
+  // the next marker is closer than a tenth of the axis, and it hangs to the
+  // left near the right edge so it is not clipped.
+  const minGap = Math.max(2, Math.ceil(labels.length / 10));
+  const labelled = notes.map((n, i) => {
+    const next = notes[i + 1];
+    return !next || next.index - n.index >= minGap;
+  });
+  if (notes.length && primaryIndex >= 0)
+    attach(
+      seriesOptions[primaryIndex],
+      notes.map((n, i) => ({
+        xAxis: n.index,
+        name: n.label,
+        lineStyle: { color: TOKENS.ink, type: [2, 3], width: 1, opacity: 0.55 },
+        itemStyle: { color: TOKENS.ink },
+        label: {
+          show: labelled[i],
+          formatter: n.label,
+          position: "end",
+          distance: 6,
+          align: n.index > labels.length * 0.7 ? "right" : "left",
+          verticalAlign: "middle",
+          color: TOKENS.ink,
+          fontSize: 11,
+        },
+      })),
+      ["none", "circle"]
+    );
+  const noteTexts = new Map(notes.map((n) => [n.index, n.texts]));
 
   return {
     animation: opts.animation ?? true,
     animationDuration: 300,
-    grid: { left: 44, right: 12, top: 16, bottom: 28 },
+    // a little more headroom when notes are drawn, for the dot and its label
+    grid: { left: 44, right: 12, top: notes.length ? 26 : 16, bottom: 28 },
     xAxis: {
       type: "category",
       boundaryGap: false,
@@ -169,9 +234,27 @@ export function lineOption(
           const f = s.format ?? fmtNumber;
           return `${s.name}: <b>${f(cur)}</b>${prev !== undefined ? ` · ${f(prev)} before${change ? ` · ${change}` : ""}` : ""}`;
         });
-        return `<div style="font-weight:500;margin-bottom:2px">${title}</div>${lines.join("<br>")}`;
+        const texts = noteTexts.get(idx);
+        const noteHtml = texts?.length
+          ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.18);color:#d8d8dc">${texts
+              .map(
+                (t) =>
+                  `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;margin-right:6px;vertical-align:1px"></span>${escapeHtml(t)}`
+              )
+              .join("<br>")}</div>`
+          : "";
+        return `<div style="font-weight:500;margin-bottom:2px">${title}</div>${lines.join("<br>")}${noteHtml}`;
       },
     },
     series: seriesOptions,
   };
+}
+
+/** Note text is the owner's, but a tooltip is HTML; keep the sentence a sentence. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

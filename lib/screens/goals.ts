@@ -1,5 +1,6 @@
 import "server-only";
 import type { Point } from "@/lib/charts/format";
+import type { ChartNote } from "@/lib/charts/notes";
 import { sql } from "@/lib/db";
 import type { BuiltContext } from "@/lib/query/authorize";
 import type { GoalDef, GoalStats } from "@/lib/query/goals";
@@ -8,10 +9,12 @@ import {
   funnel,
   goalStats,
   goalTimeseries,
+  notes as notesOf,
   summary,
 } from "@/lib/query/run";
 import type { ViewState } from "@/lib/url-state";
 import type { Kpi, KpiGoal } from "./kpi";
+import { toNotes } from "./overview";
 import { type Section, settle } from "./settle";
 
 /**
@@ -32,7 +35,7 @@ export type SelectedGoal = {
   /** Sessions in the range, then sessions that completed. */
   funnel: { key: string; label: string; count: number }[];
   channels: { key: string; label: string; value: number }[];
-  trend: { current: Point[]; previous: Point[] | null };
+  trend: { current: Point[]; previous: Point[] | null; notes: ChartNote[] };
 };
 
 export type GoalsScreen = {
@@ -109,7 +112,7 @@ export function getGoalsScreen(
     const g = goals.find((x) => x.id === sel);
     if (!g) return null;
     const def: GoalDef = { id: g.id, kind: g.kind, match: g.match };
-    const [stats, before, steps, channels, cur, prevSeries, sum] =
+    const [stats, before, steps, channels, cur, prevSeries, sum, n] =
       await Promise.all([
         goalStats(ctx, def),
         prev ? goalStats(prev, def) : null,
@@ -123,6 +126,7 @@ export function getGoalsScreen(
         goalTimeseries(ctx, def, ctx.granularity),
         prev ? goalTimeseries(prev, def, ctx.granularity) : null,
         summary({ ...ctx, compare: undefined }),
+        notesOf(ctx).then(toNotes),
       ]);
     return {
       goal: g,
@@ -153,6 +157,7 @@ export function getGoalsScreen(
       trend: {
         current: toPoints(cur),
         previous: prevSeries ? toPoints(prevSeries) : null,
+        notes: n,
       },
     };
   };

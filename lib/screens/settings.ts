@@ -28,7 +28,30 @@ export type SettingsData = {
   lastAt: string | null;
   diagnostics: Diagnostic[];
   apiKeys: ApiKeySummary[];
+  /** Every note, newest first, for Settings → Notes (TICKET-076). */
+  notes: NoteSummary[];
 };
+
+export type NoteSummary = {
+  id: number;
+  at: string;
+  text: string;
+  author: string;
+};
+
+export async function listNotes(siteId: number): Promise<NoteSummary[]> {
+  const rows = await sql<
+    { id: number; at: Date; text: string; author: string }[]
+  >`
+    select id, at, text, author from public.notes
+    where site_id = ${siteId} order by at desc, id desc limit 200`;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    at: new Date(r.at).toISOString(),
+    text: r.text,
+    author: r.author,
+  }));
+}
 
 /** What the settings screen shows about a key; never the token (D-017). */
 export type ApiKeySummary = {
@@ -102,7 +125,7 @@ export async function getSettings(
   site: Site,
   website: { name: string; url: string }
 ): Promise<SettingsData> {
-  const [settings, hostnames, goals, last, apiKeys] = await Promise.all([
+  const [settings, hostnames, goals, last, apiKeys, notes] = await Promise.all([
     sql<
       {
         timezone: string;
@@ -122,6 +145,7 @@ export async function getSettings(
     sql<{ last_at: Date | null }[]>`
       select max(received_at) as last_at from analytics.events where site_id = ${site.siteId}`,
     listApiKeys(site.siteId),
+    listNotes(site.siteId),
   ]);
   const hosts = hostnames.map((h) => h.hostname);
   const diagnostics = await readDiagnostics(
@@ -147,5 +171,6 @@ export async function getSettings(
     lastAt: last[0]?.last_at ? new Date(last[0].last_at).toISOString() : null,
     diagnostics,
     apiKeys,
+    notes,
   };
 }

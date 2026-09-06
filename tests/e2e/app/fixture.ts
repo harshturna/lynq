@@ -8,6 +8,7 @@ import {
   generateCrawlerDays,
 } from "../../../scripts/seed/crawlers";
 import { generate } from "../../../scripts/seed/generate";
+import { seedNotes } from "../../../scripts/seed/notes";
 import { POSTGREST_URL, USERS } from "./env.mjs";
 
 export const SITE = {
@@ -91,6 +92,9 @@ export async function createFixture(databaseUrl: string): Promise<{
       crawlerRows as unknown as Record<string, unknown>[],
       ...([...CRAWLER_DAY_COLUMNS] as string[])
     )}`;
+    // Notes at the generator's launch spikes (TICKET-076).
+    const notes = seedNotes({ siteId, days: SEED.days });
+    await sql`insert into public.notes ${sql(notes, "site_id", "at", "text", "author")}`;
     // Fresh statistics and the daily rollup, as production has them.
     await sql`analyze analytics.events`;
     await sql`select analytics.rollup_refresh()`;

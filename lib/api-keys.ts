@@ -25,7 +25,13 @@ export function hashToken(token: string): Buffer {
   return createHash("sha256").update(token, "utf8").digest();
 }
 
-export type ResolvedKey = { keyId: number; siteId: number; scopes: Scope[] };
+export type ResolvedKey = {
+  keyId: number;
+  siteId: number;
+  scopes: Scope[];
+  /** The key's display name; a note written through a key is signed with it. */
+  name: string;
+};
 
 /**
  * A token to its site and scopes, or null. A revoked key resolves to nothing.
@@ -41,9 +47,15 @@ export async function resolveApiKey(
   const { sql } = await import("@/lib/db");
   const hash = hashToken(token);
   const [row] = await sql<
-    { id: number; site_id: number; scopes: string[]; token_hash: Buffer }[]
+    {
+      id: number;
+      site_id: number;
+      scopes: string[];
+      token_hash: Buffer;
+      name: string;
+    }[]
   >`
-    select id, site_id, scopes, token_hash
+    select id, site_id, scopes, token_hash, name
     from analytics.api_keys
     where token_hash = ${hash} and revoked_at is null
     limit 1`;
@@ -65,6 +77,7 @@ export async function resolveApiKey(
     keyId: Number(row.id),
     siteId: Number(row.site_id),
     scopes: row.scopes.filter(isScope),
+    name: row.name,
   };
 }
 

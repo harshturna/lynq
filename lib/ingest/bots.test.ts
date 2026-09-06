@@ -2,8 +2,18 @@ import { describe, expect, it } from "vitest";
 import type { ResolvedKey } from "@/lib/api-keys";
 import { type CrawlerDayRow, handleBots, makeLimiter } from "./bots";
 
-const KEY: ResolvedKey = { keyId: 7, siteId: 42, scopes: ["ingest"] };
-const READ_ONLY: ResolvedKey = { keyId: 8, siteId: 42, scopes: ["read"] };
+const KEY: ResolvedKey = {
+  keyId: 7,
+  siteId: 42,
+  scopes: ["ingest"],
+  name: "mw",
+};
+const READ_ONLY: ResolvedKey = {
+  keyId: 8,
+  siteId: 42,
+  scopes: ["read"],
+  name: "ro",
+};
 const TOKENS: Record<string, ResolvedKey> = {
   lynq_sk_good: KEY,
   lynq_sk_read: READ_ONLY,

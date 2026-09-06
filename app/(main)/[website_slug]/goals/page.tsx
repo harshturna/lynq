@@ -43,7 +43,7 @@ export default async function GoalsPage(props: {
             </div>
           }
         >
-          <SelectedSection screen={screen} />
+          <SelectedSection screen={screen} slug={slug} isGuest={isGuest} />
         </Suspense>
       )}
     </main>
