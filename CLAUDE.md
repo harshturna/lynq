@@ -79,6 +79,24 @@ sections, Handoff on in-progress tickets, Verification and Outcome on done ticke
 - Never commit secrets. `.env` is ignored; keep it that way.
 - Unreachable code is deleted, not carried. Git is the archive.
 - Keep changes focused. Preserve unrelated work in a dirty tree.
+
+## Deploys
+
+**Deploys are manual.** `vercel.json` sets `git.deploymentEnabled` to `false`, so pushing to
+`main` builds and releases nothing.
+
+- **A push is not a deploy.** Never report a change as live because it was pushed. It is live
+  once the owner runs `vercel --prod`, fires a deploy hook, or clicks Redeploy in the dashboard.
+  A ticket's Verification says "pushed", not "deployed", unless a deploy was actually run.
+- **Batch the work.** Several tickets go up in one push rather than a push per change, and a
+  small related follow-up can ride in the same commit instead of earning its own. Rule 6 still
+  holds for the commit that closes a ticket; what is batched is the pushing.
+- Only Git-triggered deploys are blocked. The CLI, deploy hooks and Redeploy still work, and
+  `"deploymentEnabled": { "main": false }` would disable one branch instead of all.
+- Vercel reads the setting from the pushed commit, so it applies from the moment the commit that
+  adds it lands on the production branch.
+- The same file and practice are in `lynq-docs` (see its README). `Clair` is not deployed from
+  this tree.
 - Unit tests live next to the code as `*.test.ts`; integration tests as `*.integration.test.ts`
   under `tests/`. Add tests with the code they cover.
 
