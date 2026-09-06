@@ -5,6 +5,7 @@ import { Closing, LandingFooter } from "./_landing/closing";
 import { Hero } from "./_landing/hero";
 import { LandingNav } from "./_landing/nav";
 import {
+  AgentsPanel,
   AttentionPanel,
   BotsPanel,
   Eyebrow,
@@ -62,6 +63,14 @@ export default async function LandingPage() {
           rest="ChatGPT, Claude and Perplexity fetch pages to answer people. GPTBot and ClaudeBot collect them for a model. Lynq tells the two apart, page by page, from a few lines on your server."
         >
           <BotsPanel />
+        </Feature>
+
+        <Feature
+          eyebrow="For agents"
+          lead="Ask your analytics from where you work."
+          rest="Claude Code, Cursor and Codex connect to Lynq over MCP with one key. Every screen's question is a tool, and every answer is a sentence with the numbers behind it."
+        >
+          <AgentsPanel />
         </Feature>
 
         <Feature

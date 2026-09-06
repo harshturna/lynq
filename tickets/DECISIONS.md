@@ -448,3 +448,29 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   Harder: a crawler is what its user agent claims, since v1 does no reverse-DNS check, and the
   docs must say so; and anyone who wants server-side request counts for humans gets a "no" until
   a separate decision is taken.
+
+## D-019 — Agents get one MCP endpoint inside the app; aggregates only; no CLI, no package
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** TICKET-078 hands the query layer to agents. The ticket left open whether that is
+  a REST API, an MCP server, or both; whether a CLI ships beside it; and whether raw rows are
+  ever returned. Each is an external surface, expensive to withdraw once anyone depends on it.
+  The design (`docs/design/agents-mcp-and-cli.md`) proposed one endpoint plus a published CLI;
+  the owner cut the CLI on 2026-09-06 ("just mcp is good; mcp is much more powerful").
+- **Decision:** **One endpoint, `POST /api/mcp`**, MCP over Streamable HTTP, stateless with JSON
+  responses, running as a Next route handler in the same deployment, authenticated with a
+  D-017 key carrying the `read` scope and counted by TICKET-086's limit. **No REST API** beside
+  it. **No CLI and no npm package**: Claude Code, Cursor and Codex reach a remote HTTP server
+  directly, and a client that only speaks stdio uses the standard `mcp-remote` bridge, which
+  the docs show. **Tools return aggregates only**: numbers and small tables, the same things
+  the screens show, never events or sessions. A key with the `notes` scope may also pin a note.
+- **Rejected alternatives:** A REST API, rejected as a second schema and second set of docs for
+  the same questions. A published `@lynq/cli`, rejected because nobody asked for a terminal
+  client and a stdio bridge already exists as `mcp-remote`; a CLI can be added later as a client
+  of the same endpoint without changing it. An `events` or `sessions` tool, rejected because
+  raw rows are an export with its own privacy story, and the daily-rotating visitor id is only
+  a promise while aggregates are what leaves the database.
+- **Consequences:** Easier: one surface to keep true, nothing new to deploy or publish, the
+  docs are three pages. Harder: a client without HTTP or `mcp-remote` support has no way in;
+  and every future question an agent should answer becomes a tool on this endpoint, which is
+  the right place for it but a place that must be versioned carefully once agents depend on it.

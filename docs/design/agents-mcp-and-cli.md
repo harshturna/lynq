@@ -1,8 +1,8 @@
-# For agents: the MCP server and the CLI
+# For agents: the MCP server
 
-**Status:** designed (TICKET-078)
+**Status:** designed (TICKET-078) · **Decided:** D-019
 **Written:** 2026-09-06
-**Ticket:** TICKET-078 · **Keys:** D-017 (`read` scope), TICKET-086 (rate limit)
+**Ticket:** TICKET-078 · **Keys:** D-017 (`read` scope), D-019, TICKET-086 (rate limit)
 
 ## 1. Why
 
@@ -10,14 +10,14 @@ The dashboard answers the questions a person thinks to ask. An agent working in 
 asks different ones, at the moment they matter: *did signups move after Tuesday's deploy*,
 *which docs page do people leave from*, *is LCP worse this week*. Lynq already has every answer
 as a typed, tenant-scoped query primitive (`lib/query`). This is the thinnest honest way to hand
-those primitives to Claude Code, Cursor, Codex, and a shell.
+those primitives to Claude Code, Cursor and Codex.
 
 ## 2. Shape
 
 ```
-agent (Claude Code, Cursor, Codex)  ──▶  POST /api/mcp  ──▶  lib/agents/tools.ts  ──▶  lib/query
-terminal: npx @lynq/cli …           ──▶  (same endpoint,    one tool per question,      buildContext
-stdio-only client: npx @lynq/cli mcp ──▶   MCP over HTTP)   JSON schema in, small        from the key's site
+agent (Claude Code, Cursor, Codex)   ──▶  POST /api/mcp  ──▶  lib/agents/tools.ts  ──▶  lib/query
+stdio-only client: npx mcp-remote …  ──▶  (MCP over HTTP)    one tool per question,      buildContext
+                                                             JSON schema in, small        from the key's site
                                                              table out
 ```
 
@@ -26,10 +26,10 @@ stdio-only client: npx @lynq/cli mcp ──▶   MCP over HTTP)   JSON schema in
 rather than SSE, with the SDK's web-standard transport in a Next route handler. Nothing new to
 deploy and nothing new to run.
 
-**The CLI is an MCP client.** `npx @lynq/cli summary --range last_7d` posts a `tools/call` to
-the same endpoint and prints the result as a table, so there is one API surface to keep true.
-`npx @lynq/cli mcp` runs a stdio MCP server that forwards to the endpoint, for clients that
-cannot yet reach a remote HTTP server directly.
+**No CLI, no package (D-019).** The three clients reach a remote HTTP server with a bearer
+header directly. A client that only speaks stdio runs the standard `mcp-remote` bridge
+(`npx mcp-remote https://lynq.byharsh.com/api/mcp --header "Authorization: Bearer …"`), which
+the docs show. A terminal client can be added later as one more client of the same endpoint.
 
 **Auth is D-017.** A bearer key with the `read` scope names the site; every tool call runs
 through `buildContext` for that site and counts against the key's 120 requests a minute
@@ -52,13 +52,11 @@ things the screens show. There is no `events` or `sessions` tool. An agent that 
 is asking for an export, which is a different product with a different privacy story, and the
 visitor id rotating daily is the promise that keeps aggregates safe to hand out.
 
-### 3.3 The CLI is published; the tracker's "snippet first" rule does not apply
+### 3.3 No CLI (decided by the owner)
 
-D-018 preferred a documented snippet over an npm package because thirty lines fit in a doc
-page. A CLI does not: it is meant to be run, not pasted. `@lynq/cli` is a real package, one
-dependency (the MCP SDK), built with esbuild like the tracker. Publishing needs an npm account
-and is the owner's step; the ticket ships the package built and tested, and the docs say
-`npx @lynq/cli` from the day it is published.
+The first draft shipped a published `@lynq/cli` with a table-printing command per tool and a
+stdio bridge. The owner cut it: nobody asks a terminal these questions, and the bridge already
+exists as `mcp-remote`. Nothing about the endpoint changes if a CLI is wanted later.
 
 ## 4. The tools
 
@@ -86,23 +84,16 @@ answer has a "before".
 Each result carries a one-line `summary` sentence beside the data, the same sentence the
 screen's description would speak, so a model can quote it without arithmetic.
 
-## 5. The CLI
-
-`lynq <tool> [--range …] [--filter dimension=op:value …] [--compare …] [--json]`, one command
-per tool with the tool's arguments as flags, a table on stdout by default and JSON with
-`--json`. `LYNQ_API_KEY` from the environment, `LYNQ_URL` to point at a self-hosted deployment.
-`lynq mcp` is the stdio bridge. Exit code 1 on a refused key, 2 on a bad argument, both with the
-server's sentence.
-
-## 6. What the docs say
+## 5. What the docs say
 
 A new top-level section, **For agents**: a page on what the server answers and how a key is
 made; a setup page with the three clients' configuration (Claude Code's `claude mcp add`,
-Cursor's `mcp.json`, Codex's config through the stdio bridge); the tool list; the CLI. The
-TypeScript page links it. The landing gains a panel staged from a real exchange.
+Cursor's `mcp.json`, Codex's config, and `mcp-remote` for a stdio-only client); the tool list
+with arguments. The TypeScript page links it. The landing gains a panel staged from a real
+exchange.
 
-## 7. Out of scope for v1
+## 6. Out of scope for v1
 
-A REST API; raw events or sessions; writes beyond a note; OAuth for the endpoint (a key is
-enough for a server-side client, and the browser refusal keeps it out of pages); a hosted
+A REST API; a CLI; raw events or sessions; writes beyond a note; OAuth for the endpoint (a key
+is enough for a server-side client, and the browser refusal keeps it out of pages); a hosted
 "ask a question" chat inside the dashboard, which is a product of its own.

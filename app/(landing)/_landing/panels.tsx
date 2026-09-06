@@ -458,6 +458,34 @@ export function BotsPanel() {
   );
 }
 
+/** The MCP endpoint (D-019): a real exchange, staged. */
+export function AgentsPanel() {
+  return (
+    <Panel className="h-[400px]">
+      <Ui style={{ left: 48, top: 40, width: 760 }}>
+        <div className="flex flex-col gap-3 p-1 font-mono text-[12.5px] leading-[1.55]">
+          <p className="text-ink">
+            <span className="mr-2 text-mute">›</span>did signups move after
+            Tuesday&apos;s deploy?
+          </p>
+          <p className="text-mute">
+            <span className="mr-2 text-teal">⚙</span>lynq · notes · summary
+            (range Aug 25 – Sep 5, compare previous period) · timeseries (metric
+            sessions)
+          </p>
+          <p className="max-w-[62ch] text-ink-2">
+            Yes. The note &ldquo;Deployed v2.0&rdquo; is pinned on Tuesday Sep
+            1. Signups completed 41 times in the five days after, against 27 in
+            the five before, 6.4% of sessions against 4.9%. Sessions themselves
+            are flat, so the lift is conversion, not traffic. /pricing is the
+            page that moved: its influence on Signup went from 1.6× to 2.2×.
+          </p>
+        </div>
+      </Ui>
+    </Panel>
+  );
+}
+
 export function FiltersPanel() {
   return (
     <Panel>

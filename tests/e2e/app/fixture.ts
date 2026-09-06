@@ -1,6 +1,8 @@
 // The app e2e fixture (TICKET-047): one site owned by the owner user with
 // forty days of generated traffic, a KPI goal and a few rows from the last
 // minutes for Realtime. Re-runnable: the site is recreated on every run.
+
+import { createHash } from "node:crypto";
 import postgres from "postgres";
 import { EVENT_COLUMNS, type EventRow } from "@/lib/ingest/rows";
 import {
@@ -20,6 +22,11 @@ export const SITE = {
 export const GOAL = { name: "Signup", match: "signup", target: 400 };
 export const SEED = { days: 40, visitorsPerDay: 25, seed: 7 };
 export const LIVE_ROWS = 12;
+/** A key with the read and notes scopes for the MCP spec; fixed so the spec can send it. */
+export const E2E_KEY = {
+  token: "lynq_sk_e2e0000000000000000000000000000000000000000000000",
+  name: "E2E agent",
+};
 
 export async function createFixture(databaseUrl: string): Promise<{
   siteId: number;
@@ -92,6 +99,8 @@ export async function createFixture(databaseUrl: string): Promise<{
       crawlerRows as unknown as Record<string, unknown>[],
       ...([...CRAWLER_DAY_COLUMNS] as string[])
     )}`;
+    await sql`insert into analytics.api_keys (site_id, name, scopes, token_hash, prefix)
+      values (${siteId}, ${E2E_KEY.name}, ${["read", "notes"]}, ${createHash("sha256").update(E2E_KEY.token, "utf8").digest()}, ${E2E_KEY.token.slice(0, 16)})`;
     // Notes at the generator's launch spikes (TICKET-076).
     const notes = seedNotes({ siteId, days: SEED.days });
     await sql`insert into public.notes ${sql(notes, "site_id", "at", "text", "author")}`;
