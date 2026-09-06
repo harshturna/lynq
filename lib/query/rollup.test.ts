@@ -4,6 +4,8 @@ import {
   rollupApplies,
   rollupBreakdownQuery,
   rollupSummaryQuery,
+  rollupTimeseriesApplies,
+  rollupTimeseriesQuery,
 } from "./rollup";
 
 const ctx: QueryContext = {
@@ -104,6 +106,40 @@ describe("rollupBreakdownQuery", () => {
     expect(rollupBreakdownQuery(ctx, "path", ["sessions"]).text).not.toContain(
       "ident"
     );
+    // a row dimension counts identified users from the rows alone
+    expect(rollupBreakdownQuery(ctx, "path", ["visitors"]).text).toContain(
+      "select e.path::text as value, count(distinct e.visitor_id)::int as visitors_ident"
+    );
     expect(rollupSummaryQuery(ctx, ctx.range).text).toContain("where true");
+  });
+});
+
+describe("rollupTimeseries", () => {
+  const utc = { ...ctx, timezone: "UTC" };
+  it("applies to UTC sites at day or coarser, never to hours or local midnights", () => {
+    expect(rollupTimeseriesApplies(utc, "visitors", "day")).toBe(true);
+    expect(rollupTimeseriesApplies(utc, "sessions", "month")).toBe(true);
+    expect(rollupTimeseriesApplies(utc, "visitors", "hour")).toBe(false);
+    expect(rollupTimeseriesApplies(ctx, "visitors", "day")).toBe(false); // Toronto midnights
+    expect(
+      rollupTimeseriesApplies(
+        { ...utc, filters: [{ dimension: "path", op: "is", values: ["/"] }] },
+        "visitors",
+        "day"
+      )
+    ).toBe(false);
+  });
+  it("sums the rolled days per bucket, one window per unrolled day, identified per bucket", () => {
+    const { text, params } = rollupTimeseriesQuery(utc, "visitors", "week");
+    expect(text).toContain("r.dimension = 'site'");
+    expect(text).toContain("generate_series(b.tail_from");
+    expect(text).toContain(
+      "count(distinct e.visitor_id)::int as visitors_ident"
+    );
+    expect(text).toContain("date_trunc($6, day at time zone $7)");
+    expect(new Set(text.match(/\$\d+/g)).size).toBe(params.length);
+    expect(rollupTimeseriesQuery(utc, "pageviews", "day").text).not.toContain(
+      "ident"
+    );
   });
 });

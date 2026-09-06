@@ -2,11 +2,19 @@ import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { EVENT_COLUMNS } from "@/lib/ingest/rows";
 import { breakdownMultiQuery, type MetricSpec } from "@/lib/query/breakdown";
-import { type QueryContext, summaryQueries } from "@/lib/query/primitives";
+import type { Metric } from "@/lib/query/primitives";
+import {
+  type QueryContext,
+  summaryQueries,
+  timeseriesQuery,
+} from "@/lib/query/primitives";
+import type { Granularity } from "@/lib/query/ranges";
 import {
   ROLLUP_DIMENSIONS,
   rollupApplies,
   rollupBreakdownQuery,
+  rollupTimeseriesApplies,
+  rollupTimeseriesQuery,
 } from "@/lib/query/rollup";
 import { generate } from "../../scripts/seed/generate";
 
@@ -141,6 +149,25 @@ async function expectEqualEverywhere(label: string) {
     const { raw, rolled } = await both(ctx(), dimension, WITH_GOAL);
     expect(rolled, `${label}: ${dimension} with goal columns`).toEqual(raw);
   }
+  // the timeseries sums the 'site' days per bucket for a UTC site (TICKET-060)
+  const utc = ctx({ timezone: "UTC" });
+  expect(rollupTimeseriesApplies(ctx(), "visitors", "day")).toBe(false);
+  for (const g of ["day", "week", "month"] as Granularity[])
+    for (const m of [
+      "visitors",
+      "pageviews",
+      "custom_events",
+      "sessions",
+      "bounce_rate",
+      "engaged_time",
+      "pages_per_session",
+      "time_on_site",
+    ] as Metric[]) {
+      expect(rollupTimeseriesApplies(utc, m, g)).toBe(true);
+      const raw = await q.run<Row>(timeseriesQuery(utc, m, g));
+      const rolled = await q.run<Row>(rollupTimeseriesQuery(utc, m, g));
+      expect(rolled, `${label}: timeseries ${m} by ${g}`).toEqual(raw);
+    }
   // the summary reads the 'site' total; compare against the two raw statements
   const c = ctx({
     compare: {

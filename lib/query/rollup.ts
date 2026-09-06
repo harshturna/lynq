@@ -14,12 +14,15 @@ import {
 } from "./filters";
 import { type GoalDef, goalPredicate } from "./goals";
 import {
+  bucketExpr,
+  type Metric,
   type QueryContext,
   ROW_METRICS,
   SESSION_METRICS,
   scope,
   type Window,
 } from "./primitives";
+import { buckets, type Granularity } from "./ranges";
 import { ENTRY_COLUMN } from "./sessions";
 
 /**
@@ -178,10 +181,18 @@ export function rollupBreakdownQuery(
     sum(time_on_site_ms)::bigint as time_on_site_ms, sum(revenue)::numeric as revenue, sum(payments)::int as payments
   from u group by 1)`,
   ];
+  // Identified users over the whole range: a session dimension needs the
+  // session definition (their entry), a row dimension only the rows.
   if (wantVisitors)
     parts.push(
-      `ident as materialized (
+      sessionDim
+        ? `ident as materialized (
   select value, visitors_ident from analytics.rollup_window(${site}, ${dim}, ${from}, ${to}, true))`
+        : `ident as materialized (
+  select ${dimension === "site" ? "''" : rowExpr(dimension as RowDimension, "e")}::text as value, count(distinct e.visitor_id)::int as visitors_ident
+  from analytics.events e
+  where ${scope(q, ctx, w)} and e.user_hash <> 0
+  group by 1)`
     );
   for (const g of goals) {
     const a = goalAlias(g);
@@ -252,4 +263,83 @@ export function rollupSummaryApplies(ctx: QueryContext, w: Window): boolean {
 /** Every summary metric for `w` from the rollup: one row, or none for an empty range. */
 export function rollupSummaryQuery(ctx: QueryContext, w: Window): Compiled {
   return rollupBreakdownQuery(ctx, "site", SUMMARY_METRICS, { limit: 1 }, w);
+}
+
+/**
+ * True when the series can be summed from the site's rolled days: unfiltered,
+ * a rolled metric, day or coarser buckets, and every bucket boundary a UTC
+ * midnight (a UTC site, or one whose offset is zero across the range), since a
+ * rolled day cannot be split between two local days.
+ */
+export function rollupTimeseriesApplies(
+  ctx: QueryContext,
+  metric: Metric,
+  granularity: Granularity,
+  w: Window = ctx.range
+): boolean {
+  if (granularity === "hour") return false;
+  if (!rollupApplies(ctx, "site", [metric], {}, w)) return false;
+  return buckets(w.from, w.toExclusive, granularity, ctx.timezone).every(
+    (b) => b.getTime() % DAY_MS === 0
+  );
+}
+
+/**
+ * One row per bucket from the rolled days plus the partial days at either end
+ * and after housekeeping's watermark (one window call per unrolled day, so a
+ * day never straddles two buckets), with identified visitors counted per
+ * bucket from the rows.
+ */
+export function rollupTimeseriesQuery(
+  ctx: QueryContext,
+  metric: Metric,
+  granularity: Granularity,
+  w: Window = ctx.range
+): Compiled {
+  const q = new Query();
+  const dayStart = ceilDay(w.from);
+  const dayEnd = floorDay(w.toExclusive);
+  const site = q.p(ctx.siteId);
+  const from = q.p(w.from);
+  const to = q.p(w.toExclusive);
+  const ds = q.p(dayStart);
+  const de = q.p(dayEnd);
+  const bucket = (col: string) => bucketExpr(q, col, granularity, ctx.timezone);
+  const parts = [
+    `st as (
+  select coalesce((select rolled_through from analytics.rollup_state where site_id = ${site}), date '1970-01-01') as through)`,
+    `b as (
+  select least(${de}::timestamptz, greatest(${ds}::timestamptz, (through + 1)::timestamp at time zone 'UTC')) as tail_from from st)`,
+    `days as (
+  select (r.day::timestamp at time zone 'UTC') as day, ${SUM_COLUMNS.replace(/(\w+)/g, "r.$1")}
+  from analytics.rollup_daily r, b
+  where r.site_id = ${site} and r.dimension = 'site'
+    and r.day >= (${ds}::timestamptz at time zone 'UTC')::date and r.day < (b.tail_from at time zone 'UTC')::date
+  union all
+  select ${from}::timestamptz, ${SUM_COLUMNS} from analytics.rollup_window(${site}, 'site', ${from}, least(${ds}::timestamptz, ${to}::timestamptz))
+  union all
+  select d.day, ${SUM_COLUMNS.replace(/(\w+)/g, "w.$1")}
+  from b, generate_series(b.tail_from, ${to}::timestamptz - interval '1 microsecond', interval '1 day') as d(day)
+  cross join lateral analytics.rollup_window(${site}, 'site', d.day, least(d.day + interval '1 day', ${to}::timestamptz)) w)`,
+    `agg as materialized (
+  select ${bucket("day")} as bucket, sum(visitors)::int as visitors, sum(pageviews)::int as pageviews,
+    sum(custom_events)::int as custom_events, sum(sessions)::int as sessions, sum(bounced)::int as bounced,
+    sum(engaged_ms)::bigint as engaged_ms, sum(session_pageviews)::bigint as session_pageviews,
+    sum(time_on_site_ms)::bigint as time_on_site_ms
+  from days group by 1)`,
+  ];
+  if (metric === "visitors")
+    parts.push(`ident as materialized (
+  select ${bucket("e.ts")} as bucket, count(distinct e.visitor_id)::int as visitors_ident
+  from analytics.events e
+  where ${scope(q, ctx, w)} and e.user_hash <> 0
+  group by 1)`);
+  return {
+    text: `with ${parts.join(",\n")}
+select a.bucket, ${metricSql(metric, () => "")} as value
+from agg a
+${metric === "visitors" ? "left join ident i using (bucket)" : ""}
+order by 1`,
+    params: q.params,
+  };
 }

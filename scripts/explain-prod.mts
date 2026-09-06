@@ -7,7 +7,12 @@ import { sql } from "@/lib/db";
 import { buildContext } from "@/lib/query/authorize";
 import { breakdownMultiQuery } from "@/lib/query/breakdown";
 import { summaryQueries, timeseriesQuery } from "@/lib/query/primitives";
-import { rollupApplies, rollupBreakdownQuery } from "@/lib/query/rollup";
+import {
+  rollupApplies,
+  rollupBreakdownQuery,
+  rollupSummaryQuery,
+  rollupTimeseriesQuery,
+} from "@/lib/query/rollup";
 
 const [{ site_id }] = await sql<
   { site_id: number }[]
@@ -42,6 +47,8 @@ const cases: Record<string, { text: string; params: unknown[] }> = {
     { limit: 200 }
   ) as never,
   timeseries: timeseriesQuery(ctx, "visitors", "day") as never,
+  summary_rollup: rollupSummaryQuery(ctx, ctx.range),
+  timeseries_rollup: rollupTimeseriesQuery(ctx, "visitors", "month"),
 };
 const sums = summaryQueries(ctx, ctx.range) as never as
   | Record<string, { text: string; params: unknown[] }>

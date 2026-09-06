@@ -49,6 +49,8 @@ import {
   rollupBreakdownQuery,
   rollupSummaryApplies,
   rollupSummaryQuery,
+  rollupTimeseriesApplies,
+  rollupTimeseriesQuery,
 } from "./rollup";
 import {
   type TargetColumn,
@@ -84,7 +86,9 @@ export async function timeseries(
   granularity: Granularity
 ): Promise<SeriesPoint[]> {
   const rows = await run<{ bucket: Date; value: number }>(
-    timeseriesQuery(ctx, metric, granularity),
+    rollupTimeseriesApplies(ctx, metric, granularity)
+      ? rollupTimeseriesQuery(ctx, metric, granularity)
+      : timeseriesQuery(ctx, metric, granularity),
     ctx.timeoutMs
   );
   return fillSeries(rows, ctx.range, granularity, ctx.timezone);

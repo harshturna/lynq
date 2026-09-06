@@ -183,14 +183,16 @@ describe("query budgets on a 90-day seed fixture", () => {
 /**
  * Twelve months through the daily rollup (D-015, TICKET-049): the three
  * Overview tables on a 365-day fixture after housekeeping has rolled it.
- * Measured 2026-09-06 on 66,754 rows (365 days × 15 visitors/day, seed 5):
- * path 32, entry_channel with goal columns 47, country 29.
+ * Measured 2026-09-06 on 78,481 rows (365 days × 15 visitors/day, seed 5):
+ * summary 10, timeseries by month 17, path 15, entry_channel with goal
+ * columns 68, country 12; budgets keep headroom for the laptop's variance.
  */
 const YEAR_BUDGET: Record<string, number> = {
   rollup_summary: 60,
-  rollup_path: 50,
-  rollup_entry_channel_goals: 80,
-  rollup_country: 50,
+  rollup_timeseries_visitors: 30,
+  rollup_path: 70,
+  rollup_entry_channel_goals: 100,
+  rollup_country: 60,
 };
 
 describe("twelve-month budgets through the daily rollup", () => {
@@ -249,6 +251,8 @@ describe("twelve-month budgets through the daily rollup", () => {
             toExclusive: c.range.from,
           },
         }),
+      rollup_timeseries_visitors: () =>
+        q.timeseries({ ...c, timezone: "UTC" }, "visitors", "month"),
       rollup_path: () =>
         q.breakdownMulti(
           c,
