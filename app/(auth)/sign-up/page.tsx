@@ -1,135 +1,71 @@
 "use client";
-import { LoaderCircle } from "lucide-react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
-import { useFormStatus } from "react-dom";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { AuthCard, Field, FormError, SubmitButton } from "../_auth/form";
 import { signUp } from "../actions";
 
-const initialState = {
-  error: null,
-  success: false,
-};
+const initialState = { error: null, success: false, message: null };
 
-function SignUp() {
-  const [signupState, signupAction] = useActionState(signUp, initialState);
+export default function SignUpPage() {
+  const [state, action] = useActionState(signUp, initialState);
   const router = useRouter();
 
   useEffect(() => {
-    if (signupState.success) {
-      router.push("/sites");
-    }
-  }, [signupState, router]);
+    if (state.success && !state.message) router.push("/sites");
+  }, [state, router]);
+
+  if (state.success && state.message)
+    return (
+      <AuthCard title="Check your email" lede={state.message}>
+        <p className="text-[13.5px] text-ink-2">
+          Already confirmed?{" "}
+          <Link
+            href="/login"
+            className="text-teal-ink underline underline-offset-[3px] hover:text-teal"
+          >
+            Log in
+          </Link>
+        </p>
+      </AuthCard>
+    );
 
   return (
-    <div className="h-screen w-screen bg-black/80 flex justify-center items-center relative">
-      <div className="max-w-sm md:max-w-lg lg:max-w-xl w-full mx-auto rounded-md p-4 md:p-8 shadow-input">
-        <Link className="block" href="/">
-          <img
-            src="/assets/logo.png"
-            alt="Lynq Logo"
-            width={120}
-            height={300}
-            className="mx-auto"
-          />
+    <AuthCard
+      title="Create your account"
+      lede="Free during beta. One script tag, no cookies, no consent banner."
+    >
+      <form action={action} className="flex flex-col gap-4">
+        <Field
+          label="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+        />
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="At least 6 characters"
+          minLength={6}
+        />
+        <FormError message={state.error} />
+        <SubmitButton pendingText="Creating your account…">
+          Create account
+        </SubmitButton>
+      </form>
+      <p className="mt-8 text-[13.5px] text-ink-2">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-teal-ink underline underline-offset-[3px] hover:text-teal"
+        >
+          Log in
         </Link>
-        <div className="relative mt-2">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t"></span>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="text-muted-foreground text-center uppercase bg-black px-2">
-              Sign up
-            </span>
-          </div>
-        </div>
-
-        <form className="mt-8 mb-2" action={signupAction}>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              required
-              id="email"
-              name="email"
-              placeholder="user@lynq.byharsh.com"
-              type="email"
-              className="border-gray-900"
-            />
-          </LabelInputContainer>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              required
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              type="password"
-              className="border-gray-900"
-            />
-          </LabelInputContainer>
-
-          <SubmitButton />
-          <div className="text-white text-center">
-            <span className="text-muted-foreground">
-              Already have an account?{" "}
-            </span>
-            <Link href="/login" className="underline">
-              Login
-            </Link>
-            <div className="bg-gradient-to-r from-transparent via-neutral-800 dark:via-neutral-700 to-transparent my-6 h-[1px] w-full" />
-            <div className="mt-4 text-red-900 text-center">
-              {signupState?.error && <p>* {signupState?.error}</p>}
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+      </p>
+    </AuthCard>
   );
 }
-
-const SubmitButton = () => {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      className="bg-gradient-to-br relative group/btn from-stone-900/10 to-zinc-900/90 flex items-center justify-center bg-stone-800/10 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
-      type="submit"
-      disabled={pending}
-    >
-      {pending ? (
-        <LoaderCircle className="h-4 w-4 animate-spin" />
-      ) : (
-        <>Sign up &rarr;</>
-      )}
-      <BottomGradient />
-    </button>
-  );
-};
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
-  );
-};
-
-const LabelInputContainer = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div className={cn("flex flex-col space-y-2 w-full text-white", className)}>
-      {children}
-    </div>
-  );
-};
-
-export default SignUp;

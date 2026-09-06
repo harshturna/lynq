@@ -2,22 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-satoshi);
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-}
-
 /* Lynq design tokens (design §3, D-008). Light only. The design calls the accent tokens
-   --accent*; in code they are --teal* because the old shadcn --accent (an HSL triple below)
-   is still read by components that leave with TICKET-035. */
+   --accent*; in code they are --teal*, a name kept from when the old kit's --accent still
+   existed alongside them. */
 @layer base {
   :root {
     --canvas: #ffffff;
@@ -64,216 +51,25 @@ h6 {
   }
 }
 
-@layer utilities {
-  .button {
-    @apply bg-black border border-white/10 px-8 py-2 text-sm font-medium text-white hover:bg-[#0c0c0c] smooth;
-  }
-
-  .smooth {
-    @apply transition-all ease-in-out duration-150;
-  }
-}
-
+/* Thin scrollbars on the rule colour; smooth in-page scrolling. */
 @layer base {
-  :root {
-    --background: 240 10% 3.9%;
-
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-
-    --primary-foreground: 240 5.9% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-
-    --input: 240 3.7% 15.9%;
-
-    --ring: 240 4.9% 83.9%;
-
-    --chart-1: 359 2% 90%;
-
-    --chart-2: 240 1% 74%;
-
-    --chart-3: 240 1% 58%;
-
-    --chart-4: 240 1% 42%;
-
-    --chart-5: 240 2% 26%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 240 10% 3.9%;
-
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-
-    --primary-foreground: 240 5.9% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-
-    --input: 240 3.7% 15.9%;
-
-    --ring: 240 4.9% 83.9%;
-
-    --chart-1: 220 70% 50%;
-
-    --chart-2: 160 60% 45%;
-
-    --chart-3: 30 80% 55%;
-
-    --chart-4: 280 65% 60%;
-
-    --chart-5: 340 75% 55%;
-
-    --sidebar-background: 240 5.9% 10%;
-
-    --sidebar-foreground: 240 4.8% 95.9%;
-
-    --sidebar-primary: 224.3 76.3% 48%;
-
-    --sidebar-primary-foreground: 0 0% 100%;
-
-    --sidebar-accent: 240 3.7% 15.9%;
-
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-
-    --sidebar-border: 240 3.7% 15.9%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply text-foreground;
-  }
   ::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
+    background: var(--rule);
     border-radius: 5px;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) transparent;
+    scrollbar-color: var(--rule) transparent;
+  }
+  html {
     scroll-behavior: smooth;
-  }
-  .blue__gradient {
-    background: linear-gradient(
-      180deg,
-      rgba(188, 165, 255, 0) 0%,
-      #2a87deb6 100%
-    );
-    filter: blur(123px);
-  }
-  .bg-blue-gradient {
-    background: linear-gradient(
-      157.81deg,
-      #7dd3fc 0.89%,
-      #38bdf8 71.54%,
-      #0ea5e9 100%
-    );
-  }
-  .text-gradient {
-    background: radial-gradient(
-      64.18% 64.18% at 71.16% 35.69%,
-      #7dd3fc 0.89%,
-      #38bdf8 71.54%,
-      #0ea5e9 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .bg-black-gradient {
-    background: linear-gradient(
-      144.39deg,
-      #ffffff -278.56%,
-      #6d6d6d -78.47%,
-      #11101d 91.61%
-    );
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 

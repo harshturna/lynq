@@ -1,42 +1,9 @@
-import { cn } from "@/lib/utils";
 import "./globals.css";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { cn } from "@/lib/utils";
 
-const fontSatoshi = localFont({
-  src: [
-    {
-      path: "../public/assets/fonts/Satoshi-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/assets/fonts/Satoshi-Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../public/assets/fonts/Satoshi-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../public/assets/fonts/Satoshi-Black.woff2",
-      weight: "900",
-      style: "black",
-    },
-  ],
-  variable: "--font-satoshi",
-});
-
-const fontHeading = localFont({
-  src: "../public/assets/fonts/CalSans-SemiBold.woff2",
-  variable: "--font-heading",
-});
-
-// The new UI's face (design §3, D-008): the variable Geist file that ships with the app.
-// Exposed as a variable only; the old dashboard and the landing page keep Satoshi until
-// TICKET-035 applies the light base.
+/** The one face (design §3, D-008): the variable Geist file that ships with the app. */
 const fontGeist = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist",
@@ -45,7 +12,7 @@ const fontGeist = localFont({
 
 export const metadata: Metadata = {
   title: "Lynq",
-  description: "Privacy first analytics",
+  description: "Analytics that respects your visitors.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -58,14 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={cn(
-          "bg-black text-white",
-          fontSatoshi.variable,
-          fontHeading.variable,
-          fontGeist.variable
-        )}
-      >
+      <body className={cn("bg-canvas font-sans text-ink", fontGeist.variable)}>
         {children}
         {/* Lynq tracks itself (design §11). */}
         <script
