@@ -29,8 +29,8 @@ export function Hero({ demo }: { demo: DemoStats | null }) {
         </h1>
         <p className="mt-[22px] max-w-[52ch] text-[16px] leading-[1.55] text-ink-2">
           Lynq shows where people came from, what they read and what they did,
-          on one page you can read in a minute. No cookies, no banner, and none
-          of <Mark nowrap>your time</Mark> wasted.
+          on one page you can read in a minute. No cookies, no banner, and{" "}
+          <Mark nowrap>no one being followed</Mark>.
         </p>
         <div className="mt-[26px] flex items-center">
           <Link href="/sign-up" className={BTN}>

@@ -34,7 +34,7 @@ Closed.
 ```
 npm run verify   # pass, 157 unit tests
 ```
-DEPLOY_RESULT
+After the deploys: docs-lynq.byharsh.com/favicon.ico is a 4-size Windows icon; lynq.byharsh.com/icon.svg answers 200 and the page links it as rel=icon with the apple-touch-icon.
 
 ## Outcome
 Shipped: the app icon files and layout change; lynq-docs commit e672b61. Nothing left out; no follow-ups.
