@@ -34,7 +34,7 @@ export default function SignUpPage() {
   return (
     <AuthCard
       title="Create your account"
-      lede="Free during beta. One script tag, no cookies, no consent banner."
+      lede="Always free. One script tag, no cookies, no consent banner."
     >
       <form action={action} className="flex flex-col gap-4">
         <Field

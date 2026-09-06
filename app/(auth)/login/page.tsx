@@ -58,7 +58,7 @@ export default function LoginPage() {
         disabled={guestPending}
         className={QUIET}
       >
-        {guestPending ? "Opening the demo…" : "Explore app as guest →"}
+        {guestPending ? "Opening a live site…" : "Explore app as guest →"}
       </button>
       <p className="mt-8 text-[13.5px] text-ink-2">
         New to Lynq?{" "}

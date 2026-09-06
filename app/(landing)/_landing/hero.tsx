@@ -44,16 +44,14 @@ export function Hero({ demo }: { demo: DemoStats | null }) {
           </Link>
         </div>
         <ul className="mt-[18px] flex flex-wrap gap-x-[18px] gap-y-1 text-[12.5px] text-mute">
-          {["One line to install", "No cookies", "Free during beta"].map(
-            (t) => (
-              <li key={t}>
-                <span aria-hidden className="mr-[6px] text-teal">
-                  ✓
-                </span>
-                {t}
-              </li>
-            )
-          )}
+          {["One line to install", "No cookies", "Always free"].map((t) => (
+            <li key={t}>
+              <span aria-hidden className="mr-[6px] text-teal">
+                ✓
+              </span>
+              {t}
+            </li>
+          ))}
         </ul>
         {demo && <LiveCount initial={demo.visitorsNow} />}
       </div>

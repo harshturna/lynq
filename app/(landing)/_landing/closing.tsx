@@ -8,7 +8,7 @@ export function Closing() {
       <h2 className="mb-[30px] text-[34px] font-medium leading-[1.1] tracking-[-0.025em] md:text-[48px]">
         Analytics without the tracking.
         <br />
-        <span className="text-mute">Free during beta.</span>
+        <span className="text-mute">Always free.</span>
       </h2>
       <Link href="/sign-up" className={BTN}>
         Start free
