@@ -518,6 +518,9 @@ export function DataTable({
                     return (
                       <Fragment key={c.key}>
                         <td
+                          // a relative time ("just now") can tick over between
+                          // the server render and hydration; the client value wins
+                          suppressHydrationWarning
                           className={cn(
                             "whitespace-nowrap tabular",
                             numeric(c, i),

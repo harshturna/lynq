@@ -836,7 +836,10 @@ function ApiKeys({
                 <td className="py-[9px] pr-4 text-mute">
                   {k.scopes.join(", ")}
                 </td>
-                <td className="py-[9px] pr-4 text-mute">
+                <td
+                  suppressHydrationWarning
+                  className="py-[9px] pr-4 text-mute"
+                >
                   {k.lastUsedAt ? fmtAgo(new Date(k.lastUsedAt)) : "never"}
                 </td>
                 <td className="py-[9px] text-right">

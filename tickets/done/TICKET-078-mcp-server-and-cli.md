@@ -81,4 +81,4 @@ Shipped: `POST /api/mcp`, an MCP server over Streamable HTTP inside the app, aut
 
 Left out, per D-019 and the owner: the CLI and any npm package (`mcp-remote` covers stdio-only clients); a REST API; raw events or sessions; OAuth. The ticket's title keeps "CLI" for the record of what was considered.
 
-Follow-ups: none filed. If a terminal client is wanted later it is one more client of this endpoint.
+Follow-ups: TICKET-088, filed the same day when the owner asked whether a real client had been tried: the login proxy was redirecting every keyed endpoint, and the e2e request context's cookies had hidden it. Fixed there. If a terminal client is wanted later it is one more client of this endpoint.
