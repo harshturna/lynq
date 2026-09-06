@@ -22,6 +22,7 @@ import type {
 import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter, withParam } from "@/lib/url-state";
 import { AttentionLine } from "./attention-line";
+import { PAGE_VIEWS } from "./views";
 
 const SHOWN = 12;
 
@@ -186,11 +187,7 @@ export function PagesTable({
               />
             </label>
           }
-          views={[
-            { key: "all", label: "All" },
-            { key: "entry", label: "Entry" },
-            { key: "exit", label: "Exit" },
-          ]}
+          views={PAGE_VIEWS}
           defaultView="all"
           columns={shown}
           rows={matched.slice(0, SHOWN)}

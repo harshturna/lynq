@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Reveal } from "./reveal";
 
@@ -297,6 +297,74 @@ const ROWS: [string, number, string, string][] = [
   ["/dashboard", 40, "226", "4.2%"],
   ["/login", 31, "177", "1.0%"],
 ];
+
+/** The Attention view (D-016): the pool, split, then ranked by share. */
+const ATTENTION: [string, number, string, string, string][] = [
+  ["/docs/getting-started", 100, "21.7%", "16h 06m", "0.53×"],
+  ["/", 56, "12.2%", "9h 00m", "0.72×"],
+  ["/pricing", 49, "10.6%", "7h 52m", "2.21×"],
+  ["/docs/integrations", 45, "9.8%", "7h 16m", "0.29×"],
+  ["/blog/evals-are-your-product", 26, "5.7%", "4h 12m", "1.17×"],
+];
+const POOL = [21.7, 12.2, 10.6, 9.8, 5.7];
+
+export function AttentionPanel() {
+  const rest = 100 - POOL.reduce((a, n) => a + n, 0);
+  return (
+    <Panel className="h-[400px]">
+      {/* oversized on purpose: the UI bleeds off the panel's right edge (D-014) */}
+      <Ui style={{ left: 48, top: 40, width: 980 }}>
+        <p className="mb-[10px] text-[12.5px] text-mute">
+          <b className="mr-[6px] text-[24px] font-medium tracking-[-0.02em] text-ink">
+            74 hours
+          </b>
+          of attention in the last 30 days
+        </p>
+        <div
+          aria-hidden
+          className="mb-[10px] flex h-3 w-full gap-px overflow-hidden rounded-[3px] bg-soft"
+        >
+          {POOL.map((share, i) => (
+            <span
+              key={ATTENTION[i][0]}
+              className="h-full"
+              style={{
+                width: `${share}%`,
+                background: `color-mix(in oklab, var(--teal) ${100 - i * 16}%, var(--teal-3))`,
+              }}
+            />
+          ))}
+          <span className="h-full bg-teal-3" style={{ width: `${rest}%` }} />
+        </div>
+        <p className="mb-[14px] text-[12.5px] leading-[1.5] text-ink-2">
+          The 5 pages above hold <b className="font-medium text-ink">60%</b> of
+          it. <b className="font-medium text-ink">/docs/getting-started</b>{" "}
+          alone holds 16h 06m, and is read to the end 46% of the time.
+        </p>
+        <div className="grid grid-cols-[1fr_70px_86px_78px] gap-x-[14px] text-[13px] max-md:grid-cols-[1fr_64px_74px]">
+          <Th>Page</Th>
+          <Th right>Share</Th>
+          <Th right className="max-md:hidden">
+            Time
+          </Th>
+          <Th right>Influence</Th>
+          {ATTENTION.map(([path, , share, time, lift]) => (
+            <Fragment key={path}>
+              <Td className="truncate">{path}</Td>
+              <Td right className="font-medium text-ink">
+                {share}
+              </Td>
+              <Td right className="max-md:hidden">
+                {time}
+              </Td>
+              <Td right>{lift}</Td>
+            </Fragment>
+          ))}
+        </div>
+      </Ui>
+    </Panel>
+  );
+}
 
 export function FiltersPanel() {
   return (

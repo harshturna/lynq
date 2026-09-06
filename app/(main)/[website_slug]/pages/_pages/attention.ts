@@ -77,3 +77,64 @@ export function attentionSummary(
         : null,
   };
 }
+
+/**
+ * The Attention view's lead (TICKET-080, D-016): attention is a finite pool
+ * the site spent, so the view names it before ranking it. Shares are of
+ * total attention, not of pageviews, which is what the D-011 line above
+ * splits.
+ */
+export type AttentionLead = {
+  segments: Segment[];
+  /** Attention of the whole site in the range, in milliseconds. */
+  totalMs: number;
+  /** Share the segments above the rest hold, 0 to 100. */
+  topShare: number;
+  topCount: number;
+  leader: { path: string; ms: number; share: number; read: number | null };
+};
+
+export const LEAD_PAGES = 5;
+
+export function attentionLead(
+  rows: {
+    value: string;
+    attention_ms: number;
+    read_through: number | null;
+  }[],
+  totalMs: number,
+  shown = LEAD_PAGES
+): AttentionLead | null {
+  const ranked = rows.filter((r) => r.attention_ms > 0);
+  if (ranked.length < 2 || totalMs <= 0) return null;
+  const top = ranked.slice(0, shown);
+  const segments: Segment[] = top.map((r) => ({
+    key: r.value,
+    label: r.value,
+    value: r.attention_ms,
+  }));
+  const rest = totalMs - top.reduce((a, r) => a + r.attention_ms, 0);
+  const others = ranked.length - top.length;
+  if (rest > 0)
+    segments.push({
+      key: "__rest",
+      label:
+        others > 0
+          ? `${others} other ${others === 1 ? "page" : "pages"}`
+          : "other pages",
+      value: rest,
+    });
+  const first = top[0];
+  return {
+    segments,
+    totalMs,
+    topShare: (top.reduce((a, r) => a + r.attention_ms, 0) / totalMs) * 100,
+    topCount: top.length,
+    leader: {
+      path: first.value,
+      ms: first.attention_ms,
+      share: (first.attention_ms / totalMs) * 100,
+      read: first.read_through,
+    },
+  };
+}

@@ -1,4 +1,5 @@
 import type { PagesScreen } from "@/lib/screens/pages";
+import { AttentionView } from "./attention-view";
 import { SelectedPagePanel } from "./selected";
 import { PagesTable } from "./table";
 
@@ -11,6 +12,14 @@ export async function TableSection({
   slug: string;
   hasFilters: boolean;
 }) {
+  if (screen.attention)
+    return (
+      <AttentionView
+        data={await screen.attention}
+        rangeLabel={screen.rangeLabel}
+      />
+    );
+  if (!screen.table) return null;
   const table = await screen.table;
   return (
     <PagesTable

@@ -5,6 +5,7 @@ import { Closing, LandingFooter } from "./_landing/closing";
 import { Hero } from "./_landing/hero";
 import { LandingNav } from "./_landing/nav";
 import {
+  AttentionPanel,
   Eyebrow,
   Feature,
   FiltersPanel,
@@ -44,6 +45,14 @@ export default async function LandingPage() {
           rest="Traffic, sources, pages and your goal, without clicking around."
         >
           <OverviewPanel />
+        </Feature>
+
+        <Feature
+          eyebrow="Attention"
+          lead="See which pages actually hold people."
+          rest="Time held, how far people read, and which pages help them convert. Not just how often a page was opened."
+        >
+          <AttentionPanel />
         </Feature>
 
         <Feature

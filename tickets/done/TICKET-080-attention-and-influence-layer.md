@@ -1,9 +1,9 @@
 # TICKET-080: Attention and influence, a layer over the numbers Lynq already has
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-06
 **Started:** 2026-09-06
-**Completed:** —
+**Completed:** 2026-09-06
 **Area:** feature
 
 ## Goal
@@ -72,26 +72,45 @@ Without changing what Lynq counts today, add a second reading of the same rows t
 - [x] Decision: D-016, taken on measured evidence.
 - [x] Query: `attention(ctx)` and read-through per page from engagement rows; `influence(ctx, goal)` from the sessions CTE with the before-conversion rule; budgets on the seed fixture.
 - [x] Seed: scroll depth and engaged time shaped per page type so read-through has real spread.
-- [ ] Pages screen: the Attention view (Attention, Share, Read-through, Influence), the attention line reworded in minutes, the em dash under each minimum, one-sentence descriptions where the numbers are.
-- [ ] Mock the view at 1280 and 375 with the measured numbers, and look before wiring (D-010).
-- [ ] Landing panel and docs pages; the docs' counting page carries the three definitions verbatim.
-- [ ] Verify: npm run verify; npm run test:integration; npm run test:e2e; measure on production.
+- [x] Pages screen: the Attention view (Attention, Share, Read-through, Influence), the attention line reworded in minutes, the em dash under each minimum, one-sentence descriptions where the numbers are.
+- [x] Mock the view at 1280 and 375 with the measured numbers, and look before wiring (D-010).
+- [x] Landing panel and docs pages; the docs' counting page carries the three definitions verbatim.
+- [x] Verify: npm run verify; npm run test:integration; npm run test:e2e; measure on production.
 
 ## Progress log
 - 2026-09-06 — Created from the owner's differentiation question; keep today's metrics, add the layer.
+- 2026-09-06 — Mocked the view and the owner rejected the first pass: a duration on its own does not say what it measures, and the table read like any other. Four framings were mocked instead, and the chosen one names the pool before ranking it: a headline ("74 hours of attention in the last 30 days"), the split bar across the top five pages, one sentence, then the table with Share leading because a percentage explains itself. The word "attention" stays, defined once in the headline; the column header is the plain "Time".
+- 2026-09-06 — Built and looked at both widths. Two fixes from looking: the compare slot rendered a column of em dashes, because these metrics have no previous-period figures, so the table is rendered with compare off; and at 375 the header "Share of attention" was long enough to starve the label column, so it is "Share" and Time joins Read-through as secondary.
 - 2026-09-06 — `lib/query/attention.ts` written with both primitives and wrapped in run.ts. Checked against production: the primitives reproduce the hand-measured numbers (/docs/getting-started 1,527 minutes, /pricing lift 1.48). `tests/integration/attention.integration.test.ts` proves the rules on a fixture built for them, including that a page only reachable after converting never earns influence.
 - 2026-09-06 — The seed drew scroll depth uniformly regardless of page, so read-through was flat at 28 to 37% everywhere. It is now shaped by page family (long-form, marketing, app screen) and a unit test asserts the three separate.
 - 2026-09-06 — Influence took 5,328 ms on the 90-day fixture and blew the statement timeout. The plan showed the `per` CTE joining back to the session CTE, which has no index, so every one of 18,825 rows rescanned 8,402 sessions. Carrying the converted flag through the `seen` CTE instead removed the join: 69 ms, a 77-fold improvement. Attention was 27 ms throughout.
 - 2026-09-06 — Started by measuring all three metrics on production. That moved attention and read-through off pageview rows onto engagement rows, and settled the influence rule against the evidence (see Context). Design section and D-016 written before any code.
 
 ## Handoff
-- **State:** the design (docs/design/attention-and-influence.md), D-016, both query primitives with their run wrappers, the seed's scroll shape, an integration test that proves each rule, and budgets (attention 60 ms, influence 140 ms) are done and green. The screen, the landing panel and the docs are not started.
-- **Blocked on:** nothing
-- **Next:** mock the Attention view at 1280 and 375 with the measured numbers, then build it on the Pages screen; then the landing panel and the docs' counting page.
-- **Read first:** docs/design/attention-and-influence.md §3 for the view's columns, lib/query/attention.ts
+Closed; see Verification and Outcome.
 
 ## Verification
-Filled in on completion. The command that was run, in a code block, and its result.
+```
+npm run verify                                   # lint, typecheck, ticket check, 166 unit tests: pass
+TEST_DATABASE_URL=... npm run test:integration   # 8 files, 47 tests: pass
+  budgets: attention 27 ms (budget 60), influence 69 ms (budget 140)
+TEST_DATABASE_URL=... npm run test:e2e           # 80 passed (2.9 m)
+cd ../lynq-docs && npm run build                 # compiled, 26 pages
+```
+`tests/integration/attention.integration.test.ts` proves each rule on a fixture built for it:
+a page reachable only after converting never earns influence, a page under 30 pageviews reports
+no read-through, and lift is null when either side is under 50 sessions.
+`tests/e2e/app/attention.spec.ts` opens the view from the tab, checks the pool sentence and the
+split bar, asserts the shares are ordered, filters from a row, and runs axe at 1280 and 375.
+Looked at, not just asserted: the view at both widths, the landing panel in place, and the four
+competing mocks before choosing.
 
 ## Outcome
-Filled in on completion: what shipped, what was deliberately left out, follow-up tickets created.
+Shipped: `docs/design/attention-and-influence.md` and D-016; `lib/query/attention.ts` with both
+primitives and their run wrappers; the seed's page-shaped scroll depth; the Pages screen's fourth
+view with its pool lead, split and sentence; the landing page's Attention section; the docs'
+three definitions, a page on reading the view, and a home-page line (lynq-docs 1ec3025).
+Left out: a previous-period comparison for these three metrics, so the Attention view renders
+with the change column off; ranking the Overview's Pages table by attention, which the design
+called a later step; and carrying attention in the daily rollup, which is unnecessary at 27 ms
+and would be a guess without numbers behind it. No follow-up tickets filed.

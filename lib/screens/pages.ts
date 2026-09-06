@@ -6,8 +6,10 @@ import type { FlowRow } from "@/lib/query/flow";
 import type { GoalStats } from "@/lib/query/goals";
 import type { Granularity } from "@/lib/query/ranges";
 import {
+  attention,
   breakdownMulti,
   goalStats,
+  influence,
   pageFlow,
   summary,
   timeseries,
@@ -27,7 +29,7 @@ import { type Section, settle } from "./settle";
  */
 export const PAGE_TABLE_LIMIT = 200;
 
-export type PagesView = "all" | "entry" | "exit";
+export type PagesView = "all" | "entry" | "exit" | "attention";
 
 export type PagesTable = {
   view: PagesView;
@@ -50,14 +52,30 @@ export type SelectedPage = {
   trend: { current: Point[]; previous: Point[] | null };
 };
 
+/** The Attention view's rows (D-016): attention, read-through and influence. */
+export type AttentionData = {
+  rows: {
+    value: string;
+    attention_ms: number;
+    read_through: number | null;
+    lift: number | null;
+  }[];
+  siteAttentionMs: number;
+  total: number;
+};
+
 export type PagesScreen = {
   view: PagesView;
+  /** "this month", "in the last 7 days": the Attention pool needs a period. */
+  rangeLabel: string;
   granularity: Granularity;
   timezone: string;
   compare: boolean;
   kpi: Kpi;
   sel: string | undefined;
-  table: Promise<Section<PagesTable>>;
+  /** Null on the Attention view, which has its own shape. */
+  table: Promise<Section<PagesTable>> | null;
+  attention: Promise<Section<AttentionData>> | null;
   /** Visitors per bucket for the top rows, by path. */
   selected: Promise<Section<SelectedPage | null>>;
 };
@@ -72,7 +90,10 @@ export type PagesScreen = {
  */
 function viewsFor(
   kpi: Kpi
-): Record<PagesView, { dimension: string; metrics: MetricSpec[] }> {
+): Record<
+  Exclude<PagesView, "attention">,
+  { dimension: string; metrics: MetricSpec[] }
+> {
   const session: MetricSpec[] = [
     "sessions",
     "visitors",
@@ -92,6 +113,23 @@ function viewsFor(
   };
 }
 
+/** The range as a phrase that follows "104 hours of attention …". */
+function poolPeriod(range: ViewState["range"]): string {
+  if (typeof range !== "string") return "in this range";
+  const phrases: Record<string, string> = {
+    last_24h: "in the last 24 hours",
+    today: "today",
+    yesterday: "yesterday",
+    last_7d: "in the last 7 days",
+    last_30d: "in the last 30 days",
+    last_90d: "in the last 90 days",
+    this_week: "this week",
+    this_month: "this month",
+    last_12mo: "in the last 12 months",
+  };
+  return phrases[range] ?? "in this range";
+}
+
 const toPoints = (s: { bucket: Date; value: number }[]): Point[] =>
   s.map((p) => ({ t: p.bucket.toISOString(), v: p.value }));
 
@@ -104,10 +142,12 @@ export function getPagesScreen(
     ? { ...ctx, range: ctx.compare, compare: undefined }
     : null;
   const view: PagesView =
-    state.view.pages === "entry" || state.view.pages === "exit"
+    state.view.pages === "entry" ||
+    state.view.pages === "exit" ||
+    state.view.pages === "attention"
       ? state.view.pages
       : "all";
-  const spec = viewsFor(kpi)[view];
+  const spec = viewsFor(kpi)[view === "attention" ? "all" : view];
 
   const table = async (): Promise<PagesTable> => {
     const [cur, before, entries, exits, sum] = await Promise.all([
@@ -146,7 +186,26 @@ export function getPagesScreen(
       pageviews: sum.current.pageviews,
     };
   };
-  const tablePromise = table();
+  const tablePromise = view === "attention" ? null : table();
+
+  /** The Attention view (D-016): two primitives merged on the path. */
+  const attentionData = async (): Promise<AttentionData> => {
+    const [a, inf] = await Promise.all([
+      attention(ctx, { limit: PAGE_TABLE_LIMIT }),
+      kpi.goal ? influence(ctx, kpi.goal, { limit: PAGE_TABLE_LIMIT }) : null,
+    ]);
+    const lift = new Map((inf ?? []).map((r) => [r.value, r.lift]));
+    return {
+      rows: a.rows.map((r) => ({
+        value: r.value,
+        attention_ms: r.attention_ms,
+        read_through: r.read_through,
+        lift: lift.get(r.value) ?? null,
+      })),
+      siteAttentionMs: a.siteAttentionMs,
+      total: a.total,
+    };
+  };
 
   const selected = async (): Promise<SelectedPage | null> => {
     const path = state.sel;
@@ -182,12 +241,15 @@ export function getPagesScreen(
 
   return {
     view,
+    rangeLabel: poolPeriod(state.range),
     granularity: ctx.granularity,
     timezone: ctx.timezone,
     compare: prev !== null,
     kpi,
     sel: state.sel,
-    table: settle("pages.table", tablePromise),
+    table: tablePromise ? settle("pages.table", tablePromise) : null,
+    attention:
+      view === "attention" ? settle("pages.attention", attentionData()) : null,
     selected: settle("pages.selected", selected()),
   };
 }
