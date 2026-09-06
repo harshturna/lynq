@@ -6,6 +6,11 @@ test("pages: search, select, keyboard filter and the share round-trip", async ({
   browser,
 }) => {
   await open(page, `${SITE_PATH}/pages`);
+  // The attention line (D-011): a named split bar and the sentence.
+  await expect(
+    page.getByRole("img", { name: /^Where the attention goes:/ })
+  ).toBeVisible();
+  await expect(page.getByText(/pages take \d+% of pageviews/)).toBeVisible();
   const table = page.getByRole("region", { name: "Pages" });
 
   // Search narrows the table without touching the URL.

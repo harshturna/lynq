@@ -12,7 +12,6 @@ import {
   Heatmap,
   Histogram,
   Quadrant,
-  Treemap,
 } from "@/components/charts/shapes";
 import { DeltaBadge, Pill } from "@/components/shell/badge";
 import { Control, Segmented } from "@/components/shell/control";
@@ -53,21 +52,6 @@ import { makeBins } from "@/lib/charts/histogram";
 import { withFilter, withParam } from "@/lib/url-state";
 
 /** Every shell component on sample data (TICKET-030 to TICKET-033). */
-const TREEMAP = [
-  ["/", 5210, 48],
-  ["/pricing", 2610, 96],
-  ["/docs/getting-started", 1840, 132],
-  ["/blog/launch", 1420, 210],
-  ["/signup", 1102, 61],
-  ["/docs/api", 980, 155],
-  ["/about", 640, 34],
-  ["/changelog", 420, 88],
-].map(([label, value, shade]) => ({
-  key: String(label),
-  label: String(label),
-  value: Number(value),
-  shade: Number(shade),
-}));
 const QUADRANT = [
   ["Google", 6200, 3.4, 211],
   ["Direct", 3100, 4.1, 127],
@@ -561,16 +545,6 @@ function Body() {
         />
       </div>
 
-      <Section title="Pages" qualifier="area visitors · shade engaged" strong>
-        <Treemap
-          title="Pages by visitors"
-          cells={TREEMAP}
-          total={16000}
-          shadeLabel="engaged"
-          formatShade={(v) => `${v}s`}
-        />
-      </Section>
-
       <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
         <Section title="Sources" qualifier="visitors × conversion" strong>
           <Quadrant
@@ -633,11 +607,6 @@ function Body() {
 
       <Section title="Thresholds" qualifier="what shows with too little data">
         <div className="grid gap-4 min-[1000px]:grid-cols-2">
-          <Treemap
-            title="Pages (too few)"
-            cells={TREEMAP.slice(0, 3)}
-            shadeLabel="engaged"
-          />
           <Histogram
             title="LCP (too few)"
             name="Samples"

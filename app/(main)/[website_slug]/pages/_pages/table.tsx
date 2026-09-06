@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Sparkline, trendLabel } from "@/components/charts/charts";
-import { Treemap } from "@/components/charts/shapes";
 import {
   type Column,
   DataTable,
@@ -22,10 +21,9 @@ import type {
 } from "@/lib/screens/pages";
 import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter, withParam } from "@/lib/url-state";
+import { AttentionLine } from "./attention-line";
 
 const SHOWN = 12;
-/** Top rows in the treemap plus the everything-else leaf (design §8.3). */
-const TREEMAP_CELLS = 12;
 
 const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
 const dur: Column["format"] = (v) =>
@@ -111,7 +109,7 @@ function columnsFor(
   ];
 }
 
-/** The treemap, the search box and the table (design §8.3). */
+/** The attention line (D-011), the search box and the table (design §8.3). */
 export function PagesTable({
   slug: _slug,
   view,
@@ -178,12 +176,6 @@ export function PagesTable({
     update(withFilter(state, { dimension, op: "is", values: [row.id] }));
     announce(`Added ${filterSentence(dimension, "is", [row.id])}.`);
   };
-  const cells = t.rows.slice(0, TREEMAP_CELLS).map((r) => ({
-    key: r.value,
-    label: r.value,
-    value: Number(r.pageviews ?? r.sessions ?? 0),
-    shade: Number(r.engaged_time ?? 0),
-  }));
   const emptyText = hasFilters
     ? "Nothing matches these filters"
     : "No pageviews in this period";
@@ -197,24 +189,7 @@ export function PagesTable({
       )}
     >
       {view === "all" && (
-        <Section
-          title="Where the attention goes"
-          qualifier="area is pageviews, shade is engaged time"
-        >
-          <Treemap
-            title="Pages by pageviews and engaged time"
-            cells={cells}
-            total={t.pageviews}
-            shadeLabel="engaged"
-            unit="pageviews"
-            formatShade={(v) => fmtDuration(v)}
-            onMarkClick={(m) => {
-              const cell = cells[m.dataIndex];
-              if (cell)
-                update(withParam(state, "sel", cell.key), { replace: true });
-            }}
-          />
-        </Section>
+        <AttentionLine rows={t.rows} pageviews={t.pageviews} />
       )}
       <div>
         <div className="mb-3 flex justify-end">

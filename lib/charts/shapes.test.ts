@@ -8,40 +8,10 @@ import {
   heatmapThreshold,
   histogramThreshold,
   quadrantThreshold,
-  treemapThreshold,
 } from "./thresholds";
-import { treemapCells, treemapOption } from "./treemap";
 
 // biome-ignore lint/suspicious/noExplicitAny: option shapes are loosely typed
 type Any = any;
-
-describe("treemap", () => {
-  const cells = [
-    { key: "/", label: "/", value: 500, shade: 40 },
-    { key: "/pricing", label: "/pricing", value: 200, shade: 90 },
-  ];
-  it("adds an everything-else leaf so the area sums to the total", () => {
-    const all = treemapCells(cells, 1000);
-    expect(all).toHaveLength(3);
-    expect(all[2]).toMatchObject({
-      key: "__rest",
-      label: "everything else",
-      value: 300,
-    });
-    expect(treemapCells(cells, 700)).toHaveLength(2);
-    expect(treemapCells(cells)).toHaveLength(2);
-  });
-  it("shades by the second value dimension", () => {
-    const o = treemapOption(cells, {
-      shadeLabel: "engaged",
-      total: 1000,
-    }) as Any;
-    expect(o.visualMap.dimension).toBe(1);
-    expect(o.visualMap.max).toBe(90);
-    expect(o.series[0].data[1].value).toEqual([200, 90]);
-    expect(o.series[0].label.color).toBe("#0a0a0a");
-  });
-});
 
 describe("quadrant", () => {
   const points = [
@@ -148,9 +118,6 @@ describe("dot plot", () => {
 
 describe("thresholds", () => {
   it("name the count or the width that is missing", () => {
-    expect(treemapThreshold(3, 900).ok).toBe(false);
-    expect(treemapThreshold(4, 599).reason).toMatch(/wider/);
-    expect(treemapThreshold(4, null).ok).toBe(true);
     expect(quadrantThreshold(2).reason).toMatch(/3 or more sources/);
     expect(heatmapThreshold(29, 900).reason).toMatch(/30 or more sessions/);
     expect(heatmapThreshold(30, 699).reason).toMatch(/wider/);

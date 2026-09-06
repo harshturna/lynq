@@ -7,7 +7,7 @@ import { suggestValues } from "@/lib/screens/suggest";
 import type { SearchInput } from "@/lib/url-state";
 import { SelectedSection, TableSection } from "./_pages/sections";
 
-/** Pages (design §8.3): treemap, the table with All / Entry / Exit, the selected page below. */
+/** Pages (design §8.3, D-011): the attention line, the table with All / Entry / Exit, the selected page below. */
 export default async function PagesPage(props: {
   params: Promise<{ website_slug: string }>;
   searchParams: Promise<SearchInput>;

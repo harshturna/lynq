@@ -9,7 +9,6 @@ import {
   HeatmapChart,
   LineChart,
   ScatterChart,
-  TreemapChart,
 } from "echarts/charts";
 import {
   GraphicComponent,
@@ -31,7 +30,6 @@ export function setupEcharts() {
     LineChart,
     BarChart,
     ScatterChart,
-    TreemapChart,
     HeatmapChart,
     GridComponent,
     GraphicComponent,

@@ -33,7 +33,7 @@ export const SERIES_COLORS = [
   TOKENS.teal3,
 ];
 
-/** Teal ramp for heatmaps and treemaps: 4% to 80% teal over white. */
+/** Teal ramp for heatmaps: 4% to 80% teal over white. */
 export const RAMP = [
   "#f5faf9",
   "#d9ece9",

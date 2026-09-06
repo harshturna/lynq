@@ -20,9 +20,9 @@ import type { Kpi } from "./kpi";
 import { type Section, settle } from "./settle";
 
 /**
- * The Pages screen (design §8.3): the treemap and the table share one
+ * The Pages screen (design §8.3): the attention line and the table share one
  * breakdown; entries and exits join it from the session dimensions; the
- * treemap's area is pageviews (unique visitors do not add up across pages, so
+ * attention line's split is pageviews (unique visitors do not add up across pages, so
  * an everything-else leaf could not be sized from them); the
  * selected page adds its flow, vitals, goal and trend.
  */
@@ -40,7 +40,7 @@ export type PagesTable = {
   entries: Record<string, number>;
   exits: Record<string, number>;
   total: number;
-  /** Pageviews in the range: the treemap's area, which must sum to the site's total. */
+  /** Pageviews in the range: the attention line's total, which the split must sum to. */
   pageviews: number;
 };
 

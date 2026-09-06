@@ -23,14 +23,7 @@ import {
   heatmapThreshold,
   histogramThreshold,
   quadrantThreshold,
-  treemapThreshold,
 } from "@/lib/charts/thresholds";
-import {
-  type TreemapCell,
-  type TreemapOptions,
-  treemapCells,
-  treemapOption,
-} from "@/lib/charts/treemap";
 import { Chart, type MarkClick } from "./chart";
 import { ChartOrFallback } from "./fallback";
 import { HiddenTable } from "./hidden-table";
@@ -40,50 +33,6 @@ import { HiddenTable } from "./hidden-table";
  * writes its one-sentence description, renders its table equivalent and
  * gives way to a sentence below its count or width threshold (§12).
  */
-export function Treemap({
-  title,
-  cells,
-  height = 260,
-  onMarkClick,
-  ...opts
-}: {
-  title: string;
-  cells: TreemapCell[];
-  height?: number;
-  onMarkClick?: (m: MarkClick) => void;
-} & TreemapOptions) {
-  const { shadeLabel, formatShade, total, animation, unit } = opts;
-  const option = useMemo(
-    () =>
-      treemapOption(cells, { shadeLabel, formatShade, total, animation, unit }),
-    [cells, shadeLabel, formatShade, total, animation, unit]
-  );
-  const all = treemapCells(cells, total);
-  const fs = formatShade ?? fmtNumber;
-  const top = cells[0];
-  const description = top
-    ? `${title}: ${cells.length} pages; largest ${top.label} with ${fmtNumber(top.value)} ${unit ?? "visitors"}, ${shadeLabel} ${fs(top.shade)}.`
-    : `${title}: no data.`;
-  return (
-    <ChartOrFallback check={(w) => treemapThreshold(cells.length, w)}>
-      <Chart
-        option={option}
-        height={height}
-        title={title}
-        description={description}
-        onMarkClick={onMarkClick}
-        table={
-          <HiddenTable
-            caption={title}
-            columns={["Page", unit ?? "visitors", shadeLabel]}
-            rows={all.map((c) => [c.label, fmtNumber(c.value), fs(c.shade)])}
-          />
-        }
-      />
-    </ChartOrFallback>
-  );
-}
-
 export function Quadrant({
   title,
   points,

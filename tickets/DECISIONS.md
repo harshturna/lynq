@@ -222,3 +222,26 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   costs nothing in queries (share of the top row). The accent now doubles as the series
   colour, so accent-coloured controls near a chart must stay clearly control-shaped. D-008
   otherwise stands.
+
+## D-011 — The Pages lead view is an attention line, not a treemap
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** The treemap chosen in §7 and §8.3 of the Phase 1 design (D-009's inventory)
+  read as messy in use: truncated titles in small cells, two numbers per cell, an "everything
+  else" block, rounded tiles unlike anything else on the light base. The owner rejected it
+  and asked for a calmer screen. Ranked shaded bars were mocked and rejected because they
+  repeat the table directly below.
+- **Decision:** The Pages screen opens on one line: a split bar of pageviews across the top
+  six pages plus "N other pages" (the Devices `SplitBar`), and a sentence with what the
+  table does not show at a glance, the top three pages' share and where engaged time is
+  longest and shortest. The treemap code, its threshold and its ECharts registration are
+  removed; the table remains the accessible equivalent and the full list.
+- **Rejected alternatives:** a tidied treemap (top 8, one number per cell, square corners):
+  still a second layout language on the screen. Ranked shaded bars: a picture of the table
+  above the table. Opening the top page's panel by default: busier, and it reads as a click
+  the user did not make. Dropping the lead view altogether: the screen then rests on a bare
+  table; the owner asked for something that earns the space.
+- **Consequences:** Easier: one fewer chart type, no width threshold on Pages, the screen is
+  ~180 px shorter and every label is a full path. Harder: Phase 2's Sankey-style paths view
+  (§9.6) no longer has a treemap to grow out of; the design doc's §7 table and §8.3 are
+  superseded on this row and are not rewritten.

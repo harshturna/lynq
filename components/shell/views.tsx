@@ -321,17 +321,31 @@ export type Segment = {
 
 const SEGMENT_CLASSES = ["bg-teal", "bg-teal-2", "bg-teal-3", "bg-soft-2"];
 
-/** One bar split by share with a legend that carries the deltas (§8.6 device split). */
+/** Teal at a descending strength per segment, for more segments than the four device classes. */
+function rampStyle(i: number, n: number): React.CSSProperties {
+  const strength = n <= 1 ? 80 : 80 - (72 * i) / (n - 1);
+  return {
+    background: `color-mix(in srgb, var(--teal) ${strength}%, transparent)`,
+  };
+}
+
+/**
+ * One bar split by share with a legend that carries the deltas (§8.6 device
+ * split). `ramp` shades the segments from strong to faint in order, for the
+ * Pages attention line (D-011).
+ */
 export function SplitBar({
   title,
   segments,
   compare,
   format = fmtNumber,
+  ramp = false,
 }: {
   title: string;
   segments: Segment[];
   compare?: boolean;
   format?: (v: number) => string;
+  ramp?: boolean;
 }) {
   const total = segments.reduce((a, s) => a + s.value, 0);
   const share = (v: number) => (total ? (v / total) * 100 : 0);
@@ -350,9 +364,12 @@ export function SplitBar({
             key={s.key}
             className={cn(
               "h-full",
-              SEGMENT_CLASSES[i % SEGMENT_CLASSES.length]
+              !ramp && SEGMENT_CLASSES[i % SEGMENT_CLASSES.length]
             )}
-            style={{ width: `${share(s.value)}%` }}
+            style={{
+              width: `${share(s.value)}%`,
+              ...(ramp ? rampStyle(i, segments.length) : {}),
+            }}
           />
         ))}
       </div>
@@ -363,8 +380,9 @@ export function SplitBar({
               aria-hidden
               className={cn(
                 "inline-block h-2.5 w-2.5 rounded-[2px]",
-                SEGMENT_CLASSES[i % SEGMENT_CLASSES.length]
+                !ramp && SEGMENT_CLASSES[i % SEGMENT_CLASSES.length]
               )}
+              style={ramp ? rampStyle(i, segments.length) : undefined}
             />
             <span>{s.label}</span>
             <span className="tabular text-ink-2">

@@ -6,7 +6,7 @@ import type { Threshold } from "@/lib/charts/thresholds";
 /**
  * Renders a lead view only when its threshold passes (design §12). The
  * threshold takes the measured container width (null before the first
- * measurement, when only the count part is checked) so a treemap or
+ * measurement, when only the count part is checked) so a chart or
  * heatmap gives way to one sentence on narrow screens. The screen's table
  * is outside this component and stays where it is.
  */
