@@ -31,9 +31,11 @@ import {
   fillSeries,
   type Metric,
   type QueryContext,
+  ROW_METRICS,
   type RowsKind,
   type RowsOptions,
   rowsQuery,
+  SESSION_METRICS,
   type SeriesPoint,
   type Summary,
   summaryQueries,
@@ -42,6 +44,12 @@ import {
 import { buckets, type Granularity } from "./ranges";
 import { fillMinutes, type RealtimeRow, realtimeQuery } from "./realtime";
 import { type Revenue, revenueQuery } from "./revenue";
+import {
+  rollupApplies,
+  rollupBreakdownQuery,
+  rollupSummaryApplies,
+  rollupSummaryQuery,
+} from "./rollup";
 import {
   type TargetColumn,
   type VitalsRow,
@@ -54,12 +62,10 @@ import {
 
 /**
  * Per-screen statement timeout (design §9): over budget fails the section,
- * not the pool. The design named 1.5 s; measured on the production pooler
- * (TICKET-035, 183k rows) the multi-metric breakdowns alone take 1.3 to
- * 1.7 s at twelve months, so 5 s keeps long ranges rendering until the
- * daily rollup (TICKET-049) brings them back under the budget.
+ * not the pool. Unfiltered breakdowns read the daily rollup (D-015), which
+ * brought the twelve-month tables from 1.3 to 1.7 s back under this.
  */
-export const DEFAULT_TIMEOUT_MS = 5_000;
+export const DEFAULT_TIMEOUT_MS = 1_500;
 
 /** Executes a compiled query with the read timeout (design §14). */
 export async function run<T extends Record<string, unknown>>(
@@ -104,12 +110,21 @@ async function summaryFor(
   ctx: QueryContext,
   w: { from: Date; toExclusive: Date }
 ): Promise<Summary> {
+  const out: Record<string, number> = {};
+  for (const m of [...ROW_METRICS, ...SESSION_METRICS]) out[m] = 0;
+  if (rollupSummaryApplies(ctx, w)) {
+    const [r] = await run<Record<string, number>>(
+      rollupSummaryQuery(ctx, w),
+      ctx.timeoutMs
+    );
+    for (const m of Object.keys(out)) out[m] = Number(r?.[m] ?? 0);
+    return out as Summary;
+  }
   const { rows, sessions } = summaryQueries(ctx, w);
   const [[r], [s]] = await Promise.all([
     run<Record<string, number>>(rows, ctx.timeoutMs),
     run<Record<string, number>>(sessions, ctx.timeoutMs),
   ]);
-  const out: Record<string, number> = {};
   for (const [k, v] of Object.entries({ ...(r ?? {}), ...(s ?? {}) }))
     out[k] = Number(v ?? 0);
   return out as Summary;
@@ -157,10 +172,11 @@ export async function breakdownMulti(
   metrics: MetricSpec[],
   opts: BreakdownMultiOptions = {}
 ): Promise<{ rows: BreakdownMultiRow[]; total: number }> {
-  const rows = await run<BreakdownMultiRow>(
-    breakdownMultiQuery(ctx, dimension, metrics, opts),
-    ctx.timeoutMs
-  );
+  const compiled =
+    !Array.isArray(dimension) && rollupApplies(ctx, dimension, metrics, opts)
+      ? rollupBreakdownQuery(ctx, dimension, metrics, opts)
+      : breakdownMultiQuery(ctx, dimension, metrics, opts);
+  const rows = await run<BreakdownMultiRow>(compiled, ctx.timeoutMs);
   return {
     rows: rows.map((r) => {
       const out: Record<string, number | string | null> = {};

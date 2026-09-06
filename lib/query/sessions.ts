@@ -35,7 +35,7 @@ export const ENTRY_FIELDS = [
   "utm_term",
   "utm_content",
 ] as const;
-const ENTRY_COLUMN = `(array_agg(jsonb_build_object(${ENTRY_FIELDS.map((f) => `'${f}', e.${f}`).join(", ")}) order by e.ts, e.seq, e.pageview_id) filter (where e.event = 'pageview'))[1] as entry`;
+export const ENTRY_COLUMN = `(array_agg(jsonb_build_object(${ENTRY_FIELDS.map((f) => `'${f}', e.${f}`).join(", ")}) order by e.ts, e.seq, e.pageview_id) filter (where e.event = 'pageview'))[1] as entry`;
 
 /**
  * `extra` adds session-constant dimension columns as `min(col) as <name>`.

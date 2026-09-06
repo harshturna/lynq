@@ -77,6 +77,9 @@ export async function createFixture(databaseUrl: string): Promise<{
       >[];
       await sql`insert into analytics.events ${sql(chunk, ...([...EVENT_COLUMNS] as string[]))}`;
     }
+    // Fresh statistics and the daily rollup, as production has them.
+    await sql`analyze analytics.events`;
+    await sql`select analytics.rollup_refresh()`;
     // PostgREST may have started before the schema existed (CI); reload it.
     await sql`notify pgrst, 'reload schema'`;
     return { siteId, rows: all.length };

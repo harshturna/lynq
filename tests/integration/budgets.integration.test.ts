@@ -48,9 +48,13 @@ beforeAll(async () => {
     await sql`insert into analytics.events ${sql(chunk, ...([...EVENT_COLUMNS] as string[]))}`;
   }
   await sql`analyze analytics.events`;
+  // as in production, where housekeeping has rolled every day but the last two
+  await sql`select analytics.rollup_refresh(${new Date(until.getTime() - 2 * 86_400_000)}::date)`;
   q = await import("@/lib/query/run");
 }, 300_000);
 afterAll(async () => {
+  await sql`delete from analytics.rollup_daily where site_id = ${siteId}`;
+  await sql`delete from analytics.rollup_state where site_id = ${siteId}`;
   await sql`delete from analytics.events where site_id = ${siteId}`;
   await sql`delete from public.websites where id = ${siteId}`;
   const { sql: appSql } = await import("@/lib/db");
@@ -73,20 +77,21 @@ function ctx(over: Partial<QueryContext> = {}): QueryContext {
 
 /**
  * Budgets in ms: measured × 1.5 rounded up to the next 10, with a 30 ms floor
- * so a 3 ms query does not fail on scheduler jitter. Measured 2026-09-05 on
- * 47,601 rows (90 days × 40 visitors/day, seed 7): summary 38, timeseries
- * 52/61, breakdown_path 17, breakdownMulti_path 128, entry_channel with goal
- * metrics 172, matrix 29, prop_key 5, realtime 3, pageFlow 100, goalStats 68,
- * funnel 78, heatmap 33, histogram 16, pathsTo 5, vitals 21/21/24,
- * rows_sessions 87. Re-measure and update when a primitive changes shape.
+ * so a 3 ms query does not fail on scheduler jitter. Measured 2026-09-06 on
+ * 47,601 rows (90 days × 40 visitors/day, seed 7) with the rollup filled
+ * through two days before the range end (D-015): summary 25, timeseries
+ * 58/68, breakdown_path 13, breakdownMulti_path 26, entry_channel with goal
+ * metrics 34, matrix 33, prop_key 4, realtime 2, pageFlow 118, goalStats 84,
+ * funnel 94, heatmap 37, histogram 19, pathsTo 5, vitals 25/25/28,
+ * rows_sessions 104. Re-measure and update when a primitive changes shape.
  */
 const BUDGET: Record<string, number> = {
-  summary: 60,
-  timeseries_pageviews: 80,
-  timeseries_sessions: 100,
+  summary: 40,
+  timeseries_pageviews: 90,
+  timeseries_sessions: 110,
   breakdown_path: 30,
-  breakdownMulti_path: 200,
-  breakdownMulti_entry_channel_goals: 260,
+  breakdownMulti_path: 40,
+  breakdownMulti_entry_channel_goals: 60,
   breakdownMulti_matrix: 50,
   breakdown_prop_key: 30,
   realtime: 30,
@@ -172,5 +177,117 @@ describe("query budgets on a 90-day seed fixture", () => {
         ms,
         `${name} took ${ms} ms, budget ${BUDGET[name]} ms`
       ).toBeLessThanOrEqual(BUDGET[name]);
+  }, 120_000);
+});
+
+/**
+ * Twelve months through the daily rollup (D-015, TICKET-049): the three
+ * Overview tables on a 365-day fixture after housekeeping has rolled it.
+ * Measured 2026-09-06 on 66,754 rows (365 days × 15 visitors/day, seed 5):
+ * path 32, entry_channel with goal columns 47, country 29.
+ */
+const YEAR_BUDGET: Record<string, number> = {
+  rollup_summary: 60,
+  rollup_path: 50,
+  rollup_entry_channel_goals: 80,
+  rollup_country: 50,
+};
+
+describe("twelve-month budgets through the daily rollup", () => {
+  let yearSite: number;
+  const days = 365;
+  beforeAll(async () => {
+    const [site] = await sql<{ id: number }[]>`
+      insert into public.websites (name, url, user_id, slug)
+      values ('budget-year', 'budget-year.example', gen_random_uuid(), 'budget-year') returning id`;
+    yearSite = Number(site.id);
+    const out = generate({
+      hostname: "budget-year.example",
+      days,
+      visitorsPerDay: 15,
+      seed: 5,
+      secret: "y",
+      until,
+      siteId: yearSite,
+    });
+    for (let i = 0; i < out.rows.length; i += 1000) {
+      const chunk = out.rows
+        .slice(i, i + 1000)
+        .map((r) => ({ ...r, props: sql.json(r.props) })) as unknown as Record<
+        string,
+        unknown
+      >[];
+      await sql`insert into analytics.events ${sql(chunk, ...([...EVENT_COLUMNS] as string[]))}`;
+    }
+    await sql`analyze analytics.events`;
+    await sql`select analytics.rollup_refresh(${new Date(until.getTime() - 2 * 86_400_000)}::date)`;
+  }, 300_000);
+  afterAll(async () => {
+    await sql`delete from analytics.rollup_daily where site_id = ${yearSite}`;
+    await sql`delete from analytics.rollup_state where site_id = ${yearSite}`;
+    await sql`delete from analytics.events where site_id = ${yearSite}`;
+    await sql`delete from public.websites where id = ${yearSite}`;
+  });
+
+  it("the Overview tables stay within budget at twelve months", async () => {
+    const goal = { id: 1, kind: "event" as const, match: "signup" };
+    const c: QueryContext = {
+      siteId: yearSite,
+      range: {
+        from: new Date(until.getTime() - days * 86_400_000 + 4 * 3_600_000),
+        toExclusive: until,
+      },
+      timezone: "America/Toronto",
+      filters: [],
+    };
+    const cases: Record<string, () => Promise<unknown>> = {
+      rollup_summary: () =>
+        q.summary({
+          ...c,
+          compare: {
+            from: new Date(c.range.from.getTime() - days * 86_400_000),
+            toExclusive: c.range.from,
+          },
+        }),
+      rollup_path: () =>
+        q.breakdownMulti(
+          c,
+          "path",
+          ["visitors", "pageviews", "bounce_rate", "engaged_time"],
+          { limit: 50 }
+        ),
+      rollup_entry_channel_goals: () =>
+        q.breakdownMulti(c, "entry_channel", [
+          "visitors",
+          "sessions",
+          "bounce_rate",
+          { kind: "goal_completions", goal },
+          { kind: "conversion", goal },
+        ]),
+      rollup_country: () =>
+        q.breakdownMulti(
+          c,
+          "country",
+          ["visitors", "pageviews", "bounce_rate"],
+          {
+            limit: 50,
+          }
+        ),
+    };
+    const measured: Record<string, number> = {};
+    for (const [name, fn] of Object.entries(cases))
+      measured[name] = await timed(name, fn);
+    const [{ n }] = await sql<
+      { n: number }[]
+    >`select count(*)::int as n from analytics.events where site_id = ${yearSite}`;
+    console.log(
+      `twelve-month budgets on ${n} rows (ms):`,
+      JSON.stringify(measured)
+    );
+    for (const [name, ms] of Object.entries(measured))
+      expect(
+        ms,
+        `${name} took ${ms} ms, budget ${YEAR_BUDGET[name]} ms`
+      ).toBeLessThanOrEqual(YEAR_BUDGET[name]);
   }, 120_000);
 });

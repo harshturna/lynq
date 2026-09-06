@@ -316,3 +316,45 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   component vocabulary; the panels are presentational React in the app's tokens, so they
   follow the tokens. Harder: the panels' contents are fixed demo numbers and must be kept
   believable by hand; the hero band and live count depend on the demo site existing.
+
+## D-015 — A per-day rollup serves every unfiltered breakdown; raw rows fill the edges
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** TICKET-049. At twelve months on the seeded site (183k rows) the multi-metric
+  breakdowns take 1.3 to 1.7 s warm and 7 s cold: the session CTE reads every row of the
+  range through the (site, visitor, session) index, the metrics join back to the rows once
+  per session, and with 2 MB of work_mem every sort spills to disk. The Overview runs
+  sixteen of these on a four-connection pool, so the 1.5 s statement budget (§9) failed at
+  90 days and the timeout was raised to 5 s as an interim. D-006 named rollup tables as the
+  first scaling lever.
+- **Decision:** `analytics.rollup_daily(site_id, day, dimension, value, sums)`: one row per
+  UTC day, dimension and value, holding distinct anonymous visitors, pageviews, custom
+  events, sessions, bounced sessions and the summed engaged, pageview and time-on-site
+  counts. Thirteen dimensions: path, entry_path, exit_path, the eight entry attributions,
+  country, region, city, device, browser, os. One SQL function,
+  `analytics.rollup_window(site, dimension, from, to, identified_only)`, holds the session
+  definition (§6.3) in SQL; housekeeping calls it per day to fill the table through two days
+  ago (client timestamps may trail receipt by 24 h), and the read path calls it for the
+  partial UTC days at either end of a range and for whatever housekeeping has not reached.
+  Anonymous visitor ids rotate per UTC day (D-003), so daily distinct counts sum exactly;
+  identified users keep one id, so their distinct count is taken from the raw rows over
+  the whole range through a partial index on `user_hash <> 0` and added. Goal columns
+  come from the goal-matching rows alone: those sessions are sparse, so they are fetched
+  through the session index rather than a range scan. The rollup serves every unfiltered
+  single-dimension breakdown whose range holds at least one full UTC day; a filter, a
+  property dimension, a two-dimension matrix, revenue, last-seen or suspect rows fall back
+  to the events scan.
+- **Rejected alternatives:** A larger compute size, rejected because the cost is the row
+  count, not the plan, and it grows with every site. Materialised views per dimension,
+  rejected because a refresh recomputes the whole history and cannot serve the partial
+  days. A rollup only for ranges over N days, rejected because for identified sites the
+  numbers would step at N; one definition for all unfiltered reads is easier to reason
+  about and the short ranges get faster too. Approximate visitors (HLL, or identified users
+  counted once per day), rejected because a logged-in user who visits daily would count
+  365 times over a year.
+- **Consequences:** Easier: long ranges read tens of rows per day per dimension; the
+  statement timeout returns to 1.5 s; housekeeping is the one refresh path and a missed
+  night costs only a longer raw tail. Harder: two definitions of a session metric exist
+  (the TypeScript CTE for filtered reads, the SQL function for unfiltered reads) and an
+  integration test pins them equal; an identified session that crosses UTC midnight counts
+  twice on the rollup side; a new dimension needs a column in the function and a backfill.

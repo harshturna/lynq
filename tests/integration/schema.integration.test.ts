@@ -21,6 +21,8 @@ describe("analytics schema", () => {
       "events",
       "identified_users",
       "ingest_log",
+      "rollup_daily",
+      "rollup_state",
       "schema_migrations",
       "site_hostnames",
       "site_settings",
@@ -35,6 +37,7 @@ describe("analytics schema", () => {
       "events_site_session",
       "events_site_ts",
       "events_site_ts_custom",
+      "events_site_ts_identified",
     ]);
   });
 
