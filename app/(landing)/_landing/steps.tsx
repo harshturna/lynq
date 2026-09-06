@@ -12,8 +12,8 @@ const CHECKS = [
 export function Steps() {
   return (
     <Reveal className="mt-16 border-t border-rule pt-16">
-      <div className="grid items-center gap-14 md:grid-cols-[minmax(0,.42fr)_minmax(0,.58fr)]">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-14 md:grid-cols-[minmax(0,.42fr)_minmax(0,.58fr)]">
+        <div className="min-w-0">
           <Eyebrow>Getting started</Eyebrow>
           <Lead
             lead="Set up in a minute."
@@ -26,12 +26,16 @@ export function Steps() {
               </p>
             </Step>
             <Step n={2} title="Paste one line">
-              <pre className="mt-2 overflow-x-auto rounded-[6px] bg-soft px-[14px] py-3 text-[12px] leading-[1.5]">
+              <pre
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+                tabIndex={0}
+                className="mt-2 overflow-x-auto rounded-[6px] bg-soft px-[14px] py-3 text-[12px] leading-[1.5]"
+              >
                 {
                   '<script defer src="https://lynq.byharsh.com/js/lynq.js"\n  data-site="'
                 }
                 <mark className="rounded-[3px] bg-teal-soft px-[3px] py-[1px] text-teal-ink">
-                  Your Site
+                  your-site.com
                 </mark>
                 {'" data-vitals></script>'}
               </pre>

@@ -64,7 +64,7 @@ export function Hero({ demo }: { demo: DemoStats | null }) {
           <span className="text-[12.5px] text-mute">Entry</span>
           <span className="text-[12.5px] text-mute">Exit</span>
         </div>
-        <div className="mt-[6px] grid grid-cols-[1fr_110px_64px] gap-x-4 text-[13px]">
+        <div className="mt-[6px] grid grid-cols-[minmax(0,1fr)_minmax(56px,110px)_64px] gap-x-4 text-[13px]">
           <div className="flex min-h-[28px] items-center border-b border-rule text-[11.5px] text-mute">
             Page
           </div>
@@ -75,8 +75,8 @@ export function Hero({ demo }: { demo: DemoStats | null }) {
           {pages.map((p, i) => {
             const cells = (
               <>
-                <div className="flex min-h-[38px] items-center truncate">
-                  {p.path}
+                <div className="flex min-h-[38px] min-w-0 items-center">
+                  <span className="truncate">{p.path}</span>
                 </div>
                 <div className="flex min-h-[38px] items-center">
                   <i

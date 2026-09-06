@@ -41,6 +41,15 @@ export type LineOptions = {
   animation?: boolean;
 };
 
+/** The gradient under the first series takes the series' own colour. */
+function areaTop(s: LineSeries): string {
+  return s.color === "ink"
+    ? "rgba(10,10,10,0.10)"
+    : s.color === "muted"
+      ? "rgba(138,138,147,0.16)"
+      : "rgba(15,118,110,0.18)";
+}
+
 export function lineOption(
   series: LineSeries[],
   opts: LineOptions
@@ -97,7 +106,7 @@ export function lineOption(
                 x2: 0,
                 y2: 1,
                 colorStops: [
-                  { offset: 0, color: "rgba(15,118,110,0.18)" },
+                  { offset: 0, color: areaTop(s) },
                   { offset: 1, color: "rgba(15,118,110,0)" },
                 ],
               },
@@ -123,9 +132,10 @@ export function lineOption(
       markLine: {
         silent: true,
         animation: false,
-        // ECharts reads the end symbols from the markLine, not the item
+        // ECharts reads the end symbols and their colour from the markLine, not the item
         symbol,
         symbolSize: 6,
+        itemStyle: { color: TOKENS.ink },
         data: [...(existing?.data ?? []), ...items],
       },
     });

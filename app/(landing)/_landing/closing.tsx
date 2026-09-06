@@ -4,7 +4,7 @@ import { Reveal } from "./reveal";
 
 export function Closing() {
   return (
-    <Reveal className="-mx-8 mt-24 border-t border-rule px-8 pb-[110px] pt-[120px] text-center">
+    <Reveal className="mt-24 border-t border-rule pb-[110px] pt-[120px] text-center">
       <h2 className="mb-[30px] text-[34px] font-medium leading-[1.1] tracking-[-0.025em] md:text-[48px]">
         Analytics without the tracking.
         <br />

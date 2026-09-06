@@ -46,7 +46,7 @@ export function KpiStrip({
         ? { role: "radiogroup", "aria-label": label }
         : { role: "region", "aria-label": label, tabIndex: 0 })}
       className={cn(
-        "relative grid border-t border-rule-strong",
+        "relative grid border-t border-rule-strong border-b border-rule",
         "max-[479px]:flex max-[479px]:snap-x max-[479px]:snap-mandatory max-[479px]:overflow-x-auto",
         "min-[480px]:grid-cols-2 min-[1000px]:grid-cols-[repeat(var(--tiles),minmax(0,1fr))]"
       )}
@@ -58,9 +58,9 @@ export function KpiStrip({
           <div
             key={t.key}
             className={cn(
-              "relative flex flex-col gap-[6px] border-b border-r border-rule py-4 pr-4 last:border-r-0",
+              "relative flex flex-col gap-[6px] border-r border-rule py-4 pr-4 last:border-r-0",
               "min-[1000px]:mr-4 min-[1000px]:last:mr-0",
-              "max-[479px]:w-[220px] max-[479px]:shrink-0 max-[479px]:snap-start max-[479px]:px-3",
+              "max-[479px]:w-[220px] max-[479px]:shrink-0 max-[479px]:snap-start max-[479px]:pr-3 max-[479px]:[&:not(:first-child)]:pl-3",
               checked && "shadow-[inset_0_-2px_0_var(--teal)]"
             )}
           >
@@ -104,10 +104,18 @@ export function KpiStrip({
                 </span>
               </label>
             )}
-            {(t.delta || t.note) && (
-              <div className="mt-1 flex items-center gap-2 text-[12.5px] text-mute">
-                {t.delta}
-                {t.note}
+            {!t.ghost && (
+              <div className="mt-1 flex items-center gap-2 whitespace-nowrap text-[12.5px] text-mute">
+                {t.delta || t.note ? (
+                  <>
+                    {t.delta}
+                    {t.note}
+                  </>
+                ) : (
+                  <span aria-hidden className="text-faint">
+                    —
+                  </span>
+                )}
               </div>
             )}
           </div>

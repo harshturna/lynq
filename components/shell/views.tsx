@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useId } from "react";
+import type { ReactNode } from "react";
 import { fmtNumber } from "@/lib/charts/format";
 import { funnelThreshold } from "@/lib/charts/thresholds";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ export function FlowPanel({
     heading: string
   ) => (
     <div className="min-w-0">
-      <h4 className="mb-1 text-[11px] font-medium uppercase tracking-[0.06em] text-mute">
+      <h4 className="mb-1 text-[11.5px] font-medium tracking-[0.02em] text-mute">
         {heading}
       </h4>
       {rows.length === 0 ? (
@@ -91,21 +91,12 @@ export function Funnel({
 }) {
   const first = steps[0]?.count ?? 0;
   const check = funnelThreshold(first);
-  const id = useId();
   if (!check.ok)
     return (
       <p className="py-6 text-center text-[13px] text-mute">{check.reason}</p>
     );
   return (
-    <ol
-      aria-labelledby={title ? id : undefined}
-      className="flex flex-col gap-3"
-    >
-      {title && (
-        <span id={id} className="sr-only">
-          {title}
-        </span>
-      )}
+    <ol aria-label={title || undefined} className="flex flex-col gap-3">
       {steps.map((s, i) => {
         const prev = steps[i - 1]?.count ?? 0;
         const share = first ? (s.count / first) * 100 : 0;
@@ -138,7 +129,7 @@ export function Funnel({
               <span className="col-span-2 text-[11.5px] text-mute">
                 {drop <= 0
                   ? "No drop-off"
-                  : `${drop.toFixed(0)}% dropped off after ${steps[i - 1]?.label.toLowerCase()}`}
+                  : `${drop.toFixed(0)}% dropped off after “${steps[i - 1]?.label}”`}
               </span>
             )}
           </li>
@@ -257,7 +248,7 @@ export function Matrix({
           <tr>
             <th
               scope="col"
-              className="py-1.5 pr-3 text-left text-[11px] font-medium uppercase tracking-[0.06em] text-mute"
+              className="py-1.5 pr-3 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute"
             >
               {rowHeader}
             </th>
@@ -265,7 +256,7 @@ export function Matrix({
               <th
                 key={c}
                 scope="col"
-                className="min-w-[72px] py-1.5 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-mute"
+                className="min-w-[72px] py-1.5 text-right text-[11.5px] font-medium tracking-[0.02em] text-mute"
               >
                 {c}
               </th>
@@ -323,7 +314,8 @@ const SEGMENT_CLASSES = ["bg-teal", "bg-teal-2", "bg-teal-3", "bg-soft-2"];
 
 /** Teal at a descending strength per segment, for more segments than the four device classes. */
 function rampStyle(i: number, n: number): React.CSSProperties {
-  const strength = n <= 1 ? 80 : 80 - (72 * i) / (n - 1);
+  // 80% down to 24%, so the last of six segments still reads against the track
+  const strength = n <= 1 ? 80 : 80 - (56 * i) / (n - 1);
   return {
     background: `color-mix(in srgb, var(--teal) ${strength}%, transparent)`,
   };

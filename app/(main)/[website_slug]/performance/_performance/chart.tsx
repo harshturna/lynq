@@ -37,7 +37,7 @@ export function LcpByDevice({
     name: LABEL[d],
     points: byDevice.data[d],
     color: COLOR[d],
-    format: (v: number) => fmtVital("lcp", v),
+    format: (v: number) => (v === 0 ? "0" : fmtVital("lcp", v)),
   }));
   return (
     <Section

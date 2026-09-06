@@ -40,7 +40,8 @@ export function TopNav({
         ? pathname.slice(base.length + 1).split("/")[0]
         : null;
   const isSettings = active === "settings";
-  // Under md only Overview stays inline; the rest sit under More (design §4).
+  // Under lg only Overview stays inline; the rest sit under More (design §4;
+  // lg rather than md since TICKET-089, because ten sections overflow at 1000 px).
   const sections = sectionsFor(bots);
   const inline = sections.slice(0, 1);
   const overflow = sections.slice(1);
@@ -60,14 +61,14 @@ export function TopNav({
 
       <nav
         aria-label="Sections"
-        className="flex min-w-0 flex-1 items-stretch gap-4 self-stretch overflow-x-auto [scroll-padding-inline:16px] [scrollbar-width:none] md:gap-5"
+        className="flex min-w-0 flex-1 items-stretch gap-4 self-stretch overflow-x-auto [scroll-padding-inline:16px] [scrollbar-width:none] lg:gap-4 xl:gap-5"
       >
         {sections.map((s, i) => (
           <NavLink
             key={s.key}
             href={s.key ? `${base}/${s.key}` : base}
             current={active === s.key}
-            className={i >= inline.length ? "hidden md:inline-flex" : ""}
+            className={i >= inline.length ? "hidden lg:inline-flex" : ""}
           >
             {s.label}
           </NavLink>
@@ -76,7 +77,7 @@ export function TopNav({
           <DropdownMenu.Trigger asChild>
             <button
               type="button"
-              className="inline-flex h-full items-center gap-1 self-stretch whitespace-nowrap text-[13.5px] text-ink-2 md:hidden"
+              className="inline-flex h-full items-center gap-1 self-stretch whitespace-nowrap text-[13.5px] text-ink-2 lg:hidden"
               aria-label="More sections"
             >
               More{" "}
@@ -96,8 +97,14 @@ export function TopNav({
                   <Link
                     href={`${base}/${s.key}`}
                     aria-current={active === s.key ? "page" : undefined}
+                    className={cn(active === s.key && "font-medium text-ink")}
                   >
                     {s.label}
+                    {active === s.key && (
+                      <span aria-hidden className="ml-auto text-teal">
+                        ✓
+                      </span>
+                    )}
                   </Link>
                 </DropdownMenu.Item>
               ))}
@@ -201,7 +208,7 @@ function NavLink({
       aria-current={current ? "page" : undefined}
       className={cn(
         "tab-mark inline-flex h-full items-center self-stretch whitespace-nowrap text-[13.5px] transition-colors",
-        "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal",
+        "rounded-control focus-visible:outline-2 focus-visible:outline-offset-[-10px] focus-visible:outline-teal",
         current ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
         className
       )}

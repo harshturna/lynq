@@ -62,8 +62,11 @@ export function ScreenHeader({
           pickers ? (
             <>
               {extra}
-              {rangeLabel({ from: dates.from, to: dates.to })} · {compareText} ·{" "}
-              {timezone}
+              {state.range === "last_24h"
+                ? "The last 24 hours"
+                : rangeLabel({ from: dates.from, to: dates.to })}
+              <span className="whitespace-nowrap"> · {compareText}</span>
+              <span className="whitespace-nowrap"> · {timezone}</span>
             </>
           ) : (
             <>

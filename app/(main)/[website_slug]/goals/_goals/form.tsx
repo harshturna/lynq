@@ -164,14 +164,21 @@ export function GoalForm({
                 Make this the KPI
               </label>
               {error && <p className="text-[12px] text-poor">{error}</p>}
-              <div className="flex items-center justify-between gap-2">
-                {goal ? (
-                  confirm ? (
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="h-8 rounded-control bg-ink px-3 text-[13px] font-medium text-canvas disabled:bg-soft disabled:text-mute"
+                >
+                  {pending ? "Saving…" : goal ? "Save goal" : "Create goal"}
+                </button>
+                {goal &&
+                  (confirm ? (
                     <button
                       type="button"
                       disabled={pending}
                       onClick={remove}
-                      className="h-8 rounded-control bg-poor px-3 text-[13px] font-medium text-canvas"
+                      className="text-[12.5px] text-poor hover:underline"
                     >
                       {pending ? "Deleting…" : "Delete for good"}
                     </button>
@@ -179,21 +186,11 @@ export function GoalForm({
                     <button
                       type="button"
                       onClick={() => setConfirm(true)}
-                      className="h-8 rounded-control px-2 text-[13px] text-poor hover:bg-poor-soft"
+                      className="text-[12.5px] text-mute hover:text-ink"
                     >
-                      Delete…
+                      Delete
                     </button>
-                  )
-                ) : (
-                  <span />
-                )}
-                <button
-                  type="submit"
-                  disabled={pending}
-                  className="h-8 rounded-control bg-teal px-3 text-[13px] font-medium text-canvas disabled:opacity-50"
-                >
-                  {pending ? "Saving…" : goal ? "Save" : "Create goal"}
-                </button>
+                  ))}
               </div>
             </form>
           )}

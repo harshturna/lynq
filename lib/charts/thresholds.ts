@@ -24,8 +24,7 @@ export function heatmapThreshold(
   if (width !== null && width < HEATMAP_MIN_WIDTH)
     return {
       ok: false,
-      reason:
-        "The heatmap needs a wider screen; the table has the same numbers.",
+      reason: "The heatmap needs a wider screen.",
     };
   return { ok: true };
 }

@@ -118,6 +118,7 @@ export function EventsTable({
         compare={compare}
       />
       <ShowAllDrawer
+        labelHeader="Event"
         open={drawer}
         onOpenChange={setDrawer}
         title="Events"

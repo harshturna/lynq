@@ -59,7 +59,7 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <fieldset className="inline-flex rounded-control bg-soft p-[2px]">
+    <fieldset className="inline-flex gap-3">
       <legend className="sr-only">{label}</legend>
       {options.map((o) => (
         <button
@@ -68,10 +68,10 @@ export function Segmented<T extends string>({
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "h-6 rounded-chip px-[9px] text-[12.5px] font-medium text-mute transition-colors",
+            // the same tab as a table's views: text with a teal underline, no box (TICKET-089)
+            "tab-mark inline-flex h-7 items-end pb-[5px] text-[12.5px] text-mute transition-colors hover:text-ink",
             "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal",
-            o.value === value &&
-              "bg-canvas text-ink shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+            o.value === value && "text-ink"
           )}
         >
           {o.label}

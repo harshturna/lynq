@@ -120,6 +120,7 @@ export function VitalsPages({
         }
       />
       <ShowAllDrawer
+        labelHeader="Page"
         open={drawer}
         onOpenChange={setDrawer}
         title="Pages by Web Vitals"

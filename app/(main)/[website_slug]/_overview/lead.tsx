@@ -310,8 +310,9 @@ function GoalPanel({
         )}
       </div>
       <p className="mt-2 text-[12.5px] text-mute">
-        {fmtRatio(stats.converting_sessions, stats.sessions)} of sessions
-        converted.
+        {stats.sessions
+          ? `${fmtRatio(stats.converting_sessions, stats.sessions)} of sessions converted.`
+          : "No sessions in this period."}
         {target
           ? ` ${fmtRatio(stats.completions, target, 0)} of the target of ${fmtInt(target)} per month.`
           : ""}

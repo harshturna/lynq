@@ -149,6 +149,7 @@ export function AttentionView({
         compare={false}
       />
       <ShowAllDrawer
+        labelHeader="Page"
         open={drawer}
         onOpenChange={setDrawer}
         title="Pages · Attention"

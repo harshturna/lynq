@@ -136,7 +136,9 @@ function NotesStrip({
             aria-hidden
             className="inline-block h-[6px] w-[6px] translate-y-[-1px] rounded-full bg-ink"
           />
-          <span className="text-mute tabular">{when(n.at)}</span>
+          <span className="whitespace-nowrap text-mute tabular">
+            {when(n.at)}
+          </span>
           <span>{n.text}</span>
         </li>
       ))}

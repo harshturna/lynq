@@ -107,6 +107,10 @@ export function NoteForm({
                   required
                   // biome-ignore lint/a11y/noAutofocus: the popover opened for this field; the goal form does the same
                   autoFocus
+                  onFocus={(e) => {
+                    // an edit opens with the caret at the end and the start scrolled away
+                    if (note) e.currentTarget.setSelectionRange(0, 0);
+                  }}
                   className={FIELD}
                 />
               </label>
@@ -131,7 +135,7 @@ export function NoteForm({
                 <button
                   type="submit"
                   disabled={pending || !text.trim()}
-                  className="h-8 rounded-control bg-ink px-3 text-[13px] font-medium text-canvas disabled:opacity-40"
+                  className="h-8 rounded-control bg-ink px-3 text-[13px] font-medium text-canvas disabled:bg-soft disabled:text-mute"
                 >
                   {note ? "Save note" : "Add note"}
                 </button>

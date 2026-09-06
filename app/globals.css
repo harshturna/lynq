@@ -128,3 +128,10 @@
     animation: none;
   }
 }
+
+/* One focus ring everywhere (TICKET-089): the browser default is a blue that
+   is not in the palette. Elements that set their own ring keep it. */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}

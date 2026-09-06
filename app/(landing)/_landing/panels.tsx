@@ -96,7 +96,7 @@ export function Ui({
     <div
       style={style}
       className={cn(
-        "absolute rounded-[10px] border border-rule bg-canvas text-[13px] text-ink max-md:!relative max-md:!left-0 max-md:!right-auto max-md:!top-0 max-md:mx-4 max-md:mt-4 max-md:!w-auto max-md:overflow-x-auto",
+        "absolute rounded-[10px] border border-rule bg-canvas text-[13px] text-ink max-md:!relative max-md:!left-0 max-md:!right-auto max-md:!top-0 max-md:mx-4 max-md:mt-4 max-md:!w-auto max-md:overflow-x-auto md:max-lg:!w-[calc(100%-48px)] md:max-lg:overflow-x-auto",
         lift
           ? "shadow-[0_20px_50px_-20px_rgba(10,10,10,.35)]"
           : "shadow-[0_30px_60px_-40px_rgba(10,10,10,.35)]",
@@ -150,7 +150,7 @@ export function Strip({ tiles, cols = 6 }: { tiles: Tile[]; cols?: number }) {
         <div
           key={t.label}
           className={cn(
-            "mr-[14px] border-b border-r border-rule py-[14px] pr-[14px] last:mr-0 last:border-r-0",
+            "mr-[14px] border-b border-r border-rule py-[14px] pr-[14px] last:mr-0 last:border-r-0 max-md:[&:nth-child(2n)]:mr-0 max-md:[&:nth-child(2n)]:border-r-0",
             t.on && "shadow-[inset_0_-2px_0_var(--teal)]"
           )}
         >
@@ -159,7 +159,7 @@ export function Strip({ tiles, cols = 6 }: { tiles: Tile[]; cols?: number }) {
           >
             {t.label}
           </span>
-          <b className="mt-[6px] block text-[26px] font-medium leading-none tracking-[-0.02em] tabular">
+          <b className="mt-[6px] block whitespace-nowrap text-[26px] font-medium leading-none tracking-[-0.02em] tabular">
             {t.value}
           </b>
           {t.delta && (
@@ -190,7 +190,7 @@ const PREVIOUS =
 export function OverviewPanel() {
   return (
     <Panel dots>
-      <Ui style={{ left: 56, top: 48, width: 1180 }}>
+      <Ui style={{ left: 48, top: 48, width: 1180 }}>
         <Strip
           tiles={[
             {
@@ -208,7 +208,7 @@ export function OverviewPanel() {
               tone: "bad",
             },
             { label: "Engaged time", value: "1m 56s", delta: "▲ 3.0%" },
-            { label: "Signup ★", value: "127", delta: "6.1%" },
+            { label: "Signup ★", value: "127", delta: "▲ 353.6%" },
           ]}
         />
         <SectionTitle note="per day">Unique visitors</SectionTitle>
@@ -334,7 +334,7 @@ export function AttentionPanel() {
   return (
     <Panel className="h-[400px]">
       {/* oversized on purpose: the UI bleeds off the panel's right edge (D-014) */}
-      <Ui style={{ left: 48, top: 40, width: 980 }}>
+      <Ui style={{ left: 48, top: 40, width: 1180 }}>
         <p className="mb-[10px] text-[12.5px] text-mute">
           <b className="mr-[6px] text-[24px] font-medium tracking-[-0.02em] text-ink">
             74 hours
@@ -407,7 +407,7 @@ const BOTS: [string, string, string, string][] = [
 export function BotsPanel() {
   return (
     <Panel className="h-[400px]">
-      <Ui style={{ left: 48, top: 40, width: 980 }}>
+      <Ui style={{ left: 48, top: 40, width: 1180 }}>
         <p className="mb-[10px] text-[12.5px] text-mute">
           <b className="mr-[6px] text-[24px] font-medium tracking-[-0.02em] text-ink">
             3,412
@@ -462,8 +462,8 @@ export function BotsPanel() {
 export function AgentsPanel() {
   return (
     <Panel className="h-[400px]">
-      <Ui style={{ left: 48, top: 40, width: 760 }}>
-        <div className="flex flex-col gap-3 p-1 font-mono text-[12.5px] leading-[1.55]">
+      <Ui style={{ left: 48, top: 40, width: 1180 }}>
+        <div className="flex max-w-[72ch] flex-col gap-3 p-1 font-mono text-[12.5px] leading-[1.55]">
           <p className="text-ink">
             <span className="mr-2 text-mute">›</span>did signups move after
             Tuesday&apos;s deploy?
@@ -473,7 +473,7 @@ export function AgentsPanel() {
             (range Aug 25 – Sep 5, compare previous period) · timeseries (metric
             sessions)
           </p>
-          <p className="max-w-[62ch] text-ink-2">
+          <p className="text-ink-2">
             Yes. The note &ldquo;Deployed v2.0&rdquo; is pinned on Tuesday Sep
             1. Signups completed 41 times in the five days after, against 27 in
             the five before, 6.4% of sessions against 4.9%. Sessions themselves
@@ -497,45 +497,81 @@ const JOURNEY: [string, string, string, string][] = [
 export function JourneysPanel() {
   return (
     <Panel className="h-[400px]">
-      <Ui style={{ left: 48, top: 32, width: 560 }}>
-        <div className="border-b border-rule pb-3">
-          <b className="text-[16px] font-medium">Session</b>
-          <p className="mt-1 text-[12.5px] text-mute">
-            Canada, Toronto · Desktop · Chrome on macOS · from Google
-          </p>
-        </div>
-        <p className="mt-3 text-[12.5px] text-mute">
-          Started Sep 6, 11:42 AM · 4 pages · 3m 12s engaged
-        </p>
-        <ol className="mt-2 text-[13px]">
-          {JOURNEY.map(([t, path, title, n]) => (
-            <li
-              key={t}
-              className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-rule py-[7px]"
-            >
-              <span className="text-[12px] text-mute tabular">{t}</span>
-              <span className="min-w-0">
-                <span className="block truncate">{path}</span>
-                <span className="block truncate text-[12px] text-mute">
-                  {title}
+      <Ui style={{ left: 48, top: 32, width: 1180 }}>
+        <div className="grid gap-x-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <div className="border-b border-rule pb-3">
+              <b className="text-[16px] font-medium">Session</b>
+              <p className="mt-1 text-[12.5px] text-mute">
+                Canada, Toronto · Desktop · Chrome on macOS · from Google
+              </p>
+            </div>
+            <p className="mt-3 text-[12.5px] text-mute">
+              Started Sep 6, 11:42 AM · 4 pages · 3m 12s engaged
+            </p>
+            <ol className="mt-2 text-[13px]">
+              {JOURNEY.map(([t, path, title, n]) => (
+                <li
+                  key={t}
+                  className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-rule py-[7px]"
+                >
+                  <span className="text-[12px] text-mute tabular">{t}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate">{path}</span>
+                    <span className="block truncate text-[12px] text-mute">
+                      {title}
+                    </span>
+                  </span>
+                  <span className="text-[12px] text-ink-2 tabular">{n}</span>
+                </li>
+              ))}
+              <li className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 py-[7px]">
+                <span className="text-[12px] text-mute tabular">+3m 12s</span>
+                <span className="flex items-center gap-2">
+                  <em className="rounded-[4px] bg-teal-soft px-[6px] py-[1px] text-[11px] font-medium not-italic text-good">
+                    signup
+                  </em>
+                  <span className="text-[12px] text-mute">
+                    on /signup · plan: pro
+                  </span>
                 </span>
-              </span>
-              <span className="text-[12px] text-ink-2 tabular">{n}</span>
-            </li>
-          ))}
-          <li className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 py-[7px]">
-            <span className="text-[12px] text-mute tabular">+3m 12s</span>
-            <span className="flex items-center gap-2">
-              <em className="rounded-[4px] bg-teal-soft px-[6px] py-[1px] text-[11px] font-medium not-italic text-good">
-                signup
-              </em>
-              <span className="text-[12px] text-mute">
-                on /signup · plan: pro
-              </span>
-            </span>
-            <span />
-          </li>
-        </ol>
+                <span />
+              </li>
+            </ol>
+          </div>
+          <div className="max-md:hidden">
+            <div className="border-b border-rule pb-3">
+              <b className="text-[16px] font-medium">Also today</b>
+              <p className="mt-1 text-[12.5px] text-mute">
+                This visitor&apos;s other sessions on Sep 6. An anonymous
+                visitor is a new number tomorrow, so a day is the whole story.
+              </p>
+            </div>
+            <ol className="mt-2 text-[13px]">
+              {[
+                [
+                  "9:15 AM",
+                  "/blog/evals-are-your-product → /pricing",
+                  "3 pages · 2m 20s",
+                ],
+                ["11:42 AM", "/pricing → /signup", "4 pages · 3m 12s"],
+                ["4:03 PM", "/docs/api → /dashboard", "2 pages · 1m 05s"],
+              ].map(([t, path, n]) => (
+                <li
+                  key={t}
+                  className="grid grid-cols-[64px_minmax(0,1fr)_auto_auto] items-baseline gap-3 border-b border-rule py-[7px]"
+                >
+                  <span className="text-[12px] text-mute tabular">{t}</span>
+                  <span className="truncate">{path}</span>
+                  <span className="text-[12px] text-ink-2 tabular">{n}</span>
+                  <span className="text-[12px] font-medium text-teal-ink">
+                    Open
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
       </Ui>
     </Panel>
   );
@@ -544,8 +580,8 @@ export function JourneysPanel() {
 export function FiltersPanel() {
   return (
     <Panel>
-      <Ui style={{ left: 56, top: 44, width: 900 }}>
-        <div className="mb-[14px] flex items-center gap-2 text-[12.5px]">
+      <Ui style={{ left: 48, top: 44, width: 1180 }}>
+        <div className="mb-[14px] flex flex-wrap items-center gap-2 text-[12.5px]">
           <Chip>Country is Canada</Chip>
           <Chip>Page is /pricing</Chip>
           <span className="text-mute">+ Filter</span>
@@ -628,7 +664,7 @@ export function FiltersPanel() {
 
 function Chip({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-[6px] rounded-[4px] border border-rule bg-canvas px-2 py-[3px]">
+    <span className="inline-flex items-center gap-[6px] whitespace-nowrap rounded-[4px] border border-rule bg-canvas px-2 py-[3px]">
       {children} <i className="not-italic text-mute">×</i>
     </span>
   );

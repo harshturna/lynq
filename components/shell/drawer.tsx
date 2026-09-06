@@ -48,7 +48,7 @@ export function Drawer({
               ?.focus();
           }}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-rule px-5 py-4">
+          <div className="mx-5 flex items-start justify-between gap-4 border-b border-rule py-4">
             <div>
               <Dialog.Title
                 tabIndex={-1}
@@ -97,6 +97,8 @@ export function ShowAllDrawer({
   columns,
   rows,
   onPick,
+  labelHeader = "Value",
+  placeholder = "Search",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -104,6 +106,9 @@ export function ShowAllDrawer({
   columns: Column[];
   rows: TableRow[];
   onPick?: (row: TableRow) => void;
+  /** The first column's header, the same word the table uses ("Page"). */
+  labelHeader?: string;
+  placeholder?: string;
 }) {
   const [q, setQ] = useState("");
   const visible = useMemo(() => {
@@ -124,7 +129,12 @@ export function ShowAllDrawer({
     // The table lays out with fixed widths, so the label needs one of its own:
     // without it a wide column set (Locations with revenue) leaves it zero
     // width and the row labels vanish (TICKET-073).
-    { key: "label", header: "Value", align: "left" as const, width: "220px" },
+    {
+      key: "label",
+      header: labelHeader,
+      align: "left" as const,
+      width: "220px",
+    },
     ...columns,
   ];
 
@@ -133,13 +143,17 @@ export function ShowAllDrawer({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description={`${rows.length.toLocaleString("en-US")} rows`}
+      description={
+        q.trim()
+          ? `${visible.length.toLocaleString("en-US")} of ${rows.length.toLocaleString("en-US")} rows`
+          : `${rows.length.toLocaleString("en-US")} ${rows.length === 1 ? "row" : "rows"}`
+      }
     >
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search"
+        placeholder={placeholder}
         aria-label={`Search ${title}`}
         className="mb-3 h-8 w-full rounded-control border border-rule bg-canvas px-2 text-[13px] text-ink"
       />
@@ -166,7 +180,9 @@ export function ShowAllDrawer({
                     }
                     className={cn(
                       "border-b border-rule py-2 text-[11.5px] font-medium text-mute",
-                      c.align === "right" ? "text-right" : "text-left"
+                      c.align === "left" || c.align === "center"
+                        ? "text-left"
+                        : "text-right"
                     )}
                   >
                     {c.header}
@@ -214,7 +230,9 @@ export function ShowAllDrawer({
                               key={c.key}
                               className={cn(
                                 "text-ink-2 tabular",
-                                c.align === "right" && "text-right"
+                                c.align !== "left" &&
+                                  c.align !== "center" &&
+                                  "text-right"
                               )}
                             >
                               {c.format
@@ -237,69 +255,75 @@ export function ShowAllDrawer({
           </table>
         </section>
       ) : (
-        <table className="w-full min-w-max table-fixed border-collapse text-[13px]">
-          <thead>
-            <tr>
-              {cols.map((c) => (
-                <th
-                  key={c.key}
-                  scope="col"
-                  style={
-                    "width" in c && c.width ? { width: c.width } : undefined
-                  }
-                  className={cn(
-                    "border-b border-rule py-2 text-[11.5px] font-medium text-mute",
-                    c.align === "right" ? "text-right" : "text-left"
-                  )}
-                >
-                  {c.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((r) => (
-              <tr key={r.id} className="border-b border-rule">
-                <td className="truncate py-[6px] text-ink">
-                  {onPick ? (
-                    <button
-                      type="button"
-                      onClick={() => onPick(r)}
-                      className="max-w-full truncate rounded-chip text-left hover:underline"
-                    >
-                      {r.label}
-                    </button>
-                  ) : (
-                    r.label
-                  )}
-                </td>
-                {columns.map((c) => (
-                  <td
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-max table-fixed border-collapse text-[13px]">
+            <thead>
+              <tr>
+                {cols.map((c) => (
+                  <th
                     key={c.key}
+                    scope="col"
+                    style={
+                      "width" in c && c.width ? { width: c.width } : undefined
+                    }
                     className={cn(
-                      "py-[6px] text-ink-2 tabular",
-                      c.align === "right" && "text-right"
+                      "border-b border-rule py-2 text-[11.5px] font-medium text-mute",
+                      c.align === "left" || c.align === "center"
+                        ? "text-left"
+                        : "text-right"
                     )}
                   >
-                    {c.format
-                      ? c.format(r.cells[c.key] ?? null, r)
-                      : fmt(r.cells[c.key] ?? null)}
-                  </td>
+                    {c.header}
+                  </th>
                 ))}
               </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr>
-                <td
-                  colSpan={cols.length}
-                  className="py-6 text-center text-mute"
-                >
-                  Nothing matches "{q}"
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((r) => (
+                <tr key={r.id} className="border-b border-rule">
+                  <td className="truncate py-[6px] text-ink">
+                    {onPick ? (
+                      <button
+                        type="button"
+                        onClick={() => onPick(r)}
+                        className="max-w-full truncate rounded-chip text-left hover:underline"
+                      >
+                        {r.label}
+                      </button>
+                    ) : (
+                      r.label
+                    )}
+                  </td>
+                  {columns.map((c) => (
+                    <td
+                      key={c.key}
+                      className={cn(
+                        "py-[6px] text-ink-2 tabular",
+                        c.align !== "left" &&
+                          c.align !== "center" &&
+                          "text-right"
+                      )}
+                    >
+                      {c.format
+                        ? c.format(r.cells[c.key] ?? null, r)
+                        : fmt(r.cells[c.key] ?? null)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {visible.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={cols.length}
+                    className="py-6 text-center text-mute"
+                  >
+                    Nothing matches “{q}”
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </Drawer>
   );

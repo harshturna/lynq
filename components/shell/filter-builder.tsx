@@ -19,6 +19,12 @@ import { useAnnounce, useViewState } from "./view-state";
  * operator selects and a value combobox fed by suggestions from the breakdown
  * for that dimension. Escape closes and returns focus to the button.
  */
+/** The native selects wear the app's caret rather than the platform chrome (TICKET-089). */
+const SELECT =
+  "h-8 min-w-0 appearance-none rounded-control border border-rule bg-canvas pl-2 pr-7 text-[13px] text-ink";
+const CARET =
+  "pointer-events-none absolute bottom-[9px] right-[9px] text-[11px] text-faint";
+
 export function FilterBuilder({
   id,
   dimensions = Object.keys(DIMENSIONS),
@@ -103,8 +109,11 @@ export function FilterBuilder({
           className="z-50 flex w-[320px] flex-col gap-3 rounded-control border border-rule bg-canvas p-3 shadow-[0_8px_24px_-12px_rgba(10,10,10,0.25)] outline-none"
         >
           <div className="grid grid-cols-[minmax(0,1fr)_112px] gap-2">
-            <label className="flex flex-col gap-1 text-[12px] text-mute">
+            <label className="relative flex flex-col gap-1 text-[12px] text-mute">
               Dimension
+              <span aria-hidden className={CARET}>
+                ▾
+              </span>
               <select
                 value={dimension}
                 onChange={(e) => {
@@ -112,7 +121,7 @@ export function FilterBuilder({
                   setValue("");
                   setActive(-1);
                 }}
-                className="h-8 min-w-0 rounded-control border border-rule bg-canvas px-2 text-[13px] text-ink"
+                className={SELECT}
               >
                 {[...groups].map(([g, list]) => (
                   <optgroup key={g} label={g}>
@@ -128,12 +137,15 @@ export function FilterBuilder({
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[12px] text-mute">
+            <label className="relative flex flex-col gap-1 text-[12px] text-mute">
               Operator
+              <span aria-hidden className={CARET}>
+                ▾
+              </span>
               <select
                 value={op}
                 onChange={(e) => setOp(e.target.value as FilterOp)}
-                className="h-8 rounded-control border border-rule bg-canvas px-2 text-[13px] text-ink"
+                className={SELECT}
               >
                 {(Object.keys(OP_LABEL) as FilterOp[]).map((o) => (
                   <option key={o} value={o}>

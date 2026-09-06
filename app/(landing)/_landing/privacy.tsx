@@ -6,7 +6,7 @@ const NUMBERS: [string, string][] = [
   ["2.1 kB", "script, gzipped"],
   ["0", "cookies"],
   ["24", "months of history by default"],
-  ["9", "screens"],
+  ["10", "screens"],
 ];
 
 /** One pageview as stored, and what is never stored (D-014). The numbers are true today. */

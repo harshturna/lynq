@@ -43,7 +43,7 @@ const perVisitor: Column["format"] = (_, row) => {
 const REVENUE: Column = { key: "revenue", header: "Revenue", format: money };
 const PER_VISITOR: Column = {
   key: "revenue_per_visitor",
-  header: "Rev / visitor",
+  header: "Rev. per visitor",
   sortable: false,
   format: perVisitor,
 };
@@ -168,7 +168,7 @@ export function PagesTable({
         pending ? "opacity-70 transition-opacity" : "transition-opacity"
       )}
     >
-      {view === "all" && (
+      {view !== "attention" && (
         <AttentionLine rows={t.rows} pageviews={t.pageviews} />
       )}
       <div>
@@ -202,6 +202,7 @@ export function PagesTable({
           compare={compare}
         />
         <ShowAllDrawer
+          labelHeader="Page"
           open={drawer}
           onOpenChange={setDrawer}
           title={`Pages · ${view === "all" ? "All" : view === "entry" ? "Entry" : "Exit"}`}

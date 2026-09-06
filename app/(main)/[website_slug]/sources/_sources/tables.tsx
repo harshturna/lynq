@@ -96,13 +96,23 @@ function shownFor(region: string, kpi: Kpi): Column[] {
       visitors,
       ...(kpi.goal ? [conversion] : []),
       ...(kpi.hasRevenue
-        ? [{ key: "revenue", header: "Revenue", format: money } as Column]
+        ? [
+            {
+              key: "revenue",
+              header: "Revenue",
+              format: money,
+              secondary: true,
+            } as Column,
+          ]
         : []),
     ];
   return [
     visitors,
     ...(kpi.goal
-      ? [{ key: "goal_completions", header: "Completions" }, conversion]
+      ? [
+          { key: "goal_completions", header: "Completions", secondary: true },
+          { ...conversion, secondary: true },
+        ]
       : []),
   ];
 }
@@ -278,7 +288,10 @@ function Region({
       <ShowAllDrawer
         open={drawer}
         onOpenChange={setDrawer}
-        title={`${title} · ${views?.find((v) => v.key === t.view)?.label ?? title}`}
+        title={(() => {
+          const view = views?.find((v) => v.key === t.view)?.label;
+          return view && view !== title ? `${title} · ${view}` : title;
+        })()}
         columns={columns}
         rows={rows}
         onPick={(row) => {

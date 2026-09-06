@@ -250,6 +250,7 @@ export function BotsTables({
         )}
       </div>
       <ShowAllDrawer
+        labelHeader="Crawler"
         open={crawlerDrawer}
         onOpenChange={setCrawlerDrawer}
         title="Crawlers"
@@ -257,6 +258,7 @@ export function BotsTables({
         rows={crawlerRows}
       />
       <ShowAllDrawer
+        labelHeader="Page"
         open={pageDrawer}
         onOpenChange={setPageDrawer}
         title={

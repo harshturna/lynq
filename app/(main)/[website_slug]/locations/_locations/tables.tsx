@@ -43,7 +43,7 @@ const REVENUE: Column = {
 };
 const PER_VISITOR: Column = {
   key: "revenue_per_visitor",
-  header: "Rev / visitor",
+  header: "Rev. per visitor",
   align: "right",
   width: "110px",
   sortable: false,

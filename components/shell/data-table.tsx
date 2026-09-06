@@ -161,6 +161,19 @@ export function DataTable({
     [rows, bar]
   );
   const hasHeader = Boolean(title || views || caption);
+  const expandable = rows.some((r) => r.children && r.children.length > 0);
+  // a table wider than its box scrolls sideways; a fade says so (TICKET-089)
+  const scrollRef = useRef<HTMLElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const check = () => setOverflows(el.scrollWidth - el.clientWidth > 2);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const sorted = useMemo(() => {
     if (!sort) return rows;
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -276,7 +289,7 @@ export function DataTable({
   const slots = columns.filter((c) => c.status).length + (compare ? 1 : 0);
 
   return (
-    <div className={cn("min-w-0", className)}>
+    <div className={cn("min-w-0", !fill && "w-fit max-w-full", className)}>
       {hasHeader && (
         <div className="flex flex-wrap items-end gap-x-3 gap-y-1 border-b border-rule-strong text-[14px] font-medium text-ink">
           {title && (
@@ -316,323 +329,349 @@ export function DataTable({
           {caption && <div className="ml-auto pb-[5px]">{caption}</div>}
         </div>
       )}
-      <section
-        aria-label={typeof title === "string" ? title : region}
-        tabIndex={0}
-        className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-      >
-        <table
-          className={cn(
-            "border-collapse text-[13px]",
-            fill ? "w-full" : "w-auto max-w-full"
-          )}
+      <div className="relative">
+        {overflows && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-canvas to-transparent"
+          />
+        )}
+        <section
+          ref={scrollRef}
+          aria-label={typeof title === "string" ? title : region}
+          tabIndex={0}
+          className="relative overflow-x-auto [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
         >
-          <thead>
-            <tr>
-              <th
-                scope="col"
-                className={cn(
-                  thBase,
-                  "text-left text-mute",
-                  fill
-                    ? bar
-                      ? "w-[56%] max-w-0 max-[479px]:w-full"
-                      : "w-full max-w-0"
-                    : "min-w-[220px] max-w-[320px]"
-                )}
-              >
-                <SortButton
-                  active={sort?.col === "label"}
-                  label={nextSortLabel(labelCol)}
-                  onClick={() => toggleSort(labelCol)}
-                >
-                  {labelCol.header}
-                </SortButton>
-              </th>
-              {bar && (
+          <table
+            className={cn(
+              "border-collapse text-[13px]",
+              fill ? "w-full" : "w-auto max-w-full"
+            )}
+          >
+            <thead>
+              <tr>
                 <th
                   scope="col"
                   className={cn(
                     thBase,
-                    "max-[479px]:hidden",
-                    fill ? "w-[30%]" : "w-[140px]"
+                    "text-left text-mute",
+                    fill
+                      ? bar
+                        ? "w-[56%] min-w-[140px] max-w-0 max-[479px]:w-full"
+                        : "w-full min-w-[140px] max-w-0"
+                      : "min-w-[220px] max-w-[320px]"
                   )}
                 >
-                  <span className="sr-only">Share</span>
+                  <SortButton
+                    active={sort?.col === "label"}
+                    label={nextSortLabel(labelCol)}
+                    onClick={() => toggleSort(labelCol)}
+                  >
+                    {labelCol.header}
+                  </SortButton>
                 </th>
-              )}
-              {columns.map((c, i) => (
-                <Fragment key={c.key}>
+                {bar && (
                   <th
                     scope="col"
-                    aria-sort={c.sortable === false ? undefined : ariaSort(c)}
-                    style={
-                      c.width
-                        ? ({ "--w": c.width } as React.CSSProperties)
-                        : undefined
-                    }
                     className={cn(
                       thBase,
-                      numeric(c, i),
-                      "min-[1000px]:w-[var(--w)]",
-                      c.key === primaryKey ? "text-ink" : "text-mute",
-                      hidden(c)
+                      "max-[479px]:hidden",
+                      fill ? "w-[30%]" : "w-[140px]"
                     )}
                   >
-                    {c.sortable === false ? (
-                      c.header
-                    ) : (
-                      <SortButton
-                        active={sort?.col === c.key}
-                        label={nextSortLabel(c)}
-                        onClick={() => toggleSort(c)}
-                        align={c.align ?? "right"}
-                      >
-                        {c.header}
-                      </SortButton>
-                    )}
+                    <span className="sr-only">Share</span>
                   </th>
-                  {c.status && (
+                )}
+                {columns.map((c, i) => (
+                  <Fragment key={c.key}>
                     <th
                       scope="col"
-                      className={cn(thBase, "w-[84px] pl-2", hidden(c))}
-                    >
-                      <span className="sr-only">{c.header} status</span>
-                    </th>
-                  )}
-                  {compare && c.key === primaryKey && (
-                    <th
-                      scope="col"
+                      aria-sort={c.sortable === false ? undefined : ariaSort(c)}
+                      style={
+                        c.width
+                          ? ({ "--w": c.width } as React.CSSProperties)
+                          : undefined
+                      }
                       className={cn(
                         thBase,
-                        "w-[64px] pl-3 text-right font-normal text-mute",
+                        numeric(c, i),
+                        "min-[1000px]:w-[var(--w)]",
+                        c.key === primaryKey ? "text-ink" : "text-mute",
                         hidden(c)
                       )}
                     >
-                      change
+                      {c.sortable === false ? (
+                        c.header
+                      ) : (
+                        <SortButton
+                          active={sort?.col === c.key}
+                          label={nextSortLabel(c)}
+                          onClick={() => toggleSort(c)}
+                          align={c.align ?? "right"}
+                        >
+                          {c.header}
+                        </SortButton>
+                      )}
                     </th>
-                  )}
-                </Fragment>
-              ))}
-              <th scope="col" className={cn(thBase, "w-[36px]")}>
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody ref={tbodyRef}>
-            {flat.length === 0 && (
-              <tr>
-                <td
-                  colSpan={columns.length + slots + (bar ? 3 : 2)}
-                  className="py-8 text-center text-[13px] text-mute"
-                >
-                  {emptyText}
-                </td>
+                    {c.status && (
+                      <th
+                        scope="col"
+                        className={cn(thBase, "w-[84px] pl-2", hidden(c))}
+                      >
+                        <span className="sr-only">{c.header} status</span>
+                      </th>
+                    )}
+                    {compare && c.key === primaryKey && (
+                      <th
+                        scope="col"
+                        className={cn(
+                          thBase,
+                          "w-[64px] pl-3 text-right text-mute",
+                          // the change slot is secondary below 1000 px, like the columns marked so
+                          "hidden min-[1000px]:table-cell",
+                          hidden(c)
+                        )}
+                      >
+                        Change
+                      </th>
+                    )}
+                  </Fragment>
+                ))}
+                <th scope="col" className={cn(thBase, "w-[36px]")}>
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            )}
-            {flat.map((row) => {
-              const isChild = Boolean(row.childPrefix);
-              const parent =
-                !isChild && row.children && row.children.length > 0;
-              const selected = row.id === selectedId;
-              return (
-                <tr
-                  key={row.id}
-                  aria-current={selected ? "true" : undefined}
-                  className={cn(
-                    "group h-10 border-b border-rule transition-colors hover:bg-soft",
-                    selected && "bg-teal-bar",
-                    isChild && "text-[12.5px]"
-                  )}
-                >
+            </thead>
+            <tbody ref={tbodyRef}>
+              {flat.length === 0 && (
+                <tr className="border-b border-rule">
                   <td
+                    colSpan={columns.length + slots + (bar ? 3 : 2)}
+                    className="py-8 text-center text-[13px] text-mute"
+                  >
+                    {emptyText}
+                  </td>
+                </tr>
+              )}
+              {flat.map((row) => {
+                const isChild = Boolean(row.childPrefix);
+                const parent =
+                  !isChild && row.children && row.children.length > 0;
+                const selected = row.id === selectedId;
+                return (
+                  <tr
+                    key={row.id}
+                    aria-current={selected ? "true" : undefined}
                     className={cn(
-                      "truncate text-ink",
-                      fill
-                        ? bar
-                          ? "w-[56%] max-w-0 max-[479px]:w-full"
-                          : "w-full max-w-0"
-                        : "min-w-[220px] max-w-[320px]",
-                      isChild && "pl-[18px] text-ink-2"
+                      "group h-10 border-b border-rule transition-colors hover:bg-soft",
+                      selected && "bg-teal-bar",
+                      isChild && "text-[12.5px]"
                     )}
                   >
-                    {parent && (
-                      <button
-                        type="button"
-                        aria-expanded={expanded.has(row.id)}
-                        aria-label={`${expanded.has(row.id) ? "Collapse" : "Expand"} ${row.id}`}
-                        onClick={() =>
-                          setExpanded((s) => {
-                            const n = new Set(s);
-                            if (n.has(row.id)) n.delete(row.id);
-                            else n.add(row.id);
-                            return n;
-                          })
-                        }
-                        className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-chip text-[11px] text-mute hover:bg-soft-2"
-                      >
-                        {expanded.has(row.id) ? "▾" : "▸"}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      data-row={row.id}
-                      tabIndex={row.id === focusId ? 0 : -1}
-                      onFocus={() => setFocusedId(row.id)}
-                      onKeyDown={(e) => onRowKey(e, row)}
-                      onClick={() => primaryAction(row)}
-                      aria-current={selected ? "true" : undefined}
-                      aria-label={rowName(
-                        row,
-                        Boolean(onSelect),
-                        Boolean(onFilter)
-                      )}
+                    <td
                       className={cn(
-                        "max-w-full truncate rounded-chip text-left align-middle",
-                        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal",
-                        selected &&
-                          "font-medium text-teal-ink underline decoration-teal underline-offset-[3px]"
+                        "truncate text-ink",
+                        fill
+                          ? bar
+                            ? "w-[56%] min-w-[140px] max-w-0 max-[479px]:w-full"
+                            : "w-full min-w-[140px] max-w-0"
+                          : "min-w-[220px] max-w-[320px]",
+                        isChild && "pl-[26px] text-ink-2"
                       )}
                     >
-                      {row.label}
-                    </button>
-                  </td>
-                  {bar && (
-                    <td className="pl-5 max-[479px]:hidden">
-                      {!isChild && (
-                        <span
-                          aria-hidden
-                          className="block h-[6px] rounded-[2px] bg-teal-2"
-                          style={{
-                            width: `${Math.min(100, ((Number(row.cells[bar] ?? 0) || 0) / barMax) * 100)}%`,
-                          }}
-                        />
+                      {expandable && !parent && !isChild && (
+                        <i aria-hidden className="mr-1 inline-block w-5" />
                       )}
-                    </td>
-                  )}
-                  {columns.map((c, i) => {
-                    const v = row.cells[c.key] ?? null;
-                    const prev = compare ? row.previous?.[c.key] : undefined;
-                    const isPrimary = c.key === primaryKey;
-                    const status = c.status ? c.status(v, row) : null;
-                    return (
-                      <Fragment key={c.key}>
-                        <td
-                          // a relative time ("just now") can tick over between
-                          // the server render and hydration; the client value wins
-                          suppressHydrationWarning
-                          className={cn(
-                            "whitespace-nowrap tabular",
-                            numeric(c, i),
-                            isPrimary ? "font-medium text-ink" : "text-ink-2",
-                            hidden(c)
-                          )}
+                      {parent && (
+                        <button
+                          type="button"
+                          aria-expanded={expanded.has(row.id)}
+                          aria-label={`${expanded.has(row.id) ? "Collapse" : "Expand"} ${row.id}`}
+                          onClick={() =>
+                            setExpanded((s) => {
+                              const n = new Set(s);
+                              if (n.has(row.id)) n.delete(row.id);
+                              else n.add(row.id);
+                              return n;
+                            })
+                          }
+                          className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded-chip text-[11px] text-mute hover:bg-soft-2"
                         >
-                          {c.format ? c.format(v, row) : fmt(v)}
-                        </td>
-                        {c.status && (
-                          <td className={cn("pl-2 text-left", hidden(c))}>
-                            {status &&
-                              status !== "good" &&
-                              status !== "none" && (
-                                <Pill status={status}>
-                                  {(c.statusLabel ?? ((s) => STATUS_LABEL[s]))(
-                                    status
-                                  )}
-                                </Pill>
-                              )}
-                          </td>
+                          {expanded.has(row.id) ? "▾" : "▸"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        data-row={row.id}
+                        tabIndex={row.id === focusId ? 0 : -1}
+                        onFocus={() => setFocusedId(row.id)}
+                        onKeyDown={(e) => onRowKey(e, row)}
+                        onClick={() => primaryAction(row)}
+                        aria-current={selected ? "true" : undefined}
+                        aria-label={rowName(
+                          row,
+                          Boolean(onSelect),
+                          Boolean(onFilter)
                         )}
-                        {compare && isPrimary && (
+                        className={cn(
+                          "max-w-full truncate rounded-chip text-left align-middle",
+                          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal",
+                          selected &&
+                            "font-medium text-teal-ink underline decoration-teal underline-offset-[3px]"
+                        )}
+                      >
+                        {row.label}
+                      </button>
+                    </td>
+                    {bar && (
+                      <td className="pl-5 max-[479px]:hidden">
+                        {!isChild && (
+                          <span
+                            aria-hidden
+                            className="block h-[6px] rounded-[2px] bg-teal-2"
+                            style={{
+                              width: `${Math.min(100, ((Number(row.cells[bar] ?? 0) || 0) / barMax) * 100)}%`,
+                            }}
+                          />
+                        )}
+                      </td>
+                    )}
+                    {columns.map((c, i) => {
+                      const v = row.cells[c.key] ?? null;
+                      const prev = compare ? row.previous?.[c.key] : undefined;
+                      const isPrimary = c.key === primaryKey;
+                      const status = c.status ? c.status(v, row) : null;
+                      return (
+                        <Fragment key={c.key}>
                           <td
+                            // a relative time ("just now") can tick over between
+                            // the server render and hydration; the client value wins
+                            suppressHydrationWarning
                             className={cn(
-                              "whitespace-nowrap pl-3 text-right text-[12px] text-mute tabular",
+                              "whitespace-nowrap tabular",
+                              numeric(c, i),
+                              isPrimary ? "font-medium text-ink" : "text-ink-2",
                               hidden(c)
                             )}
                           >
-                            {typeof v === "number" ? (
-                              <ChangeSlot
-                                current={v}
-                                previous={prev}
-                                lowerIsBetter={c.lowerIsBetter}
-                                points={c.points}
-                              />
-                            ) : (
-                              <span className="text-faint">—</span>
-                            )}
+                            {c.format ? c.format(v, row) : fmt(v)}
                           </td>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                  <td className="text-right">
-                    {onFilter && (
-                      <button
-                        type="button"
-                        tabIndex={-1}
-                        aria-label={`${filterLabel} by ${typeof row.label === "string" ? row.label : row.id}`}
-                        onClick={() => onFilter(row)}
-                        className={cn(
-                          "inline-flex h-8 w-8 items-center justify-center rounded-chip text-mute opacity-0 transition-opacity",
-                          "group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-soft-2 hover:text-ink focus:opacity-100"
-                        )}
-                      >
-                        <svg
-                          aria-hidden
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
+                          {c.status && (
+                            <td className={cn("pl-2 text-left", hidden(c))}>
+                              {status &&
+                                status !== "good" &&
+                                status !== "none" && (
+                                  <Pill status={status}>
+                                    {(
+                                      c.statusLabel ?? ((s) => STATUS_LABEL[s])
+                                    )(status)}
+                                  </Pill>
+                                )}
+                            </td>
+                          )}
+                          {compare && isPrimary && (
+                            <td
+                              className={cn(
+                                "whitespace-nowrap pl-3 text-right text-[12px] text-mute tabular",
+                                "hidden min-[1000px]:table-cell",
+                                hidden(c)
+                              )}
+                            >
+                              {typeof v === "number" ? (
+                                <ChangeSlot
+                                  current={v}
+                                  previous={prev}
+                                  lowerIsBetter={c.lowerIsBetter}
+                                  points={c.points}
+                                />
+                              ) : (
+                                <span className="text-faint">—</span>
+                              )}
+                            </td>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                    <td className="text-right">
+                      {onFilter && (
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          aria-label={`${filterLabel} by ${typeof row.label === "string" ? row.label : row.id}`}
+                          onClick={() => onFilter(row)}
+                          className={cn(
+                            "inline-flex h-8 w-8 items-center justify-center rounded-chip text-mute opacity-0 transition-opacity",
+                            "group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-soft-2 hover:text-ink focus:opacity-100"
+                          )}
                         >
-                          <path
-                            d="M1.5 2.5h11l-4.2 5v4l-2.6 1v-5z"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
-      {(total !== undefined || onShowAll || exportName) && (
-        <div className="flex items-center gap-2 pt-[10px] text-[12px] text-mute">
-          {total !== undefined && (
-            <span>
+                          <svg
+                            aria-hidden
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          >
+                            <path
+                              d="M1.5 2.5h11l-4.2 5v4l-2.6 1v-5z"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      </div>
+      {(() => {
+        // "19 rows · Show all · Export CSV": separators only between present
+        // items, and no export for nothing (TICKET-089)
+        const items: ReactNode[] = [];
+        if (total !== undefined)
+          items.push(
+            <span key="total">
               {total.toLocaleString("en-US")} {total === 1 ? "row" : "rows"}
             </span>
-          )}
-          {onShowAll && (
-            <>
-              <span aria-hidden>·</span>
-              <button
-                type="button"
-                onClick={onShowAll}
-                className="font-medium text-teal-ink hover:underline"
-              >
-                Show all
-              </button>
-            </>
-          )}
-          {exportName && (
-            <>
-              <span aria-hidden>·</span>
-              <button
-                type="button"
-                onClick={exportCsv}
-                className="font-medium text-teal-ink hover:underline"
-              >
-                Export CSV
-              </button>
-            </>
-          )}
-        </div>
-      )}
+          );
+        if (onShowAll)
+          items.push(
+            <button
+              key="all"
+              type="button"
+              onClick={onShowAll}
+              className="font-medium text-teal-ink hover:underline"
+            >
+              Show all
+            </button>
+          );
+        if (exportName && flat.length > 0)
+          items.push(
+            <button
+              key="csv"
+              type="button"
+              onClick={exportCsv}
+              className="font-medium text-teal-ink hover:underline"
+            >
+              Export CSV
+            </button>
+          );
+        if (!items.length) return null;
+        return (
+          <div className="flex items-center gap-2 pt-[10px] text-[12px] text-mute">
+            {items.map((item, i) => (
+              <Fragment key={(item as { key: string }).key}>
+                {i > 0 && <span aria-hidden>·</span>}
+                {item}
+              </Fragment>
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }

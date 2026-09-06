@@ -2,7 +2,7 @@
 
 import { formatInTimeZone } from "date-fns-tz";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useState, useTransition } from "react";
+import { type ReactNode, useEffect, useState, useTransition } from "react";
 import { Pill } from "@/components/shell/badge";
 import { NoteForm } from "@/components/shell/note-form";
 import { deleteWebsite } from "@/lib/actions";
@@ -31,6 +31,7 @@ const SECTIONS = [
   { id: "notes", label: "Notes" },
   { id: "keys", label: "API keys" },
 ] as const;
+const SECTION_IDS = SECTIONS.map((s) => s.id);
 
 const FIELD =
   "h-8 w-full max-w-[420px] rounded-control border border-rule bg-canvas px-2 text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal disabled:bg-soft disabled:text-mute";
@@ -40,9 +41,45 @@ const AREA =
 const SCRIPT_ORIGIN = "https://lynq.byharsh.com";
 
 const SAVE =
-  "h-8 rounded-control bg-ink px-3 text-[13px] font-medium text-canvas disabled:opacity-40";
+  "h-8 rounded-control bg-ink px-3 text-[13px] font-medium text-canvas disabled:bg-soft disabled:text-mute";
+const SELECT =
+  "h-8 w-full max-w-[420px] appearance-none rounded-control border border-rule bg-canvas pl-2 pr-7 text-[13px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal disabled:bg-soft disabled:text-mute";
+/** DataTable's header style, for the hand-written tables on this page. */
+const TH =
+  "whitespace-nowrap border-b border-rule pb-2 pt-[10px] pr-4 text-left text-[11.5px] font-medium tracking-[0.02em] text-mute";
 
 /** The settings page body: sub-nav, sections, one save per section (design §8.10). */
+/** The block currently in view, for the sub-nav (TICKET-089). */
+function useActiveBlock(ids: readonly string[]): string {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const fromHash = () => {
+      const id = window.location.hash.slice(1);
+      if (ids.includes(id)) setActive(id);
+    };
+    fromHash();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const seen = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (seen[0]) setActive(seen[0].target.id);
+      },
+      { rootMargin: "-10% 0px -70% 0px" }
+    );
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+    window.addEventListener("hashchange", fromHash);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("hashchange", fromHash);
+    };
+  }, [ids]);
+  return active;
+}
+
 export function SettingsPage({
   slug,
   userId,
@@ -54,6 +91,7 @@ export function SettingsPage({
   data: SettingsData;
   isGuest: boolean;
 }) {
+  const active = useActiveBlock(SECTION_IDS);
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-[200px_minmax(0,1fr)]">
       <nav
@@ -65,7 +103,11 @@ export function SettingsPage({
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
-                className="block rounded-control px-[10px] py-[6px] text-[13px] text-ink-2 hover:bg-soft hover:text-ink"
+                aria-current={active === s.id ? "true" : undefined}
+                className={cn(
+                  "block rounded-control px-[10px] py-[6px] text-[13px] text-ink-2 hover:bg-soft hover:text-ink",
+                  active === s.id && "bg-soft font-medium text-ink"
+                )}
               >
                 {s.label}
               </a>
@@ -73,7 +115,7 @@ export function SettingsPage({
           ))}
         </ul>
       </nav>
-      <div className="flex flex-col gap-10">
+      <div className="flex min-w-0 flex-col gap-10">
         {isGuest && (
           <p
             role="status"
@@ -142,13 +184,13 @@ function Block({
     <section
       id={id}
       aria-labelledby={`${id}-h`}
-      className="scroll-mt-6 border-t border-rule-strong pt-4"
+      className="min-w-0 scroll-mt-6 border-t border-rule-strong pt-4"
     >
-      <h2 id={`${id}-h`} className="text-[15px] font-medium">
+      <h2 id={`${id}-h`} className="text-[14px] font-medium">
         {title}
       </h2>
       <p className="mt-1 max-w-[64ch] text-[12.5px] text-mute">{lede}</p>
-      <div className="mt-4 flex flex-col gap-4">{children}</div>
+      <div className="mt-4 flex min-w-0 flex-col gap-4">{children}</div>
     </section>
   );
 }
@@ -165,7 +207,7 @@ function Field({
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: the control is the child; every caller passes one input, textarea or select
     <label className="grid gap-1 min-[640px]:grid-cols-[200px_minmax(0,1fr)] min-[640px]:gap-6">
-      <span className="text-[13px] font-medium">
+      <span className="text-[13px] font-medium min-[640px]:pt-[7px]">
         {label}
         {hint && (
           <span className="mt-[2px] block text-[12px] font-normal text-mute">
@@ -264,13 +306,16 @@ function General({ slug, data, isGuest }: SectionProps) {
           ))}
         </datalist>
       </Field>
-      <Toggle
-        label="Keyboard shortcuts"
-        hint="[ and ] step the range, / focuses search, ? lists them."
-        checked={shortcuts}
-        onChange={setShortcuts}
-        disabled={isGuest}
-      />
+      <div className="grid gap-1 min-[640px]:grid-cols-[200px_minmax(0,1fr)] min-[640px]:gap-6">
+        <span className="text-[13px] font-medium">Keyboard shortcuts</span>
+        <Toggle
+          label="On"
+          hint="[ and ] step the range, / focuses search, ? lists them."
+          checked={shortcuts}
+          onChange={setShortcuts}
+          disabled={isGuest}
+        />
+      </div>
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -315,9 +360,11 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
           aria-label="Tracking snippet"
           // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
           tabIndex={0}
-          className="max-w-[720px] overflow-x-auto rounded-control bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          className="max-w-[880px] rounded-control bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
         >
-          <pre className="p-3 text-[12px]">{snippet}</pre>
+          <pre className="whitespace-pre-wrap break-all p-3 text-[12px]">
+            {snippet}
+          </pre>
         </section>
         <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
           <button
@@ -356,7 +403,7 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
       </div>
       <div className="grid gap-3 min-[640px]:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <span className="text-[12px] font-medium uppercase tracking-[0.06em] text-mute">
+          <span className="text-[12.5px] font-medium text-ink">
             In the snippet
           </span>
           <Toggle
@@ -379,7 +426,7 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <span className="text-[12px] font-medium uppercase tracking-[0.06em] text-mute">
+          <span className="text-[12.5px] font-medium text-ink">
             Stored on the server
           </span>
           <Toggle
@@ -396,20 +443,20 @@ function Tracking({ slug, data, isGuest }: SectionProps) {
             onChange={setStoreUserIds}
             disabled={isGuest}
           />
-          <div className="flex items-center gap-3 pt-1">
-            <button
-              type="button"
-              disabled={isGuest || s.pending}
-              onClick={() =>
-                s.run(() => saveTracking(slug, { storeTitles, storeUserIds }))
-              }
-              className={SAVE}
-            >
-              {s.pending ? "Saving…" : "Save tracking"}
-            </button>
-            {s.status}
-          </div>
         </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          disabled={isGuest || s.pending}
+          onClick={() =>
+            s.run(() => saveTracking(slug, { storeTitles, storeUserIds }))
+          }
+          className={SAVE}
+        >
+          {s.pending ? "Saving…" : "Save tracking"}
+        </button>
+        {s.status}
       </div>
       <div className="rounded-card border border-rule p-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -522,19 +569,27 @@ function Kpi({ slug, data, isGuest }: SectionProps) {
       lede="The KPI goal drives the Overview's sixth tile, the Sources strip. Goals themselves are managed on the Goals screen."
     >
       <Field label="KPI goal">
-        <select
-          value={goalId}
-          onChange={(e) => setGoalId(e.target.value)}
-          disabled={isGuest}
-          className={FIELD}
-        >
-          <option value="">None</option>
-          {data.goals.map((g) => (
-            <option key={g.id} value={String(g.id)}>
-              {g.name} · {g.kind === "pageview" ? "page" : "event"} {g.match}
-            </option>
-          ))}
-        </select>
+        <span className="relative block">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute bottom-[9px] right-[9px] text-[11px] text-faint"
+          >
+            ▾
+          </span>
+          <select
+            value={goalId}
+            onChange={(e) => setGoalId(e.target.value)}
+            disabled={isGuest}
+            className={SELECT}
+          >
+            <option value="">None</option>
+            {data.goals.map((g) => (
+              <option key={g.id} value={String(g.id)}>
+                {g.name} · {g.kind === "pageview" ? "page" : "event"} {g.match}
+              </option>
+            ))}
+          </select>
+        </span>
       </Field>
       <div className="flex items-center gap-3">
         <button
@@ -658,7 +713,7 @@ function DataSection({
                 router.push("/sites");
               })
             }
-            className="h-8 rounded-control bg-poor px-3 text-[13px] font-medium text-canvas disabled:opacity-40"
+            className="h-8 rounded-control bg-poor px-3 text-[13px] font-medium text-canvas disabled:bg-soft disabled:text-mute"
           >
             {deleting ? "Deleting…" : "Delete site"}
           </button>
@@ -702,57 +757,60 @@ function Notes({ slug, data, isGuest }: SectionProps) {
         </span>
       </div>
       {data.notes.length > 0 && (
-        <table className="max-w-[720px] border-collapse text-[13px]">
-          <thead>
-            <tr>
-              {["When", "Note", "By", "Actions"].map((h) => (
-                <th
-                  key={h}
-                  scope="col"
-                  className="border-rule border-b py-[6px] pr-4 text-left text-[11.5px] font-medium text-mute"
-                >
-                  {h === "Actions" ? <span className="sr-only">{h}</span> : h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.notes.map((n) => (
-              <tr key={n.id} className="border-rule border-b align-top">
-                <td className="whitespace-nowrap py-[9px] pr-4 text-mute tabular">
-                  {formatInTimeZone(
-                    new Date(n.at),
-                    data.timezone,
-                    "MMM d, yyyy, HH:mm"
-                  )}
-                </td>
-                <td className="py-[9px] pr-4">{n.text}</td>
-                <td className="py-[9px] pr-4 text-mute">
-                  {n.author.startsWith("key:")
-                    ? `key: ${n.author.slice(4)}`
-                    : n.author || "—"}
-                </td>
-                <td className="py-[9px] text-right">
-                  <NoteForm
-                    slug={slug}
-                    timezone={data.timezone}
-                    isGuest={isGuest}
-                    note={n}
-                    trigger={
-                      <button
-                        type="button"
-                        aria-label={`Edit note: ${n.text}`}
-                        className="text-[12.5px] text-teal-ink hover:underline"
-                      >
-                        Edit
-                      </button>
-                    }
-                  />
-                </td>
+        <section
+          aria-label="Notes list"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+          tabIndex={0}
+          className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        >
+          <table className="w-full max-w-[880px] border-collapse text-[13px]">
+            <thead>
+              <tr>
+                {["When", "Note", "By", "Actions"].map((h) => (
+                  <th key={h} scope="col" className={TH}>
+                    {h === "Actions" ? <span className="sr-only">{h}</span> : h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.notes.map((n) => (
+                <tr key={n.id} className="border-rule border-b align-top">
+                  <td className="whitespace-nowrap py-[9px] pr-4 text-mute tabular">
+                    {formatInTimeZone(
+                      new Date(n.at),
+                      data.timezone,
+                      "MMM d, yyyy, HH:mm"
+                    )}
+                  </td>
+                  <td className="min-w-[200px] py-[9px] pr-4">{n.text}</td>
+                  <td className="whitespace-nowrap py-[9px] pr-4 text-mute">
+                    {n.author.startsWith("key:")
+                      ? `key: ${n.author.slice(4)}`
+                      : n.author || "—"}
+                  </td>
+                  <td className="py-[9px] text-right">
+                    <NoteForm
+                      slug={slug}
+                      timezone={data.timezone}
+                      isGuest={isGuest}
+                      note={n}
+                      trigger={
+                        <button
+                          type="button"
+                          aria-label={`Edit note: ${n.text}`}
+                          className="text-[12.5px] text-teal-ink hover:underline"
+                        >
+                          Edit
+                        </button>
+                      }
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       )}
     </Block>
   );
@@ -812,57 +870,59 @@ function ApiKeys({
         </div>
       )}
       {data.apiKeys.length > 0 && (
-        <table className="max-w-[720px] border-collapse text-[13px]">
-          <thead>
-            <tr>
-              {["Name", "Key", "Can", "Last used", "Actions"].map((h) => (
-                <th
-                  key={h}
-                  scope="col"
-                  className="border-rule border-b py-[6px] pr-4 text-left text-[11.5px] font-medium text-mute"
-                >
-                  {h === "Actions" ? <span className="sr-only">{h}</span> : h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.apiKeys.map((k) => (
-              <tr key={k.id} className="border-rule border-b">
-                <td className="py-[9px] pr-4">{k.name}</td>
-                <td className="py-[9px] pr-4 font-mono text-[12px] text-mute">
-                  {k.prefix}…
-                </td>
-                <td className="py-[9px] pr-4 text-mute">
-                  {k.scopes.join(", ")}
-                </td>
-                <td
-                  suppressHydrationWarning
-                  className="py-[9px] pr-4 text-mute"
-                >
-                  {k.lastUsedAt ? fmtAgo(new Date(k.lastUsedAt)) : "never"}
-                </td>
-                <td className="py-[9px] text-right">
-                  <button
-                    type="button"
-                    disabled={isGuest || s.pending}
-                    onClick={() =>
-                      s.run(() => revokeApiKey(slug, k.id), "Revoked.")
-                    }
-                    className="text-[12.5px] text-poor hover:underline disabled:opacity-40"
-                  >
-                    Revoke
-                  </button>
-                </td>
+        <section
+          aria-label="API keys list"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+          tabIndex={0}
+          className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+        >
+          <table className="w-full max-w-[880px] border-collapse text-[13px]">
+            <thead>
+              <tr>
+                {["Name", "Key", "Can", "Last used", "Actions"].map((h) => (
+                  <th key={h} scope="col" className={TH}>
+                    {h === "Actions" ? <span className="sr-only">{h}</span> : h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.apiKeys.map((k) => (
+                <tr key={k.id} className="border-rule border-b">
+                  <td className="whitespace-nowrap py-[9px] pr-4">{k.name}</td>
+                  <td className="whitespace-nowrap py-[9px] pr-4 font-mono text-[12px] text-mute">
+                    {k.prefix}…
+                  </td>
+                  <td className="whitespace-nowrap py-[9px] pr-4 text-mute">
+                    {k.scopes.join(", ")}
+                  </td>
+                  <td
+                    suppressHydrationWarning
+                    className="whitespace-nowrap py-[9px] pr-4 text-mute"
+                  >
+                    {k.lastUsedAt ? fmtAgo(new Date(k.lastUsedAt)) : "never"}
+                  </td>
+                  <td className="py-[9px] text-right">
+                    <button
+                      type="button"
+                      disabled={isGuest || s.pending}
+                      onClick={() =>
+                        s.run(() => revokeApiKey(slug, k.id), "Revoked.")
+                      }
+                      className="text-[12.5px] text-poor hover:underline disabled:opacity-40"
+                    >
+                      Revoke
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       )}
-      <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-[13px]">
-          {/* not just "Name": the General section already has one */}
-          <span className="text-[11.5px] text-mute">Key name</span>
+      <div className="flex flex-col gap-4">
+        {/* not just "Name": the General section already has one */}
+        <Field label="Key name">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -870,21 +930,28 @@ function ApiKeys({
             placeholder="Deploy pipeline"
             className={FIELD}
           />
-        </label>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-[11.5px] text-mute">This key may</legend>
-          {SCOPES.map((scope) => (
-            <label key={scope} className="flex items-center gap-2 text-[13px]">
-              <input
-                type="checkbox"
-                checked={scopes.includes(scope)}
-                onChange={() => toggle(scope)}
-                disabled={isGuest}
-                className="accent-teal"
-              />
-              {SCOPE_LABEL[scope]}
-            </label>
-          ))}
+        </Field>
+        <fieldset className="grid gap-1 min-[640px]:grid-cols-[200px_minmax(0,1fr)] min-[640px]:gap-6">
+          <legend className="float-left text-[13px] font-medium">
+            This key may
+          </legend>
+          <div className="flex flex-col gap-2 min-[640px]:col-start-2">
+            {SCOPES.map((scope) => (
+              <label
+                key={scope}
+                className="flex items-center gap-2 text-[13px]"
+              >
+                <input
+                  type="checkbox"
+                  checked={scopes.includes(scope)}
+                  onChange={() => toggle(scope)}
+                  disabled={isGuest}
+                  className="accent-teal"
+                />
+                {SCOPE_LABEL[scope]}
+              </label>
+            ))}
+          </div>
         </fieldset>
         <div className="flex items-center gap-3">
           <button

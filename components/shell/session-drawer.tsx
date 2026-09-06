@@ -132,8 +132,11 @@ function Timeline({ t }: { t: SessionTimeline }) {
               timeStyle: "short",
             })
           : "—"}{" "}
-        · {t.steps.filter((s) => s.kind === "pageview").length} pages ·{" "}
-        {fmtDuration(total)} engaged
+        · {t.steps.filter((s) => s.kind === "pageview").length}{" "}
+        {t.steps.filter((s) => s.kind === "pageview").length === 1
+          ? "page"
+          : "pages"}{" "}
+        · {fmtDuration(total)} engaged
         {t.meta.referrer ? ` · referrer ${t.meta.referrer}` : ""}
       </p>
       <ol className="flex flex-col">

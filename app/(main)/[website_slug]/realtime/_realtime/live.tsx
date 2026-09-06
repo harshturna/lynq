@@ -107,21 +107,21 @@ export function Live({
       </div>
 
       {empty ? (
-        <p className="rounded-card border border-dashed border-rule px-6 py-9 text-center text-[13px] text-mute">
-          <span className="block text-[15px] font-medium text-ink">
-            No one on the site right now
-          </span>
+        <p className="text-[13px] text-mute">
+          <span className="font-medium text-ink">
+            No one on the site right now.
+          </span>{" "}
           {data.last_at
             ? `The last event arrived ${fmtAgo(new Date(data.last_at))}.`
             : "No events have arrived yet."}
         </p>
       ) : null}
 
-      <div className="grid border-t border-rule-strong min-[480px]:grid-cols-3">
+      <div className="grid border-t border-rule-strong border-b border-rule min-[480px]:grid-cols-3">
         <Tile
-          label="Visitors on the site now"
+          label="On the site now"
           value={fmtInt(data.visitors_now)}
-          note="last 5 minutes"
+          note="visitors in the last 5 minutes"
         />
         <Tile
           label={`Pageviews, ${windowLabel}`}
@@ -132,7 +132,7 @@ export function Live({
                 current={data.pageviews}
                 previous={data.pageviews_prev}
               />
-              vs the {windowLabel} before
+              vs the {windowLabel.replace(/^last /, "")} before
             </span>
           }
         />
@@ -154,7 +154,13 @@ export function Live({
           bars={data.per_minute.map((m, i, all) => {
             const ago = all.length - 1 - i;
             return {
-              label: ago % (windowMin === 60 ? 10 : 5) === 0 ? `-${ago}m` : "",
+              label:
+                ago === 0
+                  ? "now"
+                  : ago % (windowMin === 60 ? 10 : 5) === 0 ||
+                      ago === all.length - 1
+                    ? `-${ago}m`
+                    : "",
               title: ago === 0 ? "this minute" : `${ago} min ago`,
               value: m.pageviews,
             };
@@ -218,6 +224,7 @@ export function Live({
       <Section
         title="Activity"
         qualifier="newest first"
+        strong
         right={
           feed.pending > 0 ? (
             <button
@@ -285,7 +292,7 @@ export function Live({
                   onClick={() => setAllFeed(true)}
                   className="font-medium text-teal-ink hover:underline"
                 >
-                  Show earlier, {feed.rows.length - FEED_SHOWN} more
+                  Show {feed.rows.length - FEED_SHOWN} earlier
                 </button>
               </li>
             )}
@@ -310,7 +317,7 @@ function Tile({
   note: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-[6px] border-b border-r border-rule py-4 pr-4 last:border-r-0 min-[480px]:mr-4 min-[480px]:last:mr-0">
+    <div className="flex flex-col gap-[6px] border-rule py-4 pr-4 min-[480px]:mr-4 min-[480px]:border-r min-[480px]:last:mr-0 min-[480px]:last:border-r-0">
       <span className="text-[12px] text-mute">{label}</span>
       <span className="text-[30px] font-medium leading-none tracking-[-0.02em] tabular">
         {value}

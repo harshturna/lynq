@@ -88,10 +88,13 @@ export function barOption(bars: Bar[], opts: BarOptions): ChartOption {
               silent: true,
               symbol: "none",
               lineStyle: { color: TOKENS.ink2, type: [2, 3], width: 1 },
+              // "end" keeps the label horizontal above a vertical line;
+              // insideEndTop would rotate it along the line
               label: {
                 color: TOKENS.ink2,
                 fontSize: 11,
-                position: "insideEndTop",
+                position: "end",
+                distance: 4,
                 formatter: (p: { name: string }) => p.name,
               },
               data: opts.markers.map((m) => ({ name: m.label, xAxis: m.at })),

@@ -165,7 +165,7 @@ describe("DataTable", () => {
       screen.getByText("9.0%").previousSibling?.previousSibling
     ).toHaveClass("text-good");
     expect(screen.queryByText("8.6%")).toBeNull(); // bounce has no slot
-    expect(screen.getByText("change")).toBeInTheDocument();
+    expect(screen.getByText("Change")).toBeInTheDocument();
   });
 
   it("names the label column, puts the bar in its own column, and offers Show all", async () => {

@@ -61,9 +61,13 @@ export function RangePicker({ timezone }: { timezone: string }) {
           <Popover.Content
             align="start"
             sideOffset={6}
-            className={cn(POPOVER, "flex gap-4")}
+            collisionPadding={12}
+            className={cn(
+              POPOVER,
+              "flex max-w-[calc(100vw-24px)] flex-wrap gap-4"
+            )}
           >
-            <fieldset className="flex w-[150px] flex-col gap-[2px]">
+            <fieldset className="flex w-[150px] flex-col gap-[2px] max-[479px]:w-full">
               <legend className="sr-only">Presets</legend>
               {PRESETS.map((p) => (
                 <button
