@@ -1,6 +1,12 @@
 import "server-only";
 import { withTimeout } from "@/lib/db";
 import {
+  type AttentionRow,
+  attentionQuery,
+  type InfluenceRow,
+  influenceQuery,
+} from "./attention";
+import {
   type BreakdownMultiOptions,
   type BreakdownMultiRow,
   breakdownMultiQuery,
@@ -200,6 +206,48 @@ export async function breakdownMulti(
 }
 
 /** The last 30 minutes by received_at, in one statement (design §9.4). */
+/** Attention and read-through per page (D-016). */
+export async function attention(
+  ctx: QueryContext,
+  opts: { limit?: number } = {}
+): Promise<{ rows: AttentionRow[]; siteAttentionMs: number; total: number }> {
+  const rows = await run<Record<string, unknown>>(
+    attentionQuery(ctx, opts),
+    ctx.timeoutMs
+  );
+  return {
+    rows: rows.map((r) => ({
+      value: String(r.value),
+      attention_ms: num(r.attention_ms),
+      pageviews: num(r.pageviews),
+      read_through: numOrNull(r.read_through) as number | null,
+      site_attention_ms: num(r.site_attention_ms),
+      total: num(r.total),
+    })),
+    siteAttentionMs: rows[0] ? num(rows[0].site_attention_ms) : 0,
+    total: rows[0] ? num(rows[0].total) : 0,
+  };
+}
+
+/** How much more often the goal is reached by sessions that saw a page (D-016). */
+export async function influence(
+  ctx: QueryContext,
+  goal: GoalDef,
+  opts: { limit?: number } = {}
+): Promise<InfluenceRow[]> {
+  const rows = await run<Record<string, unknown>>(
+    influenceQuery(ctx, goal, opts),
+    ctx.timeoutMs
+  );
+  return rows.map((r) => ({
+    value: String(r.value),
+    sessions: num(r.sessions),
+    conversion: num(r.conversion),
+    conversion_without: num(r.conversion_without),
+    lift: numOrNull(r.lift) as number | null,
+  }));
+}
+
 export async function realtime(
   ctx: QueryContext,
   now = new Date(),

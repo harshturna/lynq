@@ -514,6 +514,32 @@ const BLOG_NEXT: W<string>[] = [
   { weight: 15, value: "/blog/prompt-caching-in-practice" },
 ];
 
+/**
+ * Scroll depth by what kind of page it is, so read-through (D-016) has a real
+ * spread on the demo site: long-form gets read by the people who stay, an app
+ * screen is scrolled a little whatever happens, and a skim is a skim.
+ */
+function scrollDepth(
+  f: { number: { int: (o: { min: number; max: number }) => number } },
+  path: string,
+  engagedMs: number
+): number {
+  if (engagedMs < 5000) return f.number.int({ min: 5, max: 35 });
+  const longForm =
+    path.startsWith("/docs") ||
+    path.startsWith("/blog") ||
+    path === "/changelog";
+  const app =
+    path.startsWith("/dashboard") || path === "/login" || path === "/signup";
+  if (app) return f.number.int({ min: 15, max: 80 });
+  if (longForm) {
+    const reached = 20 + (engagedMs / 120_000) * 90;
+    const noise = f.number.int({ min: -18, max: 12 });
+    return Math.max(10, Math.min(100, Math.round(reached + noise)));
+  }
+  return f.number.int({ min: 30, max: 95 });
+}
+
 /** Local-hour weights: quiet nights, a late-morning peak and an afternoon plateau. */
 const HOURS = [
   1, 0.6, 0.4, 0.3, 0.3, 0.5, 1, 2, 3.5, 5, 6, 6, 5.5, 5.5, 6, 6, 5.5, 4.5, 3.5,
@@ -821,14 +847,7 @@ export function generate(opts: SeedOptions): {
                 )
           );
           sessionEngaged += engaged;
-          const scroll = Math.min(
-            100,
-            Math.round(
-              engaged < 5000
-                ? f.number.int({ min: 5, max: 40 })
-                : f.number.int({ min: 30, max: 100 })
-            )
-          );
+          const scroll = scrollDepth(f, path, engaged);
           const endTs = new Date(ts.getTime() + engaged);
           push(
             blank({

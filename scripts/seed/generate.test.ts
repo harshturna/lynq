@@ -91,6 +91,29 @@ describe("seed generator", () => {
     expect(channels).toContain("Email");
     expect(channels).toContain("Paid");
     expect(channels).toContain("AI");
+  });
+
+  it("scrolls long-form pages deeper than app screens, so read-through separates", () => {
+    const byKind = { long: [0, 0], marketing: [0, 0], app: [0, 0] };
+    for (const r of rows) {
+      if (r.event !== "engagement") continue;
+      const kind =
+        r.path.startsWith("/docs") || r.path.startsWith("/blog")
+          ? "long"
+          : r.path.startsWith("/dashboard") ||
+              r.path === "/login" ||
+              r.path === "/signup"
+            ? "app"
+            : "marketing";
+      byKind[kind][1] += 1;
+      if (r.scroll_depth >= 75 && r.engaged_ms >= 10_000) byKind[kind][0] += 1;
+    }
+    const share = (k: keyof typeof byKind) =>
+      byKind[k][1] ? byKind[k][0] / byKind[k][1] : 0;
+    expect(share("long")).toBeGreaterThan(share("marketing"));
+    expect(share("marketing")).toBeGreaterThan(share("app"));
+    expect(share("long")).toBeGreaterThan(0.3);
+    expect(share("app")).toBeLessThan(0.2);
     expect(stats.revenue).toBeGreaterThan(0);
     expect(stats.identify).toBeGreaterThan(0);
     expect(

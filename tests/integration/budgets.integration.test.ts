@@ -86,7 +86,7 @@ function ctx(over: Partial<QueryContext> = {}): QueryContext {
  * 90/107, breakdown_path 19, breakdownMulti_path 11, entry_channel with goal
  * metrics 44, matrix 50, prop_key 5, realtime 3, pageFlow 164, goalStats 121,
  * funnel 136, heatmap 53, histogram 33, pathsTo 6, vitals 40/39/43,
- * rows_sessions 134.
+ * rows_sessions 134, attention 27, influence 69.
  *
  * The fixture grew about a fifth when TICKET-048 gave visitors a second
  * same-day session, and these were not re-measured then, which left several
@@ -113,6 +113,8 @@ const BUDGET: Record<string, number> = {
   vitalsBreakdown: 80,
   vitalsTimeseries: 90,
   rows_sessions: 270,
+  attention: 60,
+  influence: 140,
 };
 
 /**
@@ -183,6 +185,8 @@ describe("query budgets on a 90-day seed fixture", () => {
       vitalsBreakdown: () => q.vitalsBreakdown(c, "path"),
       vitalsTimeseries: () => q.vitalsTimeseries(c, "day"),
       rows_sessions: () => q.rows(c, "sessions", { limit: 50 }),
+      attention: () => q.attention(c, { limit: 50 }),
+      influence: () => q.influence(c, goal, { limit: 50 }),
     };
     const measured: Record<string, number> = {};
     for (const [name, fn] of Object.entries(cases))
