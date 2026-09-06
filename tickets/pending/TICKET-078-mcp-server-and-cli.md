@@ -25,6 +25,8 @@ An agent (Claude Code, Cursor, Codex) or a terminal can ask a site's numbers dir
 - [ ] Design section: transport, auth, the tool list and their schemas, rate limits.
 - [ ] Decision on site keys (shared with TICKET-075).
 - [ ] Route handler or package; CLI; docs pages; tests against the seed fixture.
+- [ ] Docs: a new top-level section ("Integrations" or "For agents") with the MCP setup for Claude Code, Cursor and Codex, the tool list, the CLI commands, and site-key creation; the TypeScript page links it.
+- [ ] Landing: a feature panel staged from a real agent exchange ("Ask why signups dropped") beside a short lead, and a docs-home line; this and TICKET-075 are the AI story the landing currently lacks.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.

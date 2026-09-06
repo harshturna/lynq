@@ -27,6 +27,8 @@ Visits that arrive from an AI assistant appear as their own channel, "AI", on So
 - [ ] Seed: a small AI share in scripts/seed/generate.ts REFERRERS so the demo has the channel.
 - [ ] Backfill the seeded site's channel column for those sources and rebuild its rollup; note the production write in the ticket.
 - [ ] Verify: npm run verify; npm run test:integration (ingest and rollup change).
+- [ ] Docs: the channel list on product/counting.mdx ("Entry and exit") and product/filters.mdx name the AI channel and which assistants feed it; the referrer classification is described where UTM and channel rules are.
+- [ ] Landing: the Overview panel's sources rows (app/(landing)/_landing/panels.tsx) gain an AI row with a believable share, and the "What you get" bullet on the docs home names AI referrals.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.

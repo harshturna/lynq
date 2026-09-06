@@ -26,6 +26,8 @@ A site can see which crawlers fetch which pages: AI answer engines (ChatGPT, Cla
 - [ ] Design section: package shape, endpoint, table, screen.
 - [ ] Decision (decide skill): site keys for server-side ingest.
 - [ ] Package, endpoint, table, screen, tests.
+- [ ] Docs: an Install page for the server-side package (Next.js middleware first), a Using Lynq page on the Bots view and the crawler families, and a privacy page note that crawler hits are stored separately from visits.
+- [ ] Landing: a feature panel ("See which AI assistants read your site") staged from the real Bots view, and a "What you get" line on the docs home. This is the first AI-facing feature; feature it, since nothing on the landing or docs mentions AI today.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.

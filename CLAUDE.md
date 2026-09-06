@@ -53,9 +53,13 @@ directories; take the highest existing `TICKET-NNN` and add one. Never reuse a n
    from another. The commit includes the moved ticket file.
 7. **Follow-up work found mid-ticket becomes a new ticket in `pending/`,** not an expansion of the
    current one. Link the two in each other's Context.
-8. **Expensive-to-reverse choices go in `tickets/DECISIONS.md`** via the `decide` skill, and the
+8. **A feature ticket plans its landing page and docs changes.** The Plan of any ticket that adds
+   or changes what a user can do lists the docs pages (`../lynq-docs`) and landing sections it
+   touches, and the ticket does not close until they are updated; the docs describe the product
+   as it is, and the landing page features what is real.
+9. **Expensive-to-reverse choices go in `tickets/DECISIONS.md`** via the `decide` skill, and the
    ticket cites the `D-NNN`. Routine choices stay in the progress log.
-9. **Ticket state must match reality at the end of every turn that touched code.**
+10. **Ticket state must match reality at the end of every turn that touched code.**
 
 `npm run check:tickets` enforces the structure: filenames, status per directory, dates, required
 sections, Handoff on in-progress tickets, Verification and Outcome on done tickets, decision ids.

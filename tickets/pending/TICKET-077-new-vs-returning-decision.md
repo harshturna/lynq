@@ -24,6 +24,7 @@ Decide whether Lynq offers a new-versus-returning split at all, and on what iden
 ## Plan
 - [ ] Write the options up in DECISIONS.md via the decide skill; the owner picks.
 - [ ] If (a) or (b): a tile on the Overview or Sources with the honest label; tests.
+- [ ] Docs, whichever way it goes: product/counting.mdx ("Visitors") and privacy.mdx say exactly what Lynq can and cannot tell about a returning person, in the same words as app/(landing)/privacy/page.tsx and the landing's privacy ledger, which must change together.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review; blocked on the decision.

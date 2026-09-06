@@ -29,6 +29,7 @@ When a site records revenue, the Pages and Locations tables show revenue and rev
 - [ ] Locations: the same on the countries table.
 - [ ] Mock the two tables with the seeded numbers and look before coding (D-010).
 - [ ] Verify: npm run verify; TEST_DATABASE_URL=… npm run test:e2e (pages and locations specs).
+- [ ] Docs: tracking/events.mdx ("Revenue") and product/goals.mdx say revenue and revenue per visitor appear on Sources, Pages and Locations; the settings page's Goals section too if it lists where revenue shows.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.

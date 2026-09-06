@@ -25,6 +25,8 @@ A site owner can pin a dated note ("Launched on Product Hunt", "Deployed v2") th
 - [ ] Table and migration; actions to add, edit, delete; the API once site keys exist.
 - [ ] Markers on the lead chart and the goal trend; announcements and the hidden table.
 - [ ] Verify: npm run verify; npm run test:integration; npm run test:e2e.
+- [ ] Docs: a Using Lynq page ("Notes") on adding a note, what it marks, and the API call a deploy pipeline makes (with the site-key setup); the counting page's Web Vitals section mentions reading a regression against a note.
+- [ ] Landing: the Overview panel's chart gains one marker with a note label; a line in the "What you get" list.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.

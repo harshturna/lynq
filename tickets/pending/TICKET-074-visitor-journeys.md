@@ -26,6 +26,8 @@ A session can be opened as a timeline, pageview by pageview and event by event, 
 - [ ] Query: a session timeline primitive over `rows` with the entry attribution.
 - [ ] Drawer component; entry points from Realtime, Goals and the Events screen.
 - [ ] Verify: npm run verify; npm run test:integration; npm run test:e2e.
+- [ ] Docs: a Using Lynq page ("Journeys") on what a journey shows, how to open one, and the one-day limit for anonymous visitors; product/counting.mdx links it from Sessions.
+- [ ] Landing: a staged panel (D-014 pattern) showing one journey timeline, with a one-line lead; the docs home's "What you get" list gains the line.
 
 ## Progress log
 - 2026-09-06 — Created from the DataFast follow-up review.
