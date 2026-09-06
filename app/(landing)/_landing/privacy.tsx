@@ -70,7 +70,13 @@ export function Privacy() {
         {NUMBERS.map(([n, label]) => (
           <div key={label}>
             <b className="block text-[40px] font-medium leading-none tracking-[-0.02em] tabular">
-              {n}
+              {label === "cookies" ? (
+                <mark className="rounded-[4px] bg-teal-soft px-[0.14em] text-inherit">
+                  {n}
+                </mark>
+              ) : (
+                n
+              )}
             </b>
             <span className="mt-2 block text-[12.5px] text-mute">{label}</span>
           </div>
