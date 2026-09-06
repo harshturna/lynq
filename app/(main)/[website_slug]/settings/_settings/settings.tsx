@@ -23,7 +23,6 @@ const SECTIONS = [
   { id: "exclusions", label: "Exclusions" },
   { id: "kpi", label: "Goals and KPI" },
   { id: "data", label: "Data" },
-  { id: "team", label: "Team" },
 ] as const;
 
 const FIELD =
@@ -59,10 +58,7 @@ export function SettingsPage({
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
-                className={cn(
-                  "block rounded-control px-[10px] py-[6px] text-[13px] text-ink-2 hover:bg-soft hover:text-ink",
-                  s.id === "team" && "text-mute"
-                )}
+                className="block rounded-control px-[10px] py-[6px] text-[13px] text-ink-2 hover:bg-soft hover:text-ink"
               >
                 {s.label}
               </a>
@@ -90,7 +86,6 @@ export function SettingsPage({
           isGuest={isGuest}
           userId={userId}
         />
-        <Team />
       </div>
     </div>
   );
@@ -663,18 +658,6 @@ function DataSection({
           )}
         </div>
       </div>
-    </Block>
-  );
-}
-
-function Team() {
-  return (
-    <Block
-      id="team"
-      title="Team"
-      lede="Invite people to see this site. Coming in Phase 2."
-    >
-      <p className="text-[12.5px] text-mute">Not available yet.</p>
     </Block>
   );
 }
