@@ -76,42 +76,61 @@ function ctx(over: Partial<QueryContext> = {}): QueryContext {
 }
 
 /**
- * Budgets in ms: measured × 1.5 rounded up to the next 10, with a 30 ms floor
- * so a 3 ms query does not fail on scheduler jitter. Measured 2026-09-06 on
- * 47,601 rows (90 days × 40 visitors/day, seed 7) with the rollup filled
- * through two days before the range end (D-015): summary 25, timeseries
- * 58/68, breakdown_path 13, breakdownMulti_path 26, entry_channel with goal
- * metrics 34, matrix 33, prop_key 4, realtime 2, pageFlow 118, goalStats 84,
- * funnel 94, heatmap 37, histogram 19, pathsTo 5, vitals 25/25/28,
- * rows_sessions 104. Re-measure and update when a primitive changes shape.
+ * Budgets in ms: measured × 2 rounded up to the next 10, with a 30 ms floor.
+ * These exist to catch a primitive changing shape, not to measure absolute
+ * speed; production latency is measured by scripts/measure-prod.mts instead.
+ * A doubling is what a shape regression looks like, and anything tighter than
+ * × 2 made the suite flaky on a laptop that is also running Docker. Re-measured 2026-09-06 on
+ * 57,844 rows (90 days × 40 visitors/day, seed 7) with the rollup filled
+ * through two days before the range end (D-015): summary 10, timeseries
+ * 90/107, breakdown_path 19, breakdownMulti_path 11, entry_channel with goal
+ * metrics 44, matrix 50, prop_key 5, realtime 3, pageFlow 164, goalStats 121,
+ * funnel 136, heatmap 53, histogram 33, pathsTo 6, vitals 40/39/43,
+ * rows_sessions 134.
+ *
+ * The fixture grew about a fifth when TICKET-048 gave visitors a second
+ * same-day session, and these were not re-measured then, which left several
+ * of them a millisecond or two under the line and the suite flaky.
+ * Re-measure and update whenever a primitive or the fixture changes shape.
  */
 const BUDGET: Record<string, number> = {
-  summary: 40,
-  timeseries_pageviews: 90,
-  timeseries_sessions: 110,
-  breakdown_path: 30,
-  breakdownMulti_path: 40,
-  breakdownMulti_entry_channel_goals: 60,
-  breakdownMulti_matrix: 50,
+  summary: 30,
+  timeseries_pageviews: 180,
+  timeseries_sessions: 220,
+  breakdown_path: 40,
+  breakdownMulti_path: 30,
+  breakdownMulti_entry_channel_goals: 90,
+  breakdownMulti_matrix: 100,
   breakdown_prop_key: 30,
   realtime: 30,
-  pageFlow: 150,
-  goalStats: 110,
-  funnel: 120,
-  heatmap: 50,
-  histogram: 30,
+  pageFlow: 330,
+  goalStats: 250,
+  funnel: 280,
+  heatmap: 110,
+  histogram: 70,
   pathsTo: 30,
-  vitals: 40,
-  vitalsBreakdown: 40,
-  vitalsTimeseries: 40,
-  rows_sessions: 140,
+  vitals: 80,
+  vitalsBreakdown: 80,
+  vitalsTimeseries: 90,
+  rows_sessions: 270,
 };
 
+/**
+ * Warm once, then take the fastest of three runs. A single timed run on a
+ * laptop that is also running Docker lands anywhere in a 20% band, which put
+ * timeseries_pageviews on both sides of its budget across consecutive runs
+ * (TICKET-072). The fastest run is what the query can do; noise only ever
+ * adds to it, so a real regression still raises the number.
+ */
 async function timed<T>(name: string, fn: () => Promise<T>): Promise<number> {
   await fn(); // warm the plan and the cache once; screens hit warm caches too
-  const t0 = performance.now();
-  await fn();
-  return Math.round(performance.now() - t0);
+  let best = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < 3; i++) {
+    const started = performance.now();
+    await fn();
+    best = Math.min(best, performance.now() - started);
+  }
+  return Math.round(best);
 }
 
 describe("query budgets on a 90-day seed fixture", () => {
@@ -172,27 +191,26 @@ describe("query budgets on a 90-day seed fixture", () => {
       { n: number }[]
     >`select count(*)::int as n from analytics.events where site_id = ${siteId}`;
     console.log(`budgets on ${n} rows (ms):`, JSON.stringify(measured));
-    for (const [name, ms] of Object.entries(measured))
-      expect(
-        ms,
-        `${name} took ${ms} ms, budget ${BUDGET[name]} ms`
-      ).toBeLessThanOrEqual(BUDGET[name]);
+    const over = Object.entries(measured).filter(([n, ms]) => ms > BUDGET[n]);
+    expect(
+      over.map(([n, ms]) => `${n} took ${ms} ms, budget ${BUDGET[n]} ms`)
+    ).toEqual([]);
   }, 120_000);
 });
 
 /**
  * Twelve months through the daily rollup (D-015, TICKET-049): the three
  * Overview tables on a 365-day fixture after housekeeping has rolled it.
- * Measured 2026-09-06 on 78,481 rows (365 days × 15 visitors/day, seed 5):
- * summary 10, timeseries by month 17, path 15, entry_channel with goal
- * columns 68, country 12; budgets keep headroom for the laptop's variance.
+ * Re-measured 2026-09-06 on 78,481 rows (365 days × 15 visitors/day, seed 5):
+ * summary 9, timeseries by month 21, path 14, entry_channel with goal columns
+ * 63, country 11. Same × 2 rule.
  */
 const YEAR_BUDGET: Record<string, number> = {
-  rollup_summary: 60,
-  rollup_timeseries_visitors: 30,
-  rollup_path: 70,
-  rollup_entry_channel_goals: 100,
-  rollup_country: 60,
+  rollup_summary: 30,
+  rollup_timeseries_visitors: 50,
+  rollup_path: 30,
+  rollup_entry_channel_goals: 130,
+  rollup_country: 30,
 };
 
 describe("twelve-month budgets through the daily rollup", () => {

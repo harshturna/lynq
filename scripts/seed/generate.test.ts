@@ -90,6 +90,7 @@ describe("seed generator", () => {
     expect(channels).toContain("Organic Search");
     expect(channels).toContain("Email");
     expect(channels).toContain("Paid");
+    expect(channels).toContain("AI");
     expect(stats.revenue).toBeGreaterThan(0);
     expect(stats.identify).toBeGreaterThan(0);
     expect(

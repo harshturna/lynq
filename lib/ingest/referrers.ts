@@ -4,11 +4,13 @@ import type { Utm } from "./url";
  * Referrer hostname to a display source and a channel (design §7.5). A
  * hand-written list of the sources that matter; unmatched hostnames become
  * Referral with the hostname as the source. Match is on the hostname or any
- * parent domain, so www.google.co.uk and google.com both read as Google.
+ * parent domain, so www.google.co.uk and google.com both read as Google, and
+ * the full hostname is tried first so gemini.google.com is AI, not Google.
  */
 export type Channel =
   | "Direct"
   | "Organic Search"
+  | "AI"
   | "Social"
   | "Referral"
   | "Email"
@@ -18,6 +20,8 @@ export type Channel =
 type Entry = { source: string; channel: Channel };
 
 const SEARCH: Channel = "Organic Search";
+/** Answer engines, separated from search because a visit from one is a different intent. */
+const AI: Channel = "AI";
 const SOCIAL: Channel = "Social";
 const EMAIL: Channel = "Email";
 const REF: Channel = "Referral";
@@ -43,9 +47,17 @@ const KNOWN: Record<string, Entry> = {
   "kagi.com": { source: "Kagi", channel: SEARCH },
   "startpage.com": { source: "Startpage", channel: SEARCH },
   "qwant.com": { source: "Qwant", channel: SEARCH },
-  "perplexity.ai": { source: "Perplexity", channel: SEARCH },
-  "chatgpt.com": { source: "ChatGPT", channel: REF },
-  "chat.openai.com": { source: "ChatGPT", channel: REF },
+  "chatgpt.com": { source: "ChatGPT", channel: AI },
+  "chat.openai.com": { source: "ChatGPT", channel: AI },
+  "claude.ai": { source: "Claude", channel: AI },
+  "perplexity.ai": { source: "Perplexity", channel: AI },
+  // more specific than google.com, and lookupReferrer tries the full hostname first
+  "gemini.google.com": { source: "Gemini", channel: AI },
+  "copilot.microsoft.com": { source: "Copilot", channel: AI },
+  "grok.com": { source: "Grok", channel: AI },
+  "chat.deepseek.com": { source: "DeepSeek", channel: AI },
+  "poe.com": { source: "Poe", channel: AI },
+  "you.com": { source: "You.com", channel: AI },
   "twitter.com": { source: "X", channel: SOCIAL },
   "t.co": { source: "X", channel: SOCIAL },
   "x.com": { source: "X", channel: SOCIAL },

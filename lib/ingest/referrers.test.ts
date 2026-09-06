@@ -19,6 +19,28 @@ describe("referrer classification", () => {
     expect(lookupReferrer("news.ycombinator.com")?.source).toBe("Hacker News");
     expect(lookupReferrer("unknown.example")).toBeNull();
   });
+  it("puts answer engines on their own channel", () => {
+    for (const [host, source] of [
+      ["chatgpt.com", "ChatGPT"],
+      ["claude.ai", "Claude"],
+      ["www.perplexity.ai", "Perplexity"],
+      ["copilot.microsoft.com", "Copilot"],
+      ["grok.com", "Grok"],
+    ] as const) {
+      expect(lookupReferrer(host), host).toEqual({ source, channel: "AI" });
+    }
+    // the full hostname is tried before its parents, so this is not Google
+    expect(lookupReferrer("gemini.google.com")).toEqual({
+      source: "Gemini",
+      channel: "AI",
+    });
+    expect(lookupReferrer("www.google.com")?.channel).toBe("Organic Search");
+    // and a tagged link naming one of them classifies the same way
+    expect(classify("", utm({ utm_source: "chatgpt.com" }))).toEqual({
+      source: "ChatGPT",
+      channel: "AI",
+    });
+  });
   it("is Direct with nothing, Referral for unknown hosts", () => {
     expect(classify("", utm())).toEqual({ source: "", channel: "Direct" });
     expect(classify("blog.example", utm())).toEqual({

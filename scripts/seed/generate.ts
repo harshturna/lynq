@@ -389,6 +389,8 @@ const REFERRERS: W<Ref>[] = [
   { weight: 2, value: { host: "youtube.com" } },
   { weight: 1.5, value: { host: "chatgpt.com" } },
   { weight: 1, value: { host: "perplexity.ai" } },
+  { weight: 1, value: { host: "claude.ai" } },
+  { weight: 0.8, value: { host: "gemini.google.com" } },
   { weight: 1, value: { host: "duckduckgo.com" } },
   { weight: 1, value: { host: "dev.to" } },
   {
