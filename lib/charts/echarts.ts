@@ -11,7 +11,6 @@ import {
   ScatterChart,
 } from "echarts/charts";
 import {
-  GraphicComponent,
   GridComponent,
   LegendComponent,
   MarkLineComponent,
@@ -32,7 +31,6 @@ export function setupEcharts() {
     ScatterChart,
     HeatmapChart,
     GridComponent,
-    GraphicComponent,
     TooltipComponent,
     LegendComponent,
     VisualMapComponent,

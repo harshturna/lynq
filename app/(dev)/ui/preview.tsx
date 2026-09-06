@@ -7,12 +7,7 @@ import {
   Sparkline,
   trendLabel,
 } from "@/components/charts/charts";
-import {
-  DotPlot,
-  Heatmap,
-  Histogram,
-  Quadrant,
-} from "@/components/charts/shapes";
+import { DotPlot, Heatmap, Histogram } from "@/components/charts/shapes";
 import { DeltaBadge, Pill } from "@/components/shell/badge";
 import { Control, Segmented } from "@/components/shell/control";
 import {
@@ -52,21 +47,6 @@ import { makeBins } from "@/lib/charts/histogram";
 import { withFilter, withParam } from "@/lib/url-state";
 
 /** Every shell component on sample data (TICKET-030 to TICKET-033). */
-const QUADRANT = [
-  ["Google", 6200, 3.4, 211],
-  ["Direct", 3100, 4.1, 127],
-  ["Product Hunt", 1900, 1.2, 23],
-  ["GitHub", 840, 5.8, 49],
-  ["X", 620, 0.9, 6],
-  ["Newsletter", 410, 7.2, 30],
-  ["Bing", 260, 2.9, 8],
-].map(([label, x, y, size]) => ({
-  key: String(label),
-  label: String(label),
-  x: Number(x),
-  y: Number(y),
-  size: Number(size),
-}));
 const HOURS = (peak: number, scale: number) =>
   Array.from({ length: 24 }, (_, h) => {
     const d = Math.min(Math.abs(h - peak), 24 - Math.abs(h - peak));
@@ -546,18 +526,6 @@ function Body() {
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-8 min-[1000px]:grid-cols-2">
-        <Section title="Sources" qualifier="visitors × conversion" strong>
-          <Quadrant
-            title="Sources by visitors and conversion"
-            points={QUADRANT}
-            xLabel="Visitors"
-            yLabel="Conversion"
-            sizeLabel="Completions"
-            avgX={1200}
-            avgY={3.2}
-            formatY={(v) => `${v.toFixed(1)}%`}
-          />
-        </Section>
         <Section
           title="Conversion by channel"
           qualifier="against the site average"

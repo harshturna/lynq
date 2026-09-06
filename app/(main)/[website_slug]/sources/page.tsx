@@ -1,21 +1,13 @@
 import { Suspense } from "react";
 import { ScreenHeader } from "@/components/shell/screen-header";
-import {
-  ChartSkeleton,
-  StripSkeleton,
-  TableSkeleton,
-} from "@/components/shell/skeleton";
+import { StripSkeleton, TableSkeleton } from "@/components/shell/skeleton";
 import { screenContext } from "@/lib/screens/context";
 import { getSourcesScreen } from "@/lib/screens/sources";
 import { suggestValues } from "@/lib/screens/suggest";
 import type { SearchInput } from "@/lib/url-state";
-import {
-  QuadrantSection,
-  StripSection,
-  TablesSection,
-} from "./_sources/sections";
+import { StripSection, TablesSection } from "./_sources/sections";
 
-/** Sources (design §8.4): the strip by KPI state, the quadrant, three entry-attributed tables. */
+/** Sources (design §8.4, D-012): the strip by KPI state, then three entry-attributed tables. */
 export default async function SourcesPage(props: {
   params: Promise<{ website_slug: string }>;
   searchParams: Promise<SearchInput>;
@@ -37,9 +29,6 @@ export default async function SourcesPage(props: {
       />
       <Suspense fallback={<StripSkeleton tiles={4} />}>
         <StripSection screen={screen} />
-      </Suspense>
-      <Suspense fallback={<ChartSkeleton height={300} />}>
-        <QuadrantSection screen={screen} />
       </Suspense>
       <Suspense
         fallback={

@@ -3,7 +3,6 @@
  * little width. The fallback is one sentence naming the threshold; the
  * screen's table stays where it is.
  */
-export const MIN_QUADRANT_SOURCES = 3;
 export const MIN_HEATMAP_SESSIONS = 30;
 export const MIN_HISTOGRAM_SAMPLES = 50;
 export const MIN_FUNNEL_SESSIONS = 10;
@@ -12,15 +11,6 @@ export const HEATMAP_MIN_WIDTH = 700;
 export const HEATMAP_BUCKET_BELOW = 640;
 
 export type Threshold = { ok: boolean; reason?: string };
-
-export function quadrantThreshold(sources: number): Threshold {
-  return sources < MIN_QUADRANT_SOURCES
-    ? {
-        ok: false,
-        reason: `The quadrant appears once ${MIN_QUADRANT_SOURCES} or more sources have visitors.`,
-      }
-    : { ok: true };
-}
 
 export function heatmapThreshold(
   sessions: number,

@@ -15,11 +15,10 @@ import type { Kpi } from "./kpi";
 import { type Section, settle } from "./settle";
 
 /**
- * The Sources screen (design §8.4, §8.0): the strip and the quadrant follow
- * the KPI state; every table counts sessions by their entry (TICKET-027).
+ * The Sources screen (design §8.4, §8.0, D-012): the strip follows the KPI
+ * state; every table counts sessions by their entry (TICKET-027).
  */
 export const SOURCES_TABLE_LIMIT = 200;
-export const QUADRANT_POINTS = 30;
 
 export type TileKind = "int" | "pct" | "duration" | "money";
 export type StripTile = {
@@ -32,14 +31,6 @@ export type StripTile = {
   lowerIsBetter?: boolean;
   /** "—" when the denominator was zero. */
   empty?: boolean;
-};
-
-export type QuadrantData = {
-  points: { key: string; label: string; x: number; y: number; size: number }[];
-  avgX: number;
-  avgY: number;
-  y: "conversion" | "engaged";
-  size: "revenue" | "completions" | "visitors";
 };
 
 export type SourcesTable = {
@@ -56,7 +47,6 @@ export type SourcesScreen = {
   compare: boolean;
   kpi: Kpi;
   strip: Promise<Section<StripTile[]>>;
-  quadrant: Promise<Section<QuadrantData>>;
   channels: Promise<Section<SourcesTable>>;
   sources: Promise<Section<SourcesTable>>;
   campaigns: Promise<Section<SourcesTable>>;
@@ -134,51 +124,6 @@ export function getSourcesScreen(
     };
   };
 
-  const quadrant = async (): Promise<QuadrantData> => {
-    const [rows, sum, goal] = await Promise.all([
-      breakdownMulti(
-        ctx,
-        "entry_source",
-        metricsFor(kpi, ["visitors", "sessions", "engaged_time"]),
-        { limit: QUADRANT_POINTS }
-      ),
-      sumP,
-      goalP,
-    ]);
-    const y: QuadrantData["y"] = kpi.goal ? "conversion" : "engaged";
-    const size: QuadrantData["size"] = kpi.hasRevenue
-      ? "revenue"
-      : kpi.goal
-        ? "completions"
-        : "visitors";
-    const points = rows.rows
-      .map((r) => ({
-        key: r.value,
-        label: r.value || "Direct",
-        x: Number(r.visitors ?? 0),
-        y:
-          y === "conversion"
-            ? Number(r.conversion ?? 0)
-            : Number(r.engaged_time ?? 0) / 1000,
-        size:
-          size === "revenue"
-            ? Number(r.revenue ?? 0)
-            : size === "completions"
-              ? Number(r.goal_completions ?? 0)
-              : Number(r.visitors ?? 0),
-      }))
-      .filter((p) => p.x > 0);
-    const avgX = points.length
-      ? points.reduce((a, p) => a + p.x, 0) / points.length
-      : 1;
-    const g = goal?.[0];
-    const avgY =
-      y === "conversion"
-        ? (g?.conversion ?? 0)
-        : sum.current.engaged_time / 1000;
-    return { points, avgX: Math.max(1, avgX), avgY, y, size };
-  };
-
   const sourcesView = SOURCE_VIEWS[state.view.sources]
     ? state.view.sources
     : "sources";
@@ -189,7 +134,6 @@ export function getSourcesScreen(
     compare: prev !== null,
     kpi,
     strip: settle("sources.strip", strip()),
-    quadrant: settle("sources.quadrant", quadrant()),
     channels: settle(
       "sources.channels",
       table("channels", "entry_channel", [

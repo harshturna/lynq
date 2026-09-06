@@ -7,9 +7,6 @@ test("sources: view tab, channel filter and the share round-trip", async ({
 }) => {
   await open(page, `${SITE_PATH}/sources`);
   await expect(page.getByRole("region", { name: "Summary" })).toBeVisible();
-  await expect(
-    page.getByRole("heading", { level: 2, name: /Where to spend/ })
-  ).toBeVisible();
 
   await page
     .getByRole("tablist", { name: "Sources view" })

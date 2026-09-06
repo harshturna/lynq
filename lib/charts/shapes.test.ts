@@ -2,48 +2,14 @@ import { describe, expect, it } from "vitest";
 import { dotplotOption } from "./dotplot";
 import { bucketHours, heatmapOption } from "./heatmap";
 import { histogramOption, makeBins } from "./histogram";
-import { quadrantOption } from "./quadrant";
 import {
   funnelThreshold,
   heatmapThreshold,
   histogramThreshold,
-  quadrantThreshold,
 } from "./thresholds";
 
 // biome-ignore lint/suspicious/noExplicitAny: option shapes are loosely typed
 type Any = any;
-
-describe("quadrant", () => {
-  const points = [
-    { key: "google", label: "Google", x: 1000, y: 3.1, size: 40 },
-    { key: "x", label: "X", x: 40, y: 0.5, size: 1 },
-  ];
-  const o = quadrantOption(points, {
-    xLabel: "Visitors",
-    yLabel: "Conversion",
-    sizeLabel: "Completions",
-    avgX: 300,
-    avgY: 2,
-  }) as Any;
-  it("uses a log x axis and average mark lines", () => {
-    expect(o.xAxis.type).toBe("log");
-    expect(o.series[0].markLine.data[0].yAxis).toBe(2);
-    expect(o.series[0].markLine.data[1].xAxis).toBe(300);
-  });
-  it("sizes bubbles by the square root of the size measure", () => {
-    const size = o.series[0].symbolSize;
-    expect(size(null, { data: { size: 40 } })).toBeCloseTo(38);
-    expect(size(null, { data: { size: 10 } })).toBeCloseTo(23);
-  });
-  it("places four corner labels", () => {
-    expect(o.graphic.map((g: Any) => g.style.text)).toEqual([
-      "scale these",
-      "winning",
-      "watch",
-      "fix the landing page",
-    ]);
-  });
-});
 
 describe("heatmap", () => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -118,7 +84,6 @@ describe("dot plot", () => {
 
 describe("thresholds", () => {
   it("name the count or the width that is missing", () => {
-    expect(quadrantThreshold(2).reason).toMatch(/3 or more sources/);
     expect(heatmapThreshold(29, 900).reason).toMatch(/30 or more sessions/);
     expect(heatmapThreshold(30, 699).reason).toMatch(/wider/);
     expect(heatmapThreshold(30, 700).ok).toBe(true);

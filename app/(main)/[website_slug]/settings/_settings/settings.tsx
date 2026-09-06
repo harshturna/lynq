@@ -515,7 +515,7 @@ function Kpi({ slug, data, isGuest }: SectionProps) {
     <Block
       id="kpi"
       title="Goals and KPI"
-      lede="The KPI goal drives the Overview's sixth tile, the Sources strip and the quadrant. Goals themselves are managed on the Goals screen."
+      lede="The KPI goal drives the Overview's sixth tile, the Sources strip. Goals themselves are managed on the Goals screen."
     >
       <Field label="KPI goal">
         <select

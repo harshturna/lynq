@@ -14,15 +14,9 @@ import {
   histogramOption,
 } from "@/lib/charts/histogram";
 import {
-  type QuadrantOptions,
-  type QuadrantPoint,
-  quadrantOption,
-} from "@/lib/charts/quadrant";
-import {
   HEATMAP_BUCKET_BELOW,
   heatmapThreshold,
   histogramThreshold,
-  quadrantThreshold,
 } from "@/lib/charts/thresholds";
 import { Chart, type MarkClick } from "./chart";
 import { ChartOrFallback } from "./fallback";
@@ -33,87 +27,6 @@ import { HiddenTable } from "./hidden-table";
  * writes its one-sentence description, renders its table equivalent and
  * gives way to a sentence below its count or width threshold (§12).
  */
-export function Quadrant({
-  title,
-  points,
-  height = 300,
-  onMarkClick,
-  ...opts
-}: {
-  title: string;
-  points: QuadrantPoint[];
-  height?: number;
-  onMarkClick?: (m: MarkClick) => void;
-} & QuadrantOptions) {
-  const {
-    xLabel,
-    yLabel,
-    sizeLabel,
-    avgX,
-    avgY,
-    formatY,
-    formatSize,
-    corners,
-    animation,
-  } = opts;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: corners is a tuple literal at the call site; its text is the input
-  const option = useMemo(
-    () =>
-      quadrantOption(points, {
-        xLabel,
-        yLabel,
-        sizeLabel,
-        avgX,
-        avgY,
-        formatY,
-        formatSize,
-        corners,
-        animation,
-      }),
-    [
-      points,
-      xLabel,
-      yLabel,
-      sizeLabel,
-      avgX,
-      avgY,
-      formatY,
-      formatSize,
-      corners?.join(","),
-      animation,
-    ]
-  );
-  const fy = formatY ?? ((v: number) => `${v}%`);
-  const fs = formatSize ?? fmtNumber;
-  const above = points.filter((p) => p.y >= avgY && p.x >= avgX).length;
-  const description = points.length
-    ? `${title}: ${points.length} sources against a site average of ${fy(avgY)} ${yLabel.toLowerCase()}; ${above} above average on both axes.`
-    : `${title}: no data.`;
-  return (
-    <ChartOrFallback check={() => quadrantThreshold(points.length)}>
-      <Chart
-        option={option}
-        height={height}
-        title={title}
-        description={description}
-        onMarkClick={onMarkClick}
-        table={
-          <HiddenTable
-            caption={title}
-            columns={["Source", xLabel, yLabel, sizeLabel]}
-            rows={points.map((p) => [
-              p.label,
-              fmtNumber(p.x),
-              fy(p.y),
-              fs(p.size),
-            ])}
-          />
-        }
-      />
-    </ChartOrFallback>
-  );
-}
-
 export function Heatmap({
   title,
   rows,

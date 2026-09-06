@@ -245,3 +245,48 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   ~180 px shorter and every label is a full path. Harder: Phase 2's Sankey-style paths view
   (§9.6) no longer has a treemap to grow out of; the design doc's §7 table and §8.3 are
   superseded on this row and are not rewritten.
+
+## D-012 — The Sources screen has no lead view
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** The quadrant of §7 and §8.4 (visitors on a log axis, conversion up, bubble
+  size revenue, four corner labels) read as dated and noisy: dotted crosshairs, hollow
+  bubbles, colliding labels. The owner rejected it outright.
+- **Decision:** Nothing replaces it. The screen is the summary strip, then the tables.
+- **Rejected alternatives:** a dot plot of conversion against the site average per source
+  (the Goals form): a clean chart, but the owner did not want a chart there. Three standouts
+  in words (scale, fix, watch): too opinionated on thin data. A stripped scatter: sixteen
+  sources pile up on the left because two are ten times bigger. A channel split line with a
+  sentence: its bar repeats the Channels table's Share column directly below it.
+- **Consequences:** Easier: a shorter screen and one fewer chart type; the ECharts graphic
+  component is no longer registered. Harder: "where to spend the next hour" is answered by
+  the tables' conversion and revenue columns, which the table redesign (D-013) must keep
+  legible.
+
+## D-013 — The data table is rebuilt: left-hugging, one primary column, bar in a column
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** Every screen's tables were hard to read: the label column stretched to the
+  container so a label and its number sat half a screen apart; every header was a sort
+  button and every row carried a coloured change, a sparkline or a dot; the D-010 share bar
+  was a tint behind the label that read as highlighted rows. The owner asked for the table
+  itself to be rethought, not for a different assignment of tables to screens.
+- **Decision:** One table component with these rules. The table hugs the left and ends where
+  its columns end; the label column is 220 to 320 px (half-width tables fill their column).
+  One primary column: the sorted metric, in ink at medium weight, with the only dark header
+  and the only change slot; the other numeric columns are ink-2 and plain, at most four in
+  all. The share bar, where a table has one, is a 6 px bar in its own column right after the
+  label. Change is 12 px mute text with a small coloured caret, right-aligned. Headers are
+  words; the sort caret shows only on the sorted column. Rows are 40 px with hairlines and a
+  hover tint. No sparkline columns and no per-cell dots; status is a pill in its own slot,
+  only where it is not good. What a table no longer shows stays in the row's panel, the
+  Show-all drawer and the CSV. Not everything is a table: a share question with few rows is
+  a split bar or a bar list; a fact the tables cannot give at a glance is a sentence.
+  This amends D-010's table rules; D-010's chart rules stand.
+- **Rejected alternatives:** applying D-010's one-metric form everywhere with a metric
+  switcher: every screen would look the same, and the fault was the table's own design.
+  Keeping wide tables and only cutting columns: still the far-apart label and number.
+- **Consequences:** Easier: one component, one rhythm across ranked and regular tables;
+  screens differ by which columns they show, not by how a table looks. Harder: every screen
+  is touched once more (TICKET-054 onward); the Overview's D-010 tables are rebuilt on the
+  new form.
