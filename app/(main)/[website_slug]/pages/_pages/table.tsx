@@ -11,9 +11,10 @@ import { ShowAllDrawer } from "@/components/shell/drawer";
 import { Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
-import { fmtDuration, fmtPct } from "@/lib/format";
+import { fmtDuration, fmtPct, fmtRevenue } from "@/lib/format";
 import { globToRegExp } from "@/lib/ingest/glob";
 import type { Granularity } from "@/lib/query/ranges";
+import type { Kpi } from "@/lib/screens/kpi";
 import type {
   PagesTable as PagesTableData,
   PagesView,
@@ -28,7 +29,26 @@ const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
 const dur: Column["format"] = (v) =>
   v === null ? "—" : fmtDuration(Number(v));
 
-function columnsFor(view: PagesView): Column[] {
+/** Zero is an em dash, so an empty column does not read as a measured zero. */
+const money: Column["format"] = (v) =>
+  v === null || Number(v) === 0 ? "—" : fmtRevenue(Number(v));
+/** Computed from the row's own cells, like the Locations share column. */
+const perVisitor: Column["format"] = (_, row) => {
+  const revenue = Number(row.cells.revenue ?? 0);
+  const visitors = Number(row.cells.visitors ?? 0);
+  return revenue === 0 || !visitors ? "—" : fmtRevenue(revenue / visitors);
+};
+
+const REVENUE: Column = { key: "revenue", header: "Revenue", format: money };
+const PER_VISITOR: Column = {
+  key: "revenue_per_visitor",
+  header: "Rev / visitor",
+  sortable: false,
+  format: perVisitor,
+};
+
+/** The full set, for the drawer and the CSV. */
+function columnsFor(view: PagesView, kpi: Kpi): Column[] {
   const bounce: Column = {
     key: "bounce_rate",
     header: "Bounce",
@@ -49,6 +69,8 @@ function columnsFor(view: PagesView): Column[] {
       { key: "visitors", header: "Visitors" },
       bounce,
       engaged,
+      // entry only: see viewsFor() in lib/screens/pages.ts
+      ...(kpi.hasRevenue && view === "entry" ? [REVENUE, PER_VISITOR] : []),
     ];
   return [
     { key: "visitors", header: "Visitors" },
@@ -58,16 +80,28 @@ function columnsFor(view: PagesView): Column[] {
   ];
 }
 
+/** What the table shows: at most four numeric columns (D-013). */
+function shownFor(view: PagesView, kpi: Kpi): Column[] {
+  const all = columnsFor(view, kpi);
+  if (view !== "entry" || !kpi.hasRevenue) return all;
+  // Revenue cannot be compared across rows on its own, so the per-visitor
+  // column earns its place and Visitors and Engaged move to the drawer.
+  const by = (key: string) => all.find((c) => c.key === key) as Column;
+  return [by("sessions"), REVENUE, PER_VISITOR, by("bounce_rate")];
+}
+
 /** The attention line (D-011), the search box and the table (design §8.3). */
 export function PagesTable({
   slug: _slug,
   view,
+  kpi,
   compare,
   hasFilters,
   table,
 }: {
   slug: string;
   view: PagesView;
+  kpi: Kpi;
   compare: boolean;
   hasFilters: boolean;
   granularity: Granularity;
@@ -78,7 +112,8 @@ export function PagesTable({
   const announce = useAnnounce();
   const [search, setSearch] = useState("");
   const [drawer, setDrawer] = useState(false);
-  const columns = useMemo(() => columnsFor(view), [view]);
+  const columns = useMemo(() => columnsFor(view, kpi), [view, kpi]);
+  const shown = useMemo(() => shownFor(view, kpi), [view, kpi]);
   const rows = useMemo<TableRow[]>(() => {
     if (!table.ok) return [];
     const t = table.data;
@@ -157,9 +192,9 @@ export function PagesTable({
             { key: "exit", label: "Exit" },
           ]}
           defaultView="all"
-          columns={columns}
+          columns={shown}
           rows={matched.slice(0, SHOWN)}
-          defaultSort={{ col: columns[0].key, dir: "desc" }}
+          defaultSort={{ col: shown[0].key, dir: "desc" }}
           selectedId={state.sel}
           onSelect={select}
           onFilter={filter}

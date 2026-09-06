@@ -63,6 +63,9 @@ export function getLocationsScreen(
   const sumP = summary(ctx);
   const metrics: MetricSpec[] = ["visitors", "pageviews", "bounce_rate"];
   if (kpi.goal) metrics.push({ kind: "goal_completions", goal: kpi.goal });
+  // A country is session-scoped, so revenue distributes across rows the way
+  // it cannot on the all-pages view (TICKET-073).
+  if (kpi.hasRevenue) metrics.push("revenue");
 
   const table = async (
     dimension: string,

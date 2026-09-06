@@ -121,7 +121,10 @@ export function ShowAllDrawer({
     overscan: 12,
   });
   const cols = [
-    { key: "label", header: "Value", align: "left" as const },
+    // The table lays out with fixed widths, so the label needs one of its own:
+    // without it a wide column set (Locations with revenue) leaves it zero
+    // width and the row labels vanish (TICKET-073).
+    { key: "label", header: "Value", align: "left" as const, width: "220px" },
     ...columns,
   ];
 
@@ -150,7 +153,7 @@ export function ShowAllDrawer({
           <table
             aria-rowcount={visible.length}
             aria-label={title}
-            className="w-full table-fixed border-collapse text-[13px]"
+            className="w-full min-w-max table-fixed border-collapse text-[13px]"
           >
             <thead className="sticky top-0 bg-canvas">
               <tr>
@@ -234,7 +237,7 @@ export function ShowAllDrawer({
           </table>
         </section>
       ) : (
-        <table className="w-full table-fixed border-collapse text-[13px]">
+        <table className="w-full min-w-max table-fixed border-collapse text-[13px]">
           <thead>
             <tr>
               {cols.map((c) => (

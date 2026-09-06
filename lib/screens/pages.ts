@@ -62,20 +62,35 @@ export type PagesScreen = {
   selected: Promise<Section<SelectedPage | null>>;
 };
 
-const VIEWS: Record<PagesView, { dimension: string; metrics: MetricSpec[] }> = {
-  all: {
-    dimension: "path",
-    metrics: ["visitors", "pageviews", "bounce_rate", "engaged_time"],
-  },
-  entry: {
-    dimension: "entry_path",
-    metrics: ["sessions", "visitors", "bounce_rate", "engaged_time"],
-  },
-  exit: {
-    dimension: "exit_path",
-    metrics: ["sessions", "visitors", "bounce_rate", "engaged_time"],
-  },
-};
+/**
+ * Revenue is added to the entry view only (TICKET-073). It attaches to the
+ * pageview whose custom event carried it, so on the all and exit views it
+ * piles onto the checkout page and answers "where did the purchase event
+ * fire", not "which page led to money". `entry_path` is session-scoped, so
+ * the same row metric sums over the whole session and distributes properly.
+ * Which mid-funnel page helped is the influence metric in TICKET-080.
+ */
+function viewsFor(
+  kpi: Kpi
+): Record<PagesView, { dimension: string; metrics: MetricSpec[] }> {
+  const session: MetricSpec[] = [
+    "sessions",
+    "visitors",
+    "bounce_rate",
+    "engaged_time",
+  ];
+  return {
+    all: {
+      dimension: "path",
+      metrics: ["visitors", "pageviews", "bounce_rate", "engaged_time"],
+    },
+    entry: {
+      dimension: "entry_path",
+      metrics: kpi.hasRevenue ? [...session, "revenue"] : session,
+    },
+    exit: { dimension: "exit_path", metrics: session },
+  };
+}
 
 const toPoints = (s: { bucket: Date; value: number }[]): Point[] =>
   s.map((p) => ({ t: p.bucket.toISOString(), v: p.value }));
@@ -92,7 +107,7 @@ export function getPagesScreen(
     state.view.pages === "entry" || state.view.pages === "exit"
       ? state.view.pages
       : "all";
-  const spec = VIEWS[view];
+  const spec = viewsFor(kpi)[view];
 
   const table = async (): Promise<PagesTable> => {
     const [cur, before, entries, exits, sum] = await Promise.all([

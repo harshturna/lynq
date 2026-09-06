@@ -11,7 +11,7 @@ import { ShowAllDrawer } from "@/components/shell/drawer";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
 import { VisitorTotal } from "@/components/shell/visitor-total";
-import { fmtPct, fmtRatio } from "@/lib/format";
+import { fmtPct, fmtRatio, fmtRevenue } from "@/lib/format";
 import type { BreakdownMultiRow } from "@/lib/query/breakdown";
 import type { Kpi } from "@/lib/screens/kpi";
 import type { LocationTable } from "@/lib/screens/locations";
@@ -26,6 +26,29 @@ const LABEL: Record<string, string> = {
   languages: "Language",
 };
 const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
+/** Zero is an em dash, so an empty column does not read as a measured zero. */
+const money: Column["format"] = (v) =>
+  v === null || Number(v) === 0 ? "—" : fmtRevenue(Number(v));
+const perVisitor: Column["format"] = (_, row) => {
+  const revenue = Number(row.cells.revenue ?? 0);
+  const visitors = Number(row.cells.visitors ?? 0);
+  return revenue === 0 || !visitors ? "—" : fmtRevenue(revenue / visitors);
+};
+const REVENUE: Column = {
+  key: "revenue",
+  header: "Revenue",
+  align: "right",
+  width: "100px",
+  format: money,
+};
+const PER_VISITOR: Column = {
+  key: "revenue_per_visitor",
+  header: "Rev / visitor",
+  align: "right",
+  width: "110px",
+  sortable: false,
+  format: perVisitor,
+};
 
 function columnsFor(kpi: Kpi, visitors: number, withBounce: boolean): Column[] {
   const cols: Column[] = [
@@ -64,6 +87,10 @@ function columnsFor(kpi: Kpi, visitors: number, withBounce: boolean): Column[] {
       align: "right",
       width: "100px",
     });
+  // Revenue stays in the drawer and the CSV. The countries table shares a
+  // three-column grid, and a fourth numeric column squeezes the country name
+  // out of the label entirely (TICKET-073; TICKET-083 covers the layout).
+  if (kpi.hasRevenue) cols.push(REVENUE, PER_VISITOR);
   return cols;
 }
 

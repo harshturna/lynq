@@ -16,6 +16,7 @@ export async function TableSection({
     <PagesTable
       slug={slug}
       view={screen.view}
+      kpi={screen.kpi}
       compare={screen.compare}
       hasFilters={hasFilters}
       granularity={screen.granularity}
