@@ -11,8 +11,6 @@ import { utcDay } from "./hash";
  */
 export const MAX_BATCH = 50;
 export const MAX_BODY_BYTES = 32 * 1024;
-/** Batches accepted per key per minute; a single crawl at full tilt is well under it. */
-export const BATCHES_PER_MINUTE = 120;
 /** How far back a reported request may be dated before it is counted as now. */
 const MAX_AGE_MS = 7 * 24 * 3600 * 1000;
 const MAX_AHEAD_MS = 5 * 60 * 1000;
@@ -46,8 +44,8 @@ export type BotsRequest = {
 export type BotsDeps = {
   resolveKey: (token: string | null) => Promise<ResolvedKey | null>;
   upsert: (rows: CrawlerDayRow[]) => Promise<void>;
-  /** Per-key rate limit; true when the batch may proceed. */
-  allow?: (keyId: number) => boolean;
+  /** Per-key rate limit (allowKey in lib/api-keys.ts); true when the batch may proceed. */
+  allow?: (keyId: number) => boolean | Promise<boolean>;
 };
 
 export type BotsResult = {
@@ -75,7 +73,7 @@ export async function handleBots(
   const key = await deps.resolveKey(bearerToken(req.headers));
   if (!key) return fail(401, "unknown key");
   if (!hasScope(key, "ingest")) return fail(403, "key lacks the ingest scope");
-  if (deps.allow && !deps.allow(key.keyId))
+  if (deps.allow && !(await deps.allow(key.keyId)))
     return fail(429, "too many batches");
   // 3. shape
   if (Buffer.byteLength(req.body) > MAX_BODY_BYTES)
@@ -134,24 +132,4 @@ function when(at: string | number | undefined, receivedAt: Date): Date {
   const now = receivedAt.getTime();
   if (ms < now - MAX_AGE_MS || ms > now + MAX_AHEAD_MS) return receivedAt;
   return new Date(ms);
-}
-
-/**
- * A fixed-window counter per key, in memory. Best effort: each server
- * instance counts on its own, which is enough to blunt a runaway snippet
- * without a shared store.
- */
-export function makeLimiter(perMinute = BATCHES_PER_MINUTE, now = Date.now) {
-  const windows = new Map<number, { minute: number; n: number }>();
-  return (keyId: number): boolean => {
-    const minute = Math.floor(now() / 60_000);
-    const w = windows.get(keyId);
-    if (!w || w.minute !== minute) {
-      if (windows.size > 10_000) windows.clear();
-      windows.set(keyId, { minute, n: 1 });
-      return true;
-    }
-    w.n++;
-    return w.n <= perMinute;
-  };
 }

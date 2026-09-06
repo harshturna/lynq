@@ -117,7 +117,8 @@ empty tab. It answers, in order:
 `POST /api/bots`, `Authorization: Bearer <key>` with the `ingest` scope (D-017), body a batch of
 `{ ua, path, status, at }` up to 50. It resolves the key to a site, classifies each entry, drops
 anything `isbot()` does not flag, and upserts. It returns 202 always after the gates, like the
-collector. Rate limited per key.
+collector. Rate limited per key: 120 requests a minute, counted in a shared Postgres row so
+every server instance sees the same count (TICKET-086).
 
 ## 8. Out of scope for v1
 

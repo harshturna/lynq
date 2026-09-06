@@ -18,6 +18,7 @@ describe("analytics schema", () => {
     const tables = await sql<{ table_name: string }[]>`
       select table_name from information_schema.tables where table_schema = 'analytics' order by 1`;
     expect(tables.map((t) => t.table_name)).toEqual([
+      "api_key_windows",
       "api_keys",
       "crawler_days",
       "events",

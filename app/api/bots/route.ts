@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { resolveApiKey } from "@/lib/api-keys";
-import { handleBots, MAX_BODY_BYTES, makeLimiter } from "@/lib/ingest/bots";
+import { allowKey, resolveApiKey } from "@/lib/api-keys";
+import { handleBots, MAX_BODY_BYTES } from "@/lib/ingest/bots";
 import { upsertCrawlerDays } from "@/lib/ingest/db-deps";
 
 // Crawler hits reported by a middleware snippet on the customer's server
@@ -8,8 +8,6 @@ import { upsertCrawlerDays } from "@/lib/ingest/db-deps";
 // and a request carrying an Origin is refused (D-017).
 export const dynamic = "force-dynamic";
 export const maxDuration = 5;
-
-const allow = makeLimiter();
 
 export async function POST(req: Request) {
   const declared = Number.parseInt(req.headers.get("content-length") ?? "", 10);
@@ -19,7 +17,7 @@ export async function POST(req: Request) {
   const body = await req.text();
   const result = await handleBots(
     { headers: req.headers, body, receivedAt: new Date() },
-    { resolveKey: resolveApiKey, upsert: upsertCrawlerDays, allow }
+    { resolveKey: resolveApiKey, upsert: upsertCrawlerDays, allow: allowKey }
   );
   if (result.status !== 202) {
     return NextResponse.json(

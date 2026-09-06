@@ -81,6 +81,37 @@ export async function resolveApiKey(
   };
 }
 
+/** Requests per minute a key may make, whatever the endpoint (TICKET-086). */
+export const KEY_REQUESTS_PER_MINUTE = 120;
+
+/**
+ * Whether a key may make one more request this minute. The counter is a row
+ * per key in Postgres, so every server instance sees the same count; one
+ * small upsert per keyed request. A store failure lets the request through:
+ * a database that cannot count cannot serve the request either, and the
+ * limiter must never be what takes the API down.
+ */
+export async function allowKey(
+  keyId: number,
+  perMinute = KEY_REQUESTS_PER_MINUTE
+): Promise<boolean> {
+  try {
+    const { sql } = await import("@/lib/db");
+    const [row] = await sql<{ n: number }[]>`
+      insert into analytics.api_key_windows (key_id, window_start, n)
+      values (${keyId}, date_trunc('minute', now()), 1)
+      on conflict (key_id) do update set
+        n = case when analytics.api_key_windows.window_start = excluded.window_start
+                 then analytics.api_key_windows.n + 1 else 1 end,
+        window_start = excluded.window_start
+      returning n`;
+    return Number(row?.n ?? 0) <= perMinute;
+  } catch (err) {
+    console.error("[api-keys] rate limit store failed; allowing:", err);
+    return true;
+  }
+}
+
 /** The bearer token of a request, or null. */
 export function bearerToken(headers: {
   get(name: string): string | null;

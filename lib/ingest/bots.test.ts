@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ResolvedKey } from "@/lib/api-keys";
-import { type CrawlerDayRow, handleBots, makeLimiter } from "./bots";
+import { type CrawlerDayRow, handleBots } from "./bots";
 
 const KEY: ResolvedKey = {
   keyId: 7,
@@ -30,7 +30,7 @@ const NOW = new Date("2026-09-06T12:00:00Z");
 function run(
   body: unknown,
   headers: Record<string, string> = { authorization: "Bearer lynq_sk_good" },
-  allow?: (keyId: number) => boolean
+  allow?: (keyId: number) => boolean | Promise<boolean>
 ) {
   const upserts: CrawlerDayRow[][] = [];
   const h = new Map(
@@ -83,8 +83,8 @@ describe("handleBots gates", () => {
     expect(big.status).toBe(400);
     expect(big.rows).toEqual([]);
   });
-  it("honours the limiter", async () => {
-    const r = await run([{ ua: GOOGLEBOT }], undefined, () => false);
+  it("honours the limiter, sync or async", async () => {
+    const r = await run([{ ua: GOOGLEBOT }], undefined, async () => false);
     expect(r.status).toBe(429);
     expect(r.rows).toEqual([]);
   });
@@ -130,21 +130,5 @@ describe("handleBots counting", () => {
     const r = await run([]);
     expect(r.status).toBe(202);
     expect(r.rows).toEqual([]);
-  });
-});
-
-describe("makeLimiter", () => {
-  it("allows a burst up to the cap per minute, per key, then resets", () => {
-    let t = 0;
-    const allow = makeLimiter(3, () => t);
-    expect([allow(1), allow(1), allow(1), allow(1)]).toEqual([
-      true,
-      true,
-      true,
-      false,
-    ]);
-    expect(allow(2)).toBe(true);
-    t = 60_001;
-    expect(allow(1)).toBe(true);
   });
 });

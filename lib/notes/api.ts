@@ -24,7 +24,7 @@ export type NotesDeps = {
     author: string;
   }) => Promise<{ id: number }>;
   remove: (siteId: number, id: number) => Promise<boolean>;
-  allow?: (keyId: number) => boolean;
+  allow?: (keyId: number) => boolean | Promise<boolean>;
 };
 
 export type NotesResult =
@@ -43,7 +43,7 @@ async function gate(
   if (!key) return { status: 401, error: "unknown key" };
   if (!hasScope(key, "notes"))
     return { status: 403, error: "key lacks the notes scope" };
-  if (deps.allow && !deps.allow(key.keyId))
+  if (deps.allow && !(await deps.allow(key.keyId)))
     return { status: 429, error: "too many requests" };
   return { key };
 }
