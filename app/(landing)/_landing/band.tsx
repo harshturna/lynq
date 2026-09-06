@@ -20,13 +20,13 @@ function axisFor(days: number): string[] {
   return out.length === 5 ? out : AXIS;
 }
 
-/** Under the hero: the demo site's last 30 days, one hairline that draws itself (D-014). */
+/** Under the hero: the last 30 days of a real site, one hairline that draws itself (D-014). */
 export function DemoBand({ demo }: { demo: DemoStats }) {
   return (
     <Reveal className="pt-2">
       <div className="flex items-baseline justify-between border-t border-rule-strong pt-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-teal">
-          The demo site, last 30 days
+          Last 30 days
         </span>
         <span className="whitespace-nowrap text-[13px] text-mute">
           <b className="mr-[6px] text-[22px] font-medium tracking-[-0.02em] text-ink tabular">

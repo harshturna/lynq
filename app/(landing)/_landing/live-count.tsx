@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const POLL_MS = 10_000;
 
-/** "23 people on the demo site right now", refreshed from the public demo route. */
+/** "23 people on a live site right now", refreshed from the public live route. */
 export function LiveCount({ initial }: { initial: number }) {
   const [count, setCount] = useState(initial);
   useEffect(() => {
@@ -30,11 +30,11 @@ export function LiveCount({ initial }: { initial: number }) {
         className="pulse-dot inline-block h-[7px] w-[7px] rounded-full bg-teal"
       />
       {count === 0 ? (
-        <>Quiet on the demo site right now</>
+        <>Quiet right now</>
       ) : (
         <>
           <b className="font-medium text-ink tabular">{count}</b>
-          {count === 1 ? "person" : "people"} on the demo site right now
+          {count === 1 ? "person" : "people"} on a live site right now
         </>
       )}
     </p>

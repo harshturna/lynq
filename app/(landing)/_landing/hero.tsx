@@ -40,7 +40,7 @@ export function Hero({ demo }: { demo: DemoStats | null }) {
             href="/login"
             className="ml-[18px] text-[13.5px] font-medium text-teal-ink hover:underline"
           >
-            See the live demo →
+            See Lynq in action →
           </Link>
         </div>
         <ul className="mt-[18px] flex flex-wrap gap-x-[18px] gap-y-1 text-[12.5px] text-mute">

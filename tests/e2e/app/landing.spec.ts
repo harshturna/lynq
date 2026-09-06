@@ -12,7 +12,7 @@ for (const width of [1280, 375]) {
       "Analytics that respects"
     );
     await expect(
-      page.getByRole("link", { name: "See the live demo →" })
+      page.getByRole("link", { name: "See Lynq in action →" })
     ).toBeVisible();
     await page.waitForLoadState("networkidle");
     // sections fade in as they enter; bring every one in before axe measures contrast
