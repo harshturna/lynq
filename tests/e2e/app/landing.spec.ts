@@ -35,3 +35,13 @@ test("the demo live route answers with JSON", async ({ page }) => {
   const body = (await res.json()) as { visitorsNow: number | null };
   expect(body).toHaveProperty("visitorsNow");
 });
+
+test("the privacy page is clean", async ({ page }) => {
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "What Lynq stores"
+  );
+  await page.waitForLoadState("networkidle");
+  await noPageOverflow(page);
+  await axeClean(page);
+});

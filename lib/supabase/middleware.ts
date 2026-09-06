@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/sign-up") &&
+    !request.nextUrl.pathname.startsWith("/privacy") &&
     !(request.nextUrl.pathname === "/")
   ) {
     const url = request.nextUrl.clone();
