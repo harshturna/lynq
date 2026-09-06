@@ -18,6 +18,10 @@ A site can see which crawlers fetch which pages: AI answer engines (ChatGPT, Cla
 - Storage: its own table (analytics.crawler_hits: site_id, ts, crawler, family, path, status),
   not analytics.events, so bot rows never touch the visitor numbers or the rollup. A Bots screen
   or a section on Sources; decide in the design.
+- Server-side request analytics rides on the same middleware (owner, 2026-09-06, verticals
+  review): the package also counts human requests by route and status with p75 server timing,
+  as one more family in the same table, joined to the front-end pageview by the daily hash.
+  Design it in the same section so the endpoint, the table and the settings switch serve both.
 - Needs a design section, a decision on the endpoint's authentication (a site key from
   settings; the same key TICKET-070's proxying page said does not exist yet), and a crawler
   user-agent list kept in the repo.
