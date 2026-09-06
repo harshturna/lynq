@@ -4,12 +4,14 @@ import type { ChartNote } from "@/lib/charts/notes";
 import { sql } from "@/lib/db";
 import type { BuiltContext } from "@/lib/query/authorize";
 import type { GoalDef, GoalStats } from "@/lib/query/goals";
+import type { SessionSummary } from "@/lib/query/primitives";
 import {
   breakdownMulti,
   funnel,
   goalStats,
   goalTimeseries,
   notes as notesOf,
+  sessionList,
   summary,
 } from "@/lib/query/run";
 import type { ViewState } from "@/lib/url-state";
@@ -36,7 +38,11 @@ export type SelectedGoal = {
   funnel: { key: string; label: string; count: number }[];
   channels: { key: string; label: string; value: number }[];
   trend: { current: Point[]; previous: Point[] | null; notes: ChartNote[] };
+  /** The newest sessions that completed the goal (TICKET-074). */
+  recent: SessionSummary[];
 };
+
+export const RECENT_SESSIONS = 20;
 
 export type GoalsScreen = {
   compare: boolean;
@@ -112,7 +118,7 @@ export function getGoalsScreen(
     const g = goals.find((x) => x.id === sel);
     if (!g) return null;
     const def: GoalDef = { id: g.id, kind: g.kind, match: g.match };
-    const [stats, before, steps, channels, cur, prevSeries, sum, n] =
+    const [stats, before, steps, channels, cur, prevSeries, sum, n, recent] =
       await Promise.all([
         goalStats(ctx, def),
         prev ? goalStats(prev, def) : null,
@@ -127,6 +133,7 @@ export function getGoalsScreen(
         prev ? goalTimeseries(prev, def, ctx.granularity) : null,
         summary({ ...ctx, compare: undefined }),
         notesOf(ctx).then(toNotes),
+        sessionList(ctx, { goal: def, limit: RECENT_SESSIONS }),
       ]);
     return {
       goal: g,
@@ -159,6 +166,7 @@ export function getGoalsScreen(
         previous: prevSeries ? toPoints(prevSeries) : null,
         notes: n,
       },
+      recent,
     };
   };
 

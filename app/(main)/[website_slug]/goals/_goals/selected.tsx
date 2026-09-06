@@ -8,6 +8,7 @@ import { NoteForm } from "@/components/shell/note-form";
 import { NotesSlot } from "@/components/shell/notes-slot";
 import { Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
+import { SessionList } from "@/components/shell/session-list";
 import { useViewState } from "@/components/shell/view-state";
 import { Funnel } from "@/components/shell/views";
 import { fmtDuration, fmtInt, fmtPct, fmtRatio } from "@/lib/format";
@@ -179,6 +180,16 @@ export function SelectedGoalPanel({
           timezone={timezone}
           height={180}
           notes={s.trend.notes}
+        />
+      </Section>
+      <Section
+        title="Converting sessions"
+        qualifier={`newest first · completed ${goal.name}`}
+        strong
+      >
+        <SessionList
+          sessions={s.recent}
+          emptyText="No session completed this goal in the period."
         />
       </Section>
     </div>

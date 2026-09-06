@@ -13,6 +13,7 @@ import {
   type SessionDimension,
   sessionExpr,
 } from "./filters";
+import { goalPredicate } from "./goals";
 import { buckets, type Granularity } from "./ranges";
 import { sessionCte, sessionWhere } from "./sessions";
 
@@ -279,6 +280,26 @@ export type RowsOptions = {
   offset?: number;
   visitorId?: bigint;
   sessionId?: bigint;
+  /** sessions: only those containing a completion of this goal (TICKET-074). */
+  goal?: { kind: "pageview" | "event"; match: string };
+};
+
+/** One session as a list shows it (TICKET-074): the drawer's row and the screens' lists share it. */
+export type SessionSummary = {
+  visitor_id: string;
+  session_id: string;
+  started: string;
+  duration_ms: number;
+  pageviews: number;
+  customs: number;
+  entry_path: string;
+  exit_path: string;
+  bounced: boolean;
+  country: string;
+  device: string;
+  browser: string;
+  source: string;
+  channel: string;
 };
 
 export function rowsQuery(
@@ -325,7 +346,11 @@ order by e.ts, e.seq, e.pageview_id limit ${q.p(limit)} offset ${q.p(offset)}`,
         { name: "device", expr: "e.device" },
         { name: "browser", expr: "e.browser" },
       ],
-      { entry: true }
+      {
+        entry: true,
+        alsoHaving: opts.goal ? goalPredicate(q, opts.goal) : undefined,
+        visitorId: opts.visitorId,
+      }
     )}
 select s.visitor_id::text as visitor_id, s.session_id::text as session_id, s.started, s.duration_ms::int as duration_ms,
        s.pageviews, s.customs, s.entry_path, s.exit_path, s.bounced, s.country, s.device, s.browser,

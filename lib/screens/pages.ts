@@ -4,6 +4,7 @@ import type { BuiltContext } from "@/lib/query/authorize";
 import type { BreakdownMultiRow, MetricSpec } from "@/lib/query/breakdown";
 import type { FlowRow } from "@/lib/query/flow";
 import type { GoalStats } from "@/lib/query/goals";
+import type { SessionSummary } from "@/lib/query/primitives";
 import type { Granularity } from "@/lib/query/ranges";
 import {
   attention,
@@ -11,6 +12,7 @@ import {
   goalStats,
   influence,
   pageFlow,
+  sessionList,
   summary,
   timeseries,
   vitals,
@@ -51,7 +53,11 @@ export type SelectedPage = {
   vitals: VitalsSummary;
   goal: GoalStats | null;
   trend: { current: Point[]; previous: Point[] | null };
+  /** The newest sessions that viewed the page (TICKET-074). */
+  recent: SessionSummary[];
 };
+
+export const RECENT_SESSIONS = 20;
 
 /** The Attention view's rows (D-016): attention, read-through and influence. */
 export type AttentionData = {
@@ -204,12 +210,13 @@ export function getPagesScreen(
     const scopedPrev = prev
       ? { ...scoped, range: prev.range, compare: undefined }
       : null;
-    const [flow, v, g, cur, before] = await Promise.all([
+    const [flow, v, g, cur, before, recent] = await Promise.all([
       pageFlow(ctx, path),
       vitals(scoped),
       kpi.goal ? goalStats(scoped, kpi.goal) : null,
       timeseries(scoped, "visitors", ctx.granularity),
       scopedPrev ? timeseries(scopedPrev, "visitors", ctx.granularity) : null,
+      sessionList(scoped, { limit: RECENT_SESSIONS }),
     ]);
     return {
       path,
@@ -220,6 +227,7 @@ export function getPagesScreen(
         current: toPoints(cur),
         previous: before ? toPoints(before) : null,
       },
+      recent,
     };
   };
 

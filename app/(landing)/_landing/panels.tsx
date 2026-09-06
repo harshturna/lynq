@@ -486,6 +486,61 @@ export function AgentsPanel() {
   );
 }
 
+/** A session's journey (TICKET-074): the drawer's timeline, staged. */
+const JOURNEY: [string, string, string, string][] = [
+  ["+0s", "/pricing", "Pricing · Aivia", "1m 04s · 80%"],
+  ["+1m 06s", "/docs/getting-started", "Getting started", "48s · 45%"],
+  ["+1m 58s", "/pricing", "Pricing · Aivia", "31s · 100%"],
+  ["+2m 31s", "/signup", "Create your account", "49s · 60%"],
+];
+
+export function JourneysPanel() {
+  return (
+    <Panel className="h-[400px]">
+      <Ui style={{ left: 48, top: 32, width: 560 }}>
+        <div className="border-b border-rule pb-3">
+          <b className="text-[16px] font-medium">Session</b>
+          <p className="mt-1 text-[12.5px] text-mute">
+            Canada, Toronto · Desktop · Chrome on macOS · from Google
+          </p>
+        </div>
+        <p className="mt-3 text-[12.5px] text-mute">
+          Started Sep 6, 11:42 AM · 4 pages · 3m 12s engaged
+        </p>
+        <ol className="mt-2 text-[13px]">
+          {JOURNEY.map(([t, path, title, n]) => (
+            <li
+              key={t}
+              className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-rule py-[7px]"
+            >
+              <span className="text-[12px] text-mute tabular">{t}</span>
+              <span className="min-w-0">
+                <span className="block truncate">{path}</span>
+                <span className="block truncate text-[12px] text-mute">
+                  {title}
+                </span>
+              </span>
+              <span className="text-[12px] text-ink-2 tabular">{n}</span>
+            </li>
+          ))}
+          <li className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-baseline gap-3 py-[7px]">
+            <span className="text-[12px] text-mute tabular">+3m 12s</span>
+            <span className="flex items-center gap-2">
+              <em className="rounded-[4px] bg-teal-soft px-[6px] py-[1px] text-[11px] font-medium not-italic text-good">
+                signup
+              </em>
+              <span className="text-[12px] text-mute">
+                on /signup · plan: pro
+              </span>
+            </span>
+            <span />
+          </li>
+        </ol>
+      </Ui>
+    </Panel>
+  );
+}
+
 export function FiltersPanel() {
   return (
     <Panel>

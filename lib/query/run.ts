@@ -54,6 +54,7 @@ import {
   rowsQuery,
   SESSION_METRICS,
   type SeriesPoint,
+  type SessionSummary,
   type Summary,
   summaryQueries,
   timeseriesQuery,
@@ -168,6 +169,30 @@ export async function rows<T extends Record<string, unknown>>(
   opts: RowsOptions = {}
 ): Promise<T[]> {
   return run<T>(rowsQuery(ctx, kind, opts), ctx.timeoutMs);
+}
+
+/** Sessions as a list shows them, newest first (TICKET-074). */
+export async function sessionList(
+  ctx: QueryContext,
+  opts: RowsOptions = {}
+): Promise<SessionSummary[]> {
+  const list = await rows<Record<string, unknown>>(ctx, "sessions", opts);
+  return list.map((r) => ({
+    visitor_id: String(r.visitor_id),
+    session_id: String(r.session_id),
+    started: new Date(r.started as string).toISOString(),
+    duration_ms: num(r.duration_ms),
+    pageviews: num(r.pageviews),
+    customs: num(r.customs),
+    entry_path: String(r.entry_path ?? ""),
+    exit_path: String(r.exit_path ?? ""),
+    bounced: Boolean(r.bounced),
+    country: String(r.country ?? ""),
+    device: String(r.device ?? ""),
+    browser: String(r.browser ?? ""),
+    source: String(r.source ?? ""),
+    channel: String(r.channel ?? ""),
+  }));
 }
 
 /** p75 per vital column plus average resources and the sample count. */

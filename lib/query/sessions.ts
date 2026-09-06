@@ -46,7 +46,13 @@ export function sessionCte(
   scope: SessionScope,
   filters: Compiled,
   extra: { name: string; expr: string }[] = [],
-  opts: { entry?: boolean } = {}
+  opts: {
+    entry?: boolean;
+    /** A further predicate on the events alias `e` that some row of the session must satisfy (a goal completion). */
+    alsoHaving?: string;
+    /** Restrict the CTE to one visitor (their sessions that day, TICKET-074). */
+    visitorId?: bigint;
+  } = {}
 ): string {
   const extraCols =
     extra.map((x) => `, min(${x.expr}) as ${x.name}`).join("") +
@@ -66,9 +72,14 @@ export function sessionCte(
   from analytics.events e
   where e.site_id = ${q.p(scope.siteId)}
     and e.${scope.column ?? "ts"} >= ${q.p(scope.from)} and e.${scope.column ?? "ts"} < ${q.p(scope.toExclusive)}
-    ${scope.includeSuspect ? "" : "and not e.suspect"}
+    ${scope.includeSuspect ? "" : "and not e.suspect"}${
+      opts.visitorId !== undefined
+        ? `
+    and e.visitor_id = ${q.p(opts.visitorId)}`
+        : ""
+    }
   group by 1, 2
-  having bool_or(${filters.rowWhere})
+  having bool_or(${filters.rowWhere})${opts.alsoHaving ? ` and bool_or(${opts.alsoHaving})` : ""}
 )`;
 }
 

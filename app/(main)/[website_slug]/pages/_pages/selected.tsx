@@ -6,6 +6,7 @@ import { Pill } from "@/components/shell/badge";
 import { displayValue } from "@/components/shell/dimensions";
 import { RowBar, Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
+import { SessionList } from "@/components/shell/session-list";
 import { useViewState } from "@/components/shell/view-state";
 import { FlowPanel } from "@/components/shell/views";
 import { fmtDuration, fmtInt, fmtRatio } from "@/lib/format";
@@ -208,6 +209,17 @@ export function SelectedPagePanel({
             granularity={granularity}
             timezone={timezone}
             height={140}
+          />
+        </Section>
+        <Section
+          title="Recent sessions on this page"
+          qualifier="newest first"
+          strong
+          className="min-[1000px]:col-span-2"
+        >
+          <SessionList
+            sessions={s.recent}
+            emptyText="No session viewed this page in the period."
           />
         </Section>
       </div>

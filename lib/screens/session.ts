@@ -1,7 +1,8 @@
 "use server";
 
 import { buildContext } from "@/lib/query/authorize";
-import { rows } from "@/lib/query/run";
+import type { SessionSummary } from "@/lib/query/primitives";
+import { rows, sessionList } from "@/lib/query/run";
 import { resolveSite } from "./site";
 
 /**
@@ -41,7 +42,11 @@ export type SessionTimeline = {
     referrer: string;
   };
   steps: SessionStep[];
+  /** The same visitor's other sessions that UTC day, newest first (TICKET-074). */
+  others: SessionSummary[];
 };
+
+const DAY_MS = 86_400_000;
 
 const ID = /^-?\d{1,20}$/;
 
@@ -77,6 +82,24 @@ export async function sessionTimeline(
   });
   if (!list.length) return null;
   const first = list[0];
+  // an anonymous visitor's id changes at midnight UTC (D-003), so the day is
+  // the whole story: the visitor's sessions in it, this one left out
+  const started = new Date(first.ts);
+  const dayStart = new Date(Math.floor(started.getTime() / DAY_MS) * DAY_MS);
+  const others = (
+    await sessionList(
+      {
+        siteId: site.siteId,
+        timezone: site.timezone,
+        range: {
+          from: dayStart,
+          toExclusive: new Date(dayStart.getTime() + DAY_MS),
+        },
+        filters: [],
+      },
+      { visitorId: BigInt(visitorId), limit: 50 }
+    )
+  ).filter((s) => s.session_id !== sessionId);
   const entry = list.find((r) => r.event === "pageview") ?? first;
   const steps: SessionStep[] = [];
   for (const r of list) {
@@ -123,5 +146,6 @@ export async function sessionTimeline(
       referrer: entry.referrer,
     },
     steps,
+    others,
   };
 }

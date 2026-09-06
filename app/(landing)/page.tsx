@@ -11,6 +11,7 @@ import {
   Eyebrow,
   Feature,
   FiltersPanel,
+  JourneysPanel,
   Lead,
   OverviewPanel,
   PerformancePanel,
@@ -71,6 +72,14 @@ export default async function LandingPage() {
           rest="Claude Code, Cursor and Codex connect to Lynq over MCP with one key. Every screen's question is a tool, and every answer is a sentence with the numbers behind it."
         >
           <AgentsPanel />
+        </Feature>
+
+        <Feature
+          eyebrow="Journeys"
+          lead="See what the people who converted actually did."
+          rest="Any converting session, any session on a page, opens as a timeline: every page, how long, how far, and the moment the goal fired. Anonymous by design, so a day is the whole story."
+        >
+          <JourneysPanel />
         </Feature>
 
         <Feature

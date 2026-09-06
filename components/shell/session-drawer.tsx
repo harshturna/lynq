@@ -8,6 +8,7 @@ import { type ViewState, withParam } from "@/lib/url-state";
 import { Pill } from "./badge";
 import { displayValue } from "./dimensions";
 import { Drawer } from "./drawer";
+import { SessionRow } from "./session-list";
 import { Bone } from "./skeleton";
 import { useViewState } from "./view-state";
 
@@ -87,7 +88,15 @@ export function SessionDrawer({
           This session is not in the last twelve months, or is not yours to see.
         </p>
       ) : (
-        <Timeline t={t} />
+        <>
+          <Timeline t={t} />
+          <AlsoToday
+            t={t}
+            open={(ids) =>
+              update(withParam(state, "session", ids), { replace: true })
+            }
+          />
+        </>
       )}
     </Drawer>
   );
@@ -173,5 +182,62 @@ function Timeline({ t }: { t: SessionTimeline }) {
         ))}
       </ol>
     </div>
+  );
+}
+
+/**
+ * The same visitor's other sessions that UTC day (docs/design/visitor-journeys.md §3).
+ * Choosing one replaces the URL rather than pushing it, so Back still closes
+ * the drawer.
+ */
+function AlsoToday({
+  t,
+  open,
+}: {
+  t: SessionTimeline;
+  open: (ids: { visitorId: string; sessionId: string }) => void;
+}) {
+  const day = t.started
+    ? new Date(t.started).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : "that day";
+  return (
+    <section aria-labelledby="also-today" className="mt-6">
+      <h3 id="also-today" className="text-[13px] font-medium text-ink">
+        Also today
+      </h3>
+      <p className="mt-1 mb-2 text-[12px] text-mute">
+        {t.others.length
+          ? `This visitor's other ${t.others.length === 1 ? "session" : "sessions"} on ${day}, UTC.`
+          : `No other session from this visitor on ${day}.`}{" "}
+        An anonymous visitor is a new number tomorrow, so a day is the whole
+        story.
+      </p>
+      {t.others.length > 0 && (
+        <ol className="flex flex-col">
+          {t.others.map((s) => (
+            <SessionRow
+              key={s.session_id}
+              s={s}
+              absolute
+              action={
+                <button
+                  type="button"
+                  onClick={() =>
+                    open({ visitorId: s.visitor_id, sessionId: s.session_id })
+                  }
+                  className="text-[12px] font-medium text-teal-ink hover:underline"
+                >
+                  Open
+                </button>
+              }
+            />
+          ))}
+        </ol>
+      )}
+    </section>
   );
 }
