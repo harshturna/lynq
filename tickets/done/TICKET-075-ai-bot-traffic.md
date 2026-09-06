@@ -77,6 +77,7 @@ A site can see which crawlers fetch which pages: AI answer engines (ChatGPT, Cla
 - 2026-09-06 — Seed: `scripts/seed/crawlers.ts` generates crawler days; the e2e fixture and `npm run seed` (new `--no-bots` flag) write them. `periodPhrase()` moved to `lib/screens/period.ts` for both Pages and Bots.
 - 2026-09-06 — Schema integration test made robust to a warm container that already holds today's salt.
 - 2026-09-06 — Migration pushed to production; table and housekeeping confirmed there. No production crawler rows written: the demo site's rows would be fake and the owner's real site has no middleware yet.
+- 2026-09-06 — Owner's word: seeded crawler days written for the demo site (aivia, site 31) with `generateCrawlerDays({ days: 120, seed: 1 })`, the same rows `npm run seed` writes: 11,518 rows, 19,018 hits, 2026-05-09 to 2026-09-06. Its events were not touched. The Bots tab now shows on the demo site.
 
 ## Handoff
 - **State:** shipped and closed.
@@ -98,6 +99,6 @@ Screens looked at: scratchpad `bots-mock-1280.png` / `bots-mock-375.png` (mock),
 ## Outcome
 Shipped: the crawler map (`lib/ingest/crawlers.ts`, `lib/crawler-families.ts`), `analytics.crawler_days` and its housekeeping line (migration `20260906030000_crawler_days.sql`, in production), `POST /api/bots` (`lib/ingest/bots.ts`, `app/api/bots/route.ts`) keyed by D-017 keys with the ingest scope and the first enforcement of the browser-Origin refusal, the Bots reads (`lib/query/crawlers.ts`, `run.ts`), the Bots screen (`lib/screens/bots.ts`, `app/(main)/[website_slug]/bots/`), shown in the nav and the command menu only when a site has rows, the seed generator and fixture rows, unit, integration and e2e tests, the landing "Bots" feature panel, and docs: `install/bots.mdx` (Next.js middleware and Express snippets, check-it-works), `product/bots.mdx`, the privacy page's Crawlers section, the home page's "What you get" line, and the API keys scope row.
 
-Left out, on purpose: a published `@lynq/next` package (D-018, on demand); reverse-DNS verification of crawler identity (design §8); Social, SEO and Other as Pages views; a compare mode and filters on the screen; any production crawler rows (the owner can run `npm run seed` for the demo site, or install the snippet on a real site). The per-key limiter is in memory per instance.
+Left out, on purpose: a published `@lynq/next` package (D-018, on demand); reverse-DNS verification of crawler identity (design §8); Social, SEO and Other as Pages views; a compare mode and filters on the screen; real production crawler rows (the demo site carries seeded ones as of 2026-09-06; the owner's own site gets real ones once the snippet is installed). The per-key limiter is in memory per instance.
 
 Follow-ups: TICKET-086 (shared rate limit for keyed endpoints).
