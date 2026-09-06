@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Sparkline, trendLabel } from "@/components/charts/charts";
 import {
   type Column,
   DataTable,
@@ -29,83 +28,33 @@ const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
 const dur: Column["format"] = (v) =>
   v === null ? "—" : fmtDuration(Number(v));
 
-function columnsFor(
-  view: PagesView,
-  trends: Record<string, number[]>,
-  selected: string | undefined
-): Column[] {
+function columnsFor(view: PagesView): Column[] {
   const bounce: Column = {
     key: "bounce_rate",
     header: "Bounce",
-    align: "right",
-    width: "84px",
     lowerIsBetter: true,
     points: true,
     format: pct,
+    secondary: true,
   };
   const engaged: Column = {
     key: "engaged_time",
     header: "Engaged",
-    align: "right",
-    width: "90px",
     format: dur,
+    secondary: true,
   };
   if (view !== "all")
     return [
-      { key: "sessions", header: "Sessions", align: "right", width: "96px" },
-      {
-        key: "visitors",
-        header: "Visitors",
-        align: "right",
-        width: "96px",
-        secondary: true,
-      },
+      { key: "sessions", header: "Sessions" },
+      { key: "visitors", header: "Visitors" },
       bounce,
       engaged,
     ];
   return [
-    { key: "visitors", header: "Visitors", align: "right", width: "96px" },
-    {
-      key: "pageviews",
-      header: "Pageviews",
-      align: "right",
-      width: "96px",
-      secondary: true,
-    },
-    {
-      key: "entries",
-      header: "Entries",
-      align: "right",
-      width: "84px",
-      secondary: true,
-    },
-    {
-      key: "exits",
-      header: "Exits",
-      align: "right",
-      width: "84px",
-      secondary: true,
-    },
+    { key: "visitors", header: "Visitors" },
+    { key: "pageviews", header: "Pageviews" },
     bounce,
     engaged,
-    {
-      key: "trend",
-      header: "Trend",
-      align: "right",
-      width: "84px",
-      sortable: false,
-      secondary: true,
-      format: (_, row) => {
-        const values = trends[row.id];
-        return values ? (
-          <Sparkline
-            values={values}
-            label={trendLabel(values)}
-            accent={row.id === selected}
-          />
-        ) : null;
-      },
-    },
   ];
 }
 
@@ -116,7 +65,6 @@ export function PagesTable({
   compare,
   hasFilters,
   table,
-  trends,
 }: {
   slug: string;
   view: PagesView;
@@ -125,16 +73,12 @@ export function PagesTable({
   granularity: Granularity;
   timezone: string;
   table: Settled<PagesTableData>;
-  trends: Record<string, number[]>;
 }) {
   const { state, update, pending } = useViewState();
   const announce = useAnnounce();
   const [search, setSearch] = useState("");
   const [drawer, setDrawer] = useState(false);
-  const columns = useMemo(
-    () => columnsFor(view, trends, state.sel),
-    [view, trends, state.sel]
-  );
+  const columns = useMemo(() => columnsFor(view), [view]);
   const rows = useMemo<TableRow[]>(() => {
     if (!table.ok) return [];
     const t = table.data;
@@ -192,20 +136,21 @@ export function PagesTable({
         <AttentionLine rows={t.rows} pageviews={t.pageviews} />
       )}
       <div>
-        <div className="mb-3 flex justify-end">
-          <label className="flex items-center gap-2 text-[12.5px] text-mute">
-            <span className="sr-only">Search paths</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search paths, e.g. /docs/*"
-              className="h-[30px] w-[240px] rounded-control border border-rule px-[10px] text-[13px] text-ink placeholder:text-faint focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal"
-            />
-          </label>
-        </div>
         <DataTable
           region="pages"
           title="Pages"
+          labelHeader="Page"
+          caption={
+            <label className="flex items-center gap-2 text-[12.5px] text-mute">
+              <span className="sr-only">Search paths</span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search paths, e.g. /docs/*"
+                className="h-[26px] w-[160px] rounded-control sm:w-[220px] border border-rule px-2 text-[12.5px] font-normal text-ink placeholder:text-faint focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal"
+              />
+            </label>
+          }
           views={[
             { key: "all", label: "All" },
             { key: "entry", label: "Entry" },
@@ -223,7 +168,6 @@ export function PagesTable({
           exportName={`pages-${view}`}
           emptyText={search ? "No paths match" : emptyText}
           compare={compare}
-          changes="sorted"
         />
         <ShowAllDrawer
           open={drawer}

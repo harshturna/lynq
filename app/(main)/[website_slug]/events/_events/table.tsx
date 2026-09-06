@@ -146,7 +146,6 @@ export function EventsTable({
             : "No events yet. Track one with lynq.track('signup')."
         }
         compare={compare}
-        changes="sorted"
       />
       <ShowAllDrawer
         open={drawer}

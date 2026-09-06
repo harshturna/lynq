@@ -11,7 +11,6 @@ import {
   pageFlow,
   summary,
   timeseries,
-  trends,
   vitals,
 } from "@/lib/query/run";
 import type { VitalsSummary } from "@/lib/query/vitals";
@@ -27,7 +26,6 @@ import { type Section, settle } from "./settle";
  * selected page adds its flow, vitals, goal and trend.
  */
 export const PAGE_TABLE_LIMIT = 200;
-export const TREND_ROWS = 10;
 
 export type PagesView = "all" | "entry" | "exit";
 
@@ -61,7 +59,6 @@ export type PagesScreen = {
   sel: string | undefined;
   table: Promise<Section<PagesTable>>;
   /** Visitors per bucket for the top rows, by path. */
-  trends: Promise<Section<Record<string, number[]>>>;
   selected: Promise<Section<SelectedPage | null>>;
 };
 
@@ -136,15 +133,6 @@ export function getPagesScreen(
   };
   const tablePromise = table();
 
-  const trendsFor = async (): Promise<Record<string, number[]>> => {
-    const t = await tablePromise;
-    if (view !== "all") return {};
-    const paths = t.rows.slice(0, TREND_ROWS).map((r) => r.value);
-    if (!paths.length) return {};
-    const series = await trends(ctx, "path", paths, ctx.granularity);
-    return Object.fromEntries([...series].map(([k, v]) => [k, v]));
-  };
-
   const selected = async (): Promise<SelectedPage | null> => {
     const path = state.sel;
     if (!path) return null;
@@ -185,7 +173,6 @@ export function getPagesScreen(
     kpi,
     sel: state.sel,
     table: settle("pages.table", tablePromise),
-    trends: settle("pages.trends", trendsFor()),
     selected: settle("pages.selected", selected()),
   };
 }

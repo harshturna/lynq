@@ -18,6 +18,12 @@ import type { Section as Settled } from "@/lib/screens/settle";
 import { withFilter } from "@/lib/url-state";
 
 const SHOWN = 8;
+/** The label column's header per region and view. */
+const LABEL: Record<string, Record<string, string>> = {
+  pages: { top: "Page", entry: "Entry page", exit: "Exit page" },
+  sources: { channels: "Channel", sources: "Source", campaigns: "Campaign" },
+  locations: { countries: "Country", regions: "Region", cities: "City" },
+};
 
 const pct: Column["format"] = (v) => (v === null ? "—" : fmtPct(Number(v)));
 const dur: Column["format"] = (v) =>
@@ -135,9 +141,9 @@ function toRows(data: TableData): TableRow[] {
 }
 
 /**
- * Pages, Sources and Locations (design §8.1, D-010): one ranked metric per
- * table with a share bar; Details opens the drawer with every column; views
- * in the URL; rows filter on Enter.
+ * Pages, Sources and Locations (design §8.1, D-013): one ranked metric per
+ * table with the bar column; Show all opens the drawer with every column;
+ * views in the URL; rows filter on Enter.
  */
 export function Tables({
   kpi,
@@ -242,9 +248,11 @@ function Region({
         title={title}
         views={views}
         defaultView={views[0].key}
-        columns={columns}
+        labelHeader={LABEL[region]?.[data.data.view] ?? title}
+        columns={[columns[0]]}
         rows={rows.slice(0, SHOWN)}
-        lead={columns[0].key}
+        bar={columns[0].key}
+        fill
         defaultSort={{ col: columns[0].key, dir: "desc" }}
         onFilter={filter}
         total={data.data.total}

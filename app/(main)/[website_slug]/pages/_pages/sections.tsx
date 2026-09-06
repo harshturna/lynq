@@ -11,7 +11,7 @@ export async function TableSection({
   slug: string;
   hasFilters: boolean;
 }) {
-  const [table, trends] = await Promise.all([screen.table, screen.trends]);
+  const table = await screen.table;
   return (
     <PagesTable
       slug={slug}
@@ -21,7 +21,6 @@ export async function TableSection({
       granularity={screen.granularity}
       timezone={screen.timezone}
       table={table}
-      trends={trends.ok ? trends.data : {}}
     />
   );
 }

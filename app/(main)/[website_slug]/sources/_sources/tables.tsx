@@ -234,7 +234,6 @@ function Region({
         exportName={`${region}-${t.view}`}
         emptyText={emptyText}
         compare={compare}
-        changes="sorted"
       />
       <ShowAllDrawer
         open={drawer}

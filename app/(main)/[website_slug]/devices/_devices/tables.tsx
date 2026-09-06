@@ -162,7 +162,6 @@ function Region({
         exportName={region}
         emptyText={emptyText}
         compare={compare}
-        changes="sorted"
       />
       <ShowAllDrawer
         open={drawer}

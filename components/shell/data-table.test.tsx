@@ -159,23 +159,27 @@ describe("DataTable", () => {
     expect(
       await screen.findByRole("button", { name: /Chrome, version 128/ })
     ).toBeInTheDocument();
-    // the change sits in its own slot beside the number, triangle coloured
+    // only the primary (sorted) column has a change slot, triangle coloured (D-013)
     expect(screen.getByText("9.0%")).toBeInTheDocument(); // 4490 vs 4120
     expect(
-      screen.getByText("8.6%").previousSibling?.previousSibling
-    ).toHaveClass("text-poor"); // bounce up is bad
-    expect(screen.getByText("vs prev")).toBeInTheDocument();
+      screen.getByText("9.0%").previousSibling?.previousSibling
+    ).toHaveClass("text-good");
+    expect(screen.queryByText("8.6%")).toBeNull(); // bounce has no slot
+    expect(screen.getByText("change")).toBeInTheDocument();
   });
 
-  it("in lead mode shows one column with a share bar and a Details link", async () => {
+  it("names the label column, puts the bar in its own column, and offers Show all", async () => {
     const onShowAll = vi.fn();
-    setup("", { lead: "visitors", onShowAll, compare: true });
-    expect(screen.getByText("Visitors")).toBeInTheDocument();
-    expect(screen.queryByText("Bounce")).toBeNull();
+    setup("", { bar: "visitors", labelHeader: "Page", onShowAll });
+    expect(
+      screen.getByRole("button", { name: /^Page, not sorted/ })
+    ).toBeInTheDocument();
+    const bars = document.querySelectorAll("td > span[aria-hidden]");
+    expect(bars).toHaveLength(3);
+    expect((bars[0] as HTMLElement).style.width).toBe("100%"); // Chrome 6980
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Details →" }));
+    await user.click(screen.getByRole("button", { name: "Show all" }));
     expect(onShowAll).toHaveBeenCalledOnce();
-    expect(screen.queryByRole("button", { name: "Show all" })).toBeNull();
   });
 
   it("shows the footer with the count and the export", () => {
