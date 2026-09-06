@@ -13,9 +13,6 @@ const fontGeist = localFont({
 export const metadata: Metadata = {
   title: "Lynq",
   description: "Analytics that respects your visitors.",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({
