@@ -43,11 +43,12 @@ history, because a note is small enough to retype.
 
 On the two charts that answer "what happened": the Overview lead chart and a goal's completions
 trend. Both take the notes that fall inside the current range and draw one **marker per
-bucket**: a short vertical tick from the axis in ink, a 6 px dot at the top, and the note's
-first words as a label when there is room. A bucket with two or more notes shows one marker
-labelled "2 notes". The tooltip that already shows the bucket's values gains the notes' text
-beneath them, and the hidden table gains a Notes column, so a screen reader hears them where a
-sighted reader sees them.
+bucket**: a faint dashed hairline from the axis with a 6 px ink dot at the top, and no text on
+the plot. The notes in the range are listed in a strip under the chart with their dates, the
+tooltip that already shows the bucket's values gains the notes' text beneath them, and the
+hidden table gains a Notes column, so a screen reader hears them where a sighted reader sees
+them. (TICKET-076 first drew the text as the marker's label; three notes in adjacent weekly
+buckets collided, and TICKET-087 moved the text off the plot.)
 
 Nothing about the series changes. A marker is a `markLine` on the primary series, silent,
 placed on the category axis at the bucket the note falls in (`bucketIndexOf(at)`); a note

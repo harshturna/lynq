@@ -246,21 +246,22 @@ export function OverviewPanel() {
             x2="600"
             y1="12"
             y2="150"
-            stroke="#0a0a0a"
+            stroke="#9a9aa3"
             strokeWidth="1"
             strokeDasharray="2 3"
-            opacity=".55"
+            opacity=".8"
             vectorEffect="non-scaling-stroke"
           />
           <circle cx="600" cy="10" r="3" fill="#0a0a0a" />
         </svg>
-        <span
-          aria-hidden
-          className="pointer-events-none absolute text-[11px] text-ink"
-          style={{ left: "calc(56.5% + 8px)", top: 118 }}
-        >
-          Launched on Product Hunt
-        </span>
+        <p className="mt-1 flex items-baseline gap-[6px] px-1 text-[12px] text-ink-2">
+          <span
+            aria-hidden
+            className="inline-block h-[6px] w-[6px] translate-y-[-1px] rounded-full bg-ink"
+          />
+          <span className="text-mute">Aug 22</span>
+          <span>Launched on Product Hunt</span>
+        </p>
       </Ui>
       <Ui lift style={{ right: 64, top: 196, width: 330 }}>
         <SectionTitle note="KPI goal" className="mt-0">

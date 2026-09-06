@@ -1,5 +1,6 @@
 "use client";
 
+import { formatInTimeZone } from "date-fns-tz";
 import { useMemo } from "react";
 import { type Bar, type BarOptions, barOption } from "@/lib/charts/bar";
 import { bucketTitle, describeSeries, fmtNumber } from "@/lib/charts/format";
@@ -84,14 +85,62 @@ export function LineChart({
     ...(markers.length ? [byIndex.get(i) ?? ""] : []),
   ]);
   return (
-    <Chart
-      option={option}
-      height={height}
-      title={title}
-      description={description}
-      onMarkClick={onMarkClick}
-      table={<HiddenTable caption={title} columns={columns} rows={rows} />}
-    />
+    <div className="flex flex-col gap-2">
+      <Chart
+        option={option}
+        height={height}
+        title={title}
+        description={description}
+        onMarkClick={onMarkClick}
+        table={<HiddenTable caption={title} columns={columns} rows={rows} />}
+      />
+      {markers.length > 0 && notes && (
+        <NotesStrip
+          notes={notes}
+          timezone={timezone}
+          granularity={granularity}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The notes in the range, under the chart, so the text never sits on the
+ * plot where markers in adjacent buckets would collide (TICKET-087).
+ */
+function NotesStrip({
+  notes,
+  timezone = "UTC",
+  granularity,
+}: {
+  notes: ChartNote[];
+  timezone?: string;
+  granularity: LineOptions["granularity"];
+}) {
+  const sorted = [...notes].sort((a, b) => a.at.localeCompare(b.at));
+  const when = (iso: string) =>
+    formatInTimeZone(
+      new Date(iso),
+      timezone,
+      granularity === "hour" ? "MMM d, h:mm a" : "MMM d"
+    );
+  return (
+    <ul
+      aria-label="Notes in this range"
+      className="flex flex-wrap gap-x-5 gap-y-1 px-1 text-[12px] text-ink-2"
+    >
+      {sorted.map((n) => (
+        <li key={n.id} className="flex items-baseline gap-[6px]">
+          <span
+            aria-hidden
+            className="inline-block h-[6px] w-[6px] translate-y-[-1px] rounded-full bg-ink"
+          />
+          <span className="text-mute tabular">{when(n.at)}</span>
+          <span>{n.text}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

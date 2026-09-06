@@ -159,32 +159,24 @@ export function lineOption(
   const primaryIndex = seriesOptions.findIndex(
     (s) => (s as { name?: string }).name === primary?.name
   );
-  // A label needs room: it is dropped (the dot and the tooltip remain) when
-  // the next marker is closer than a tenth of the axis, and it hangs to the
-  // left near the right edge so it is not clipped.
-  const minGap = Math.max(2, Math.ceil(labels.length / 10));
-  const labelled = notes.map((n, i) => {
-    const next = notes[i + 1];
-    return !next || next.index - n.index >= minGap;
-  });
+  // The text never goes on the plot (TICKET-087): a marker is a faint pin
+  // with an ink dot at the top; the sentence lives in the tooltip, the hidden
+  // table and the strip under the chart, so markers in adjacent buckets
+  // cannot collide.
   if (notes.length && primaryIndex >= 0)
     attach(
       seriesOptions[primaryIndex],
-      notes.map((n, i) => ({
+      notes.map((n) => ({
         xAxis: n.index,
         name: n.label,
-        lineStyle: { color: TOKENS.ink, type: [2, 3], width: 1, opacity: 0.55 },
-        itemStyle: { color: TOKENS.ink },
-        label: {
-          show: labelled[i],
-          formatter: n.label,
-          position: "end",
-          distance: 6,
-          align: n.index > labels.length * 0.7 ? "right" : "left",
-          verticalAlign: "middle",
-          color: TOKENS.ink,
-          fontSize: 11,
+        lineStyle: {
+          color: TOKENS.faint,
+          type: [2, 3],
+          width: 1,
+          opacity: 0.8,
         },
+        itemStyle: { color: TOKENS.ink },
+        label: { show: false },
       })),
       ["none", "circle"]
     );
@@ -193,8 +185,7 @@ export function lineOption(
   return {
     animation: opts.animation ?? true,
     animationDuration: 300,
-    // a little more headroom when notes are drawn, for the dot and its label
-    grid: { left: 44, right: 12, top: notes.length ? 26 : 16, bottom: 28 },
+    grid: { left: 44, right: 12, top: 16, bottom: 28 },
     xAxis: {
       type: "category",
       boundaryGap: false,

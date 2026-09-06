@@ -70,7 +70,7 @@ describe("lineOption", () => {
     expect(withPrev.tooltip.formatter([{ dataIndex: 1 }])).toContain("▲ 55.6%");
   });
 
-  it("draws notes as ink marks on the primary series and repeats them in the tooltip", () => {
+  it("draws notes as faint pins on the primary series, no label, and repeats them in the tooltip", () => {
     const o = lineOption([{ name: "Visitors", points, previous }], {
       granularity: "day",
       notes: [
@@ -83,15 +83,15 @@ describe("lineOption", () => {
         { index: 9, label: "off the chart", texts: ["off the chart"] },
       ],
     }) as {
-      grid: { top: number };
       tooltip: { formatter: (p: unknown) => string };
       series: {
         name: string;
         markLine?: {
           silent: boolean;
+          symbol: unknown;
           data: {
             xAxis: number;
-            label: { formatter: string };
+            label: { show: boolean };
             lineStyle: { color: string };
           }[];
         };
@@ -101,46 +101,10 @@ describe("lineOption", () => {
     expect(o.series[0].markLine).toBeUndefined();
     const marks = o.series[1].markLine;
     expect(marks?.silent).toBe(true);
-    expect(marks?.data.map((d) => [d.xAxis, d.label.formatter])).toEqual([
-      [1, "Deployed v2"],
-      [2, "2 notes"],
-    ]);
-    expect(marks?.data[0].lineStyle.color).toBe(TOKENS.ink);
-    // adjacent markers keep their dots but drop the label; the last hangs left
-    const crowded = lineOption(
-      [
-        {
-          name: "V",
-          points: Array.from({ length: 30 }, (_, i) => ({
-            t: `2026-08-${String(i + 1).padStart(2, "0")}T00:00:00.000Z`,
-            v: i,
-          })),
-        },
-      ],
-      {
-        granularity: "day",
-        notes: [
-          { index: 3, label: "a", texts: ["a"] },
-          { index: 4, label: "b", texts: ["b"] },
-          { index: 28, label: "c", texts: ["c"] },
-        ],
-      }
-    ) as {
-      series: {
-        markLine?: {
-          symbol: unknown;
-          data: { label: { show: boolean; align: string } }[];
-        };
-      }[];
-    };
-    const cm = crowded.series[0].markLine;
-    expect(cm?.symbol).toEqual(["none", "circle"]);
-    expect(cm?.data.map((d) => [d.label.show, d.label.align])).toEqual([
-      [false, "left"],
-      [true, "left"],
-      [true, "right"],
-    ]);
-    expect(o.grid.top).toBeGreaterThan(16);
+    expect(marks?.symbol).toEqual(["none", "circle"]);
+    expect(marks?.data.map((d) => d.xAxis)).toEqual([1, 2]);
+    expect(marks?.data.every((d) => d.label.show === false)).toBe(true);
+    expect(marks?.data[0].lineStyle.color).toBe(TOKENS.faint);
     const html = o.tooltip.formatter([{ dataIndex: 2 }]);
     expect(html).toContain("Product Hunt");
     expect(html).toContain("Newsletter &lt;b&gt;");
