@@ -12,6 +12,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { fmtInt } from "@/lib/format";
 import {
   parseSearch,
   searchParamsToInput,
@@ -26,8 +27,39 @@ export { searchParamsToInput };
  * an `update` that pushes the next URL through the router inside a transition,
  * so the server re-renders and `pending` can dim the affected region.
  * `useAnnounce()` queues one message for the page's single role="status" region,
- * spoken once the transition settles (design §6).
+ * spoken once the transition settles (design §6). When the filters changed
+ * across that transition the message gains the filter count and, where the
+ * screen renders a `VisitorTotal`, the visitor total: "Removed Country is
+ * Canada. 2 filters. 3,201 visitors."
  */
+export const VISITOR_TOTAL_ATTR = "data-visitor-total";
+
+function filterSignature(state: ViewState): string {
+  return state.filters
+    .map((f) => `${f.dimension}:${f.op}:${f.values.join("|")}`)
+    .join("&");
+}
+
+/** The sentence plus the filter count and the visitor total, as design §6 words them. */
+export function withFilterSummary(
+  text: string,
+  filters: ViewState["filters"],
+  visitors: number | null
+): string {
+  const count = filters.reduce((n, f) => n + f.values.length, 0);
+  const parts = [text];
+  if (count > 0) parts.push(`${count} ${count === 1 ? "filter" : "filters"}.`);
+  if (visitors !== null) parts.push(`${fmtInt(visitors)} visitors.`);
+  return parts.join(" ");
+}
+
+function visitorTotalInPage(): number | null {
+  const raw = document
+    .querySelector(`[${VISITOR_TOTAL_ATTR}]`)
+    ?.getAttribute(VISITOR_TOTAL_ATTR);
+  const n = raw === null || raw === undefined ? Number.NaN : Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 type Update = (
   next: ViewState | ((current: ViewState) => ViewState),
   opts?: {
@@ -72,9 +104,9 @@ export function ShellProvider({ children }: { children: ReactNode }) {
 
   // Announcements wait for the transition so the message describes the new page.
   const [message, setMessage] = useState("");
-  const queued = useRef<string | null>(null);
+  const queued = useRef<{ text: string; filters: string } | null>(null);
   const announce = useCallback((text: string) => {
-    queued.current = text;
+    queued.current = { text, filters: filterSignature(stateRef.current) };
   }, []);
   useEffect(() => {
     if (pending) return;
@@ -83,8 +115,16 @@ export function ShellProvider({ children }: { children: ReactNode }) {
       focusAfter.current = null;
     }
     if (queued.current === null) return;
-    const text = queued.current;
+    const { text: sentence, filters } = queued.current;
     queued.current = null;
+    const text =
+      filters === filterSignature(stateRef.current)
+        ? sentence
+        : withFilterSummary(
+            sentence,
+            stateRef.current.filters,
+            visitorTotalInPage()
+          );
     // Clear first so an identical message is announced again.
     setMessage("");
     const id = window.setTimeout(() => setMessage(text), 50);

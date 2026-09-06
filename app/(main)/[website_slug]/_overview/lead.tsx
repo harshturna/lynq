@@ -9,6 +9,7 @@ import { RowBar, Section } from "@/components/shell/section";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
 import { SplitBar } from "@/components/shell/views";
+import { VisitorTotal } from "@/components/shell/visitor-total";
 import type { Point } from "@/lib/charts/format";
 import { fmtDuration, fmtInt, fmtPct, fmtRatio } from "@/lib/format";
 import type { Summary } from "@/lib/query/primitives";
@@ -85,11 +86,14 @@ export function Lead({
         />
       )}
       {summary.ok ? (
-        <KpiStrip
-          value={metric}
-          onChange={setMetric}
-          tiles={tiles(summary.data, kpi, goal, slug)}
-        />
+        <>
+          <VisitorTotal value={summary.data.current.visitors} />
+          <KpiStrip
+            value={metric}
+            onChange={setMetric}
+            tiles={tiles(summary.data, kpi, goal, slug)}
+          />
+        </>
       ) : (
         <SectionError title="Summary" strong />
       )}

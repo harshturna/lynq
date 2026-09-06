@@ -3,6 +3,7 @@
 import { DeltaBadge } from "@/components/shell/badge";
 import { KpiStrip, type KpiTile } from "@/components/shell/kpi-strip";
 import { SectionError } from "@/components/shell/section-error";
+import { VisitorTotal } from "@/components/shell/visitor-total";
 import { fmtDuration, fmtInt, fmtPct, fmtRevenue } from "@/lib/format";
 import type { Section as Settled } from "@/lib/screens/settle";
 import type { StripTile, TileKind } from "@/lib/screens/sources";
@@ -47,5 +48,11 @@ export function SourcesStrip({
         ? `vs ${fmt(t.kind, t.previous)}`
         : undefined,
   }));
-  return <KpiStrip tiles={tiles} label="Summary" />;
+  const visitors = strip.data.find((t) => t.key === "visitors");
+  return (
+    <>
+      {visitors && <VisitorTotal value={visitors.value} />}
+      <KpiStrip tiles={tiles} label="Summary" />
+    </>
+  );
 }

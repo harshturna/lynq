@@ -10,6 +10,7 @@ import { displayValue, filterSentence } from "@/components/shell/dimensions";
 import { ShowAllDrawer } from "@/components/shell/drawer";
 import { SectionError } from "@/components/shell/section-error";
 import { useAnnounce, useViewState } from "@/components/shell/view-state";
+import { VisitorTotal } from "@/components/shell/visitor-total";
 import { fmtPct, fmtRatio } from "@/lib/format";
 import type { BreakdownMultiRow } from "@/lib/query/breakdown";
 import type { Kpi } from "@/lib/screens/kpi";
@@ -240,6 +241,7 @@ function Region({
         pending ? "opacity-70 transition-opacity" : "transition-opacity"
       }
     >
+      {selectable && <VisitorTotal value={t.visitors} />}
       <DataTable
         region={region}
         title={

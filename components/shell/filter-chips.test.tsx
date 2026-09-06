@@ -57,8 +57,9 @@ describe("FilterChips", () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 80));
     });
+    // the router is mocked, so the filters did not change and no count is appended
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Removed Country is 🇨🇦 Canada. 1 filter."
+      "Removed Country is 🇨🇦 Canada."
     );
   });
 

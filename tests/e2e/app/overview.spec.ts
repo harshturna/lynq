@@ -30,8 +30,9 @@ test("overview: metric, filter, view and the share round-trip", async ({
     name: /\/pricing, press Delete to remove/,
   });
   await expect(chip).toBeVisible();
+  // ... with the filter count and the visitor total appended (design §6).
   await expect(page.getByRole("status").first()).toContainText(
-    /Added Page is \/pricing/,
+    /Added Page is \/pricing\. 1 filter\. [\d,]+ visitors\./,
     { timeout: 15_000 }
   );
 

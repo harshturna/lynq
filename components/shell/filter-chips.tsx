@@ -15,8 +15,9 @@ import { useAnnounce, useViewState } from "./view-state";
  * Active filters as chips (design §6): one button per chip, named with the
  * whole sentence and the removal key; Delete or Backspace removes it; focus
  * moves to the next chip, else the previous, else + Filter; the page's status
- * region announces the change once the transition settles. Session-scoped
- * chips carry their scope in the label.
+ * region announces the change once the transition settles, with the filter
+ * count and the visitor total appended by the shell. Session-scoped chips
+ * carry their scope in the label.
  */
 export function FilterChips({ addButtonId }: { addButtonId?: string }) {
   const { state, update } = useViewState();
@@ -48,9 +49,7 @@ export function FilterChips({ addButtonId }: { addButtonId?: string }) {
     // The last chip's removal re-renders the header from the server, so the
     // shell focuses + Filter once the transition settles (design §6).
     update(next, count === 0 ? { focus: addButtonId } : undefined);
-    announce(
-      `Removed ${filterSentence(f.dimension, f.op, [value])}. ${count} ${count === 1 ? "filter" : "filters"}.`
-    );
+    announce(`Removed ${filterSentence(f.dimension, f.op, [value])}.`);
   };
   const clear = () => {
     update({ ...state, filters: [] }, { focus: addButtonId });

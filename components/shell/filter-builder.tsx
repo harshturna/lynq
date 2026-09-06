@@ -64,11 +64,8 @@ export function FilterBuilder({
     const v = raw.trim();
     if (!v && op !== "is") return;
     const next = withFilter(state, { dimension, op, values: [v] });
-    const count = next.filters.reduce((n, x) => n + x.values.length, 0);
     update(next);
-    announce(
-      `Added ${filterSentence(dimension, op, [v])}. ${count} ${count === 1 ? "filter" : "filters"}.`
-    );
+    announce(`Added ${filterSentence(dimension, op, [v])}.`);
     setValue("");
     setOpen(false);
   };
