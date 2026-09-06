@@ -27,7 +27,43 @@ export type SettingsData = {
   breakpoints: number[];
   lastAt: string | null;
   diagnostics: Diagnostic[];
+  apiKeys: ApiKeySummary[];
 };
+
+/** What the settings screen shows about a key; never the token (D-017). */
+export type ApiKeySummary = {
+  id: number;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  createdAt: string;
+  lastUsedAt: string | null;
+};
+
+export async function listApiKeys(siteId: number): Promise<ApiKeySummary[]> {
+  const rows = await sql<
+    {
+      id: number;
+      name: string;
+      prefix: string;
+      scopes: string[];
+      created_at: Date;
+      last_used_at: Date | null;
+    }[]
+  >`
+    select id, name, prefix, scopes, created_at, last_used_at
+    from analytics.api_keys
+    where site_id = ${siteId} and revoked_at is null
+    order by created_at desc`;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    name: r.name,
+    prefix: r.prefix,
+    scopes: r.scopes,
+    createdAt: new Date(r.created_at).toISOString(),
+    lastUsedAt: r.last_used_at ? new Date(r.last_used_at).toISOString() : null,
+  }));
+}
 
 export const DIAGNOSTICS_HOURS = 24;
 
@@ -66,7 +102,7 @@ export async function getSettings(
   site: Site,
   website: { name: string; url: string }
 ): Promise<SettingsData> {
-  const [settings, hostnames, goals, last] = await Promise.all([
+  const [settings, hostnames, goals, last, apiKeys] = await Promise.all([
     sql<
       {
         timezone: string;
@@ -85,6 +121,7 @@ export async function getSettings(
     listGoals(site.siteId),
     sql<{ last_at: Date | null }[]>`
       select max(received_at) as last_at from analytics.events where site_id = ${site.siteId}`,
+    listApiKeys(site.siteId),
   ]);
   const hosts = hostnames.map((h) => h.hostname);
   const diagnostics = await readDiagnostics(
@@ -109,5 +146,6 @@ export async function getSettings(
     breakpoints: site.breakpoints,
     lastAt: last[0]?.last_at ? new Date(last[0].last_at).toISOString() : null,
     diagnostics,
+    apiKeys,
   };
 }

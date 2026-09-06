@@ -23,7 +23,7 @@ An agent (Claude Code, Cursor, Codex) or a terminal can ask a site's numbers dir
 
 ## Plan
 - [ ] Design section: transport, auth, the tool list and their schemas, rate limits.
-- [ ] Decision on site keys (shared with TICKET-075).
+- [x] Decision: D-017, per-site API keys, taken in TICKET-085; this ticket uses the `read` scope.
 - [ ] Route handler or package; CLI; docs pages; tests against the seed fixture.
 - [ ] Docs: a new top-level section ("Integrations" or "For agents") with the MCP setup for Claude Code, Cursor and Codex, the tool list, the CLI commands, and site-key creation; the TypeScript page links it.
 - [ ] Landing: a feature panel staged from a real agent exchange ("Ask why signups dropped") beside a short lead, and a docs-home line; this and TICKET-075 are the AI story the landing currently lacks.
@@ -34,7 +34,7 @@ An agent (Claude Code, Cursor, Codex) or a terminal can ask a site's numbers dir
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.
 - **State:** not started
-- **Blocked on:** a Phase 4 design section and the site-key decision
+- **Blocked on:** a Phase 4 design section
 - **Next:** —
 - **Read first:** lib/query/authorize.ts, lib/query/run.ts
 

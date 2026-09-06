@@ -22,7 +22,7 @@ A site owner can pin a dated note ("Launched on Product Hunt", "Deployed v2") th
 
 ## Plan
 - [ ] Design section and mock.
-- [ ] Table and migration; actions to add, edit, delete; the API once site keys exist.
+- [ ] Table and migration; actions to add, edit, delete; the API on an API key with the `notes` scope (D-017, TICKET-085).
 - [ ] Markers on the lead chart and the goal trend; announcements and the hidden table.
 - [ ] Verify: npm run verify; npm run test:integration; npm run test:e2e.
 - [ ] Docs: a Using Lynq page ("Notes") on adding a note, what it marks, and the API call a deploy pipeline makes (with the site-key setup); the counting page's Web Vitals section mentions reading a regression against a note.
@@ -34,7 +34,7 @@ A site owner can pin a dated note ("Launched on Product Hunt", "Deployed v2") th
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.
 - **State:** not started
-- **Blocked on:** a Phase 3 design section; the API part on the site-key decision (TICKET-075)
+- **Blocked on:** a Phase 3 design section
 - **Next:** —
 - **Read first:** components/charts/charts.tsx, lib/charts
 

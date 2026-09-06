@@ -28,7 +28,7 @@ A site can see which crawlers fetch which pages: AI answer engines (ChatGPT, Cla
 
 ## Plan
 - [ ] Design section: package shape, endpoint, table, screen.
-- [ ] Decision (decide skill): site keys for server-side ingest.
+- [x] Decision: D-017, per-site API keys, taken in TICKET-085; this ticket uses the `ingest` scope.
 - [ ] Package, endpoint, table, screen, tests.
 - [ ] Docs: an Install page for the server-side package (Next.js middleware first), a Using Lynq page on the Bots view and the crawler families, and a privacy page note that crawler hits are stored separately from visits.
 - [ ] Landing: a feature panel ("See which AI assistants read your site") staged from the real Bots view, and a "What you get" line on the docs home. This is the first AI-facing feature; feature it, since nothing on the landing or docs mentions AI today.
@@ -39,7 +39,7 @@ A site can see which crawlers fetch which pages: AI answer engines (ChatGPT, Cla
 ## Handoff
 Kept current while the ticket is in progress. Overwrite, do not append.
 - **State:** not started
-- **Blocked on:** a Phase 3 design section and the site-key decision
+- **Blocked on:** a Phase 3 design section
 - **Next:** —
 - **Read first:** lib/ingest/collect.ts (how bots are dropped today), docs/design/phase-0-data-foundation.md §7
 

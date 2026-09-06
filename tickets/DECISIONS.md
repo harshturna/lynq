@@ -387,3 +387,35 @@ Accepted decisions are immutable except for their status and a pointer to a supe
   UI and the docs. Harder: three more definitions to keep true, minimum thresholds that must be
   explained wherever an em dash appears, and a metric (influence) that people will read as
   causal however it is labelled.
+
+## D-017 — Per-site API keys: hashed at rest, scoped, revocable
+- **Status:** Accepted
+- **Date:** 2026-09-06
+- **Context:** Three planned features need something that is not a browser to prove which site it
+  is: a server-side middleware reporting crawler hits (TICKET-075), a deploy pipeline writing a
+  note (TICKET-076), and an agent reading a site's analytics over MCP (TICKET-078). The browser
+  tracker deliberately has no secret, because a secret in a public script is theatre and the
+  hostname gate is enough for public behaviour. Each of the three tickets carried the same
+  undecided sub-step, so it is decided once here.
+- **Decision:** Keys are called **API keys** and belong to one site. A token is
+  `lynq_sk_` followed by 48 hex characters from 24 random bytes; only its SHA-256 hash is stored,
+  in `analytics.api_keys`, alongside a 16-character display prefix, a name, its scopes, and
+  created, last-used and revoked timestamps. The token is shown once at creation and never again.
+  Three scopes, because the uses differ in risk: `ingest` writes events from a server, `notes`
+  writes annotations, `read` reads analytics. A key carries the scopes chosen at creation and
+  cannot be edited; a wrong key is revoked and replaced. Authentication is an
+  `Authorization: Bearer` header; a key is never accepted on a request carrying a browser Origin
+  for the site, so a leaked key cannot be replayed from a page. Revocation is immediate and a
+  revoked row is kept for the audit trail rather than deleted.
+- **Rejected alternatives:** One unscoped key per site, rejected because reading a site's
+  analytics and appending a note are not the same risk and a single key forces the highest.
+  Storing the token in plain text so it can be shown again, rejected because the point of hashing
+  is that a database leak is not a key leak; showing it once is the standard trade. Signed
+  requests instead of a bearer token, rejected as much harder for a shell script or a middleware
+  to produce, for a threat this does not face. Reusing the Supabase session, rejected because
+  none of the three callers has one.
+- **Consequences:** Easier: three tickets are unblocked with one shape between them, and each
+  endpoint declares the scope it needs. Harder: a lost key cannot be recovered, only replaced,
+  which has to be said plainly in the UI and the docs; scopes are one more thing to get right at
+  creation; and every keyed endpoint must check the scope rather than merely that the key exists.
+

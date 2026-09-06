@@ -4,11 +4,14 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useTransition } from "react";
 import { Pill } from "@/components/shell/badge";
 import { deleteWebsite } from "@/lib/actions";
+import { SCOPE_LABEL, SCOPES } from "@/lib/api-key-scopes";
 import { fmtAgo, fmtInt } from "@/lib/format";
 import { explainDiagnostic } from "@/lib/screens/diagnostics";
 import { setKpi } from "@/lib/screens/goal-actions";
 import type { SettingsData } from "@/lib/screens/settings";
 import {
+  createApiKey,
+  revokeApiKey,
   type SaveResult,
   saveData,
   saveExclusions,
@@ -23,6 +26,7 @@ const SECTIONS = [
   { id: "exclusions", label: "Exclusions" },
   { id: "kpi", label: "Goals and KPI" },
   { id: "data", label: "Data" },
+  { id: "keys", label: "API keys" },
 ] as const;
 
 const FIELD =
@@ -86,6 +90,7 @@ export function SettingsPage({
           isGuest={isGuest}
           userId={userId}
         />
+        <ApiKeys slug={slug} data={data} isGuest={isGuest} />
       </div>
     </div>
   );
@@ -656,6 +661,159 @@ function DataSection({
           {deleteError && (
             <p className="text-[12.5px] text-poor">{deleteError}</p>
           )}
+        </div>
+      </div>
+    </Block>
+  );
+}
+
+/** API keys (D-017): created here, shown once, revoked here. */
+function ApiKeys({
+  slug,
+  data,
+  isGuest,
+}: {
+  slug: string;
+  data: SettingsData;
+  isGuest: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [scopes, setScopes] = useState<string[]>(["read"]);
+  const [token, setToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const s = useSave(slug);
+  const toggle = (scope: string) =>
+    setScopes((cur) =>
+      cur.includes(scope) ? cur.filter((x) => x !== scope) : [...cur, scope]
+    );
+  return (
+    <Block
+      id="keys"
+      title="API keys"
+      lede="For anything that is not a browser: a server sending events, a deploy pipeline writing a note, an agent reading your numbers. The tracking snippet needs no key."
+    >
+      {token && (
+        <div className="rounded-card border border-teal bg-teal-soft p-4">
+          <p className="text-[13px] font-medium text-ink">
+            Copy this now. It is not shown again.
+          </p>
+          <section
+            aria-label="New API key"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region is keyboard-reachable (design §6)
+            tabIndex={0}
+            className="mt-2 max-w-[640px] overflow-x-auto rounded-control bg-canvas"
+          >
+            <pre className="p-3 text-[12px]">{token}</pre>
+          </section>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(token);
+                setCopied(true);
+              } catch {
+                setCopied(false);
+              }
+            }}
+            className="mt-2 h-8 rounded-control border border-rule bg-canvas px-3 text-[13px] hover:bg-soft"
+          >
+            {copied ? "Copied" : "Copy key"}
+          </button>
+        </div>
+      )}
+      {data.apiKeys.length > 0 && (
+        <table className="max-w-[720px] border-collapse text-[13px]">
+          <thead>
+            <tr>
+              {["Name", "Key", "Can", "Last used", ""].map((h) => (
+                <th
+                  key={h}
+                  scope="col"
+                  className="border-rule border-b py-[6px] pr-4 text-left text-[11.5px] font-medium text-mute"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.apiKeys.map((k) => (
+              <tr key={k.id} className="border-rule border-b">
+                <td className="py-[9px] pr-4">{k.name}</td>
+                <td className="py-[9px] pr-4 font-mono text-[12px] text-mute">
+                  {k.prefix}…
+                </td>
+                <td className="py-[9px] pr-4 text-mute">
+                  {k.scopes.join(", ")}
+                </td>
+                <td className="py-[9px] pr-4 text-mute">
+                  {k.lastUsedAt ? fmtAgo(new Date(k.lastUsedAt)) : "never"}
+                </td>
+                <td className="py-[9px] text-right">
+                  <button
+                    type="button"
+                    disabled={isGuest || s.pending}
+                    onClick={() =>
+                      s.run(() => revokeApiKey(slug, k.id), "Revoked.")
+                    }
+                    className="text-[12.5px] text-poor hover:underline disabled:opacity-40"
+                  >
+                    Revoke
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <div className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1 text-[13px]">
+          {/* not just "Name": the General section already has one */}
+          <span className="text-[11.5px] text-mute">Key name</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isGuest}
+            placeholder="Deploy pipeline"
+            className={FIELD}
+          />
+        </label>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-[11.5px] text-mute">This key may</legend>
+          {SCOPES.map((scope) => (
+            <label key={scope} className="flex items-center gap-2 text-[13px]">
+              <input
+                type="checkbox"
+                checked={scopes.includes(scope)}
+                onChange={() => toggle(scope)}
+                disabled={isGuest}
+                className="accent-teal"
+              />
+              {SCOPE_LABEL[scope]}
+            </label>
+          ))}
+        </fieldset>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            disabled={isGuest || s.pending || !name.trim() || !scopes.length}
+            onClick={() =>
+              s.run(async () => {
+                setToken(null);
+                setCopied(false);
+                const res = await createApiKey(slug, { name, scopes });
+                if (res.ok && res.token) {
+                  setToken(res.token);
+                  setName("");
+                }
+                return res;
+              }, "Key created.")
+            }
+            className={SAVE}
+          >
+            {s.pending ? "Creating…" : "Create key"}
+          </button>
+          {s.status}
         </div>
       </div>
     </Block>

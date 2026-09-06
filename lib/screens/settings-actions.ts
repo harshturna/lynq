@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { updateWebsiteOne } from "@/lib/actions";
+import { generateToken, hashToken, isScope, type Scope } from "@/lib/api-keys";
 import { sql } from "@/lib/db";
 import { getUser } from "@/lib/user/server";
 import { resolveSite } from "./site";
@@ -148,5 +149,53 @@ export async function saveData(
     values (${o.siteId}, ${r}, ${bps}::smallint[])
     on conflict (site_id) do update set retention_months = excluded.retention_months, breakpoints = excluded.breakpoints`;
   revalidatePath(`/${slug}`, "layout");
+  return { ok: true };
+}
+
+/**
+ * API keys (D-017). The token is returned once, here, and never again: only
+ * its hash is stored, so a lost key is replaced rather than recovered.
+ */
+export async function createApiKey(
+  slug: string,
+  input: { name: string; scopes: string[] }
+): Promise<SaveResult & { token?: string }> {
+  const o = await owner(slug);
+  if (!o.ok) return o;
+  const name = input.name.trim();
+  if (!name || name.length > 60)
+    return { ok: false, error: "Give the key a name of up to 60 characters." };
+  const scopes = input.scopes.filter(isScope) as Scope[];
+  if (!scopes.length)
+    return { ok: false, error: "Choose at least one thing the key may do." };
+  const [{ n }] = await sql<{ n: number }[]>`
+    select count(*)::int as n from analytics.api_keys
+    where site_id = ${o.siteId} and revoked_at is null`;
+  if (n >= 20)
+    return {
+      ok: false,
+      error: "This site already has 20 keys; revoke one first.",
+    };
+  const { token, prefix } = generateToken();
+  await sql`
+    insert into analytics.api_keys (site_id, name, scopes, token_hash, prefix)
+    values (${o.siteId}, ${name}, ${scopes}, ${hashToken(token)}, ${prefix})`;
+  revalidatePath(`/${slug}/settings`);
+  return { ok: true, token };
+}
+
+export async function revokeApiKey(
+  slug: string,
+  id: number
+): Promise<SaveResult> {
+  const o = await owner(slug);
+  if (!o.ok) return o;
+  // scoped to the site, so one site's key cannot be revoked from another
+  const rows = await sql`
+    update analytics.api_keys set revoked_at = now()
+    where id = ${id} and site_id = ${o.siteId} and revoked_at is null
+    returning id`;
+  if (!rows.length) return { ok: false, error: "That key is already gone." };
+  revalidatePath(`/${slug}/settings`);
   return { ok: true };
 }
