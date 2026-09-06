@@ -48,6 +48,13 @@ describe("seed generator", () => {
       bySession.set(r.session_id, list);
     }
     expect(bySession.size).toBe(stats.sessions);
+    // returning visitors: more sessions than visitors, but most visit once
+    expect(new Set(rows.map((r) => r.visitor_id)).size).toBe(stats.visitors);
+    expect(stats.visitors).toBeLessThan(stats.sessions);
+    expect(stats.visitors).toBeGreaterThan(stats.sessions * 0.7);
+    // an identified user's id is the user hash, so it holds across days
+    for (const r of rows)
+      if (r.user_hash !== BigInt(0)) expect(r.visitor_id).toBe(r.user_hash);
     for (const list of bySession.values()) {
       // seq increases with time within a session; one visitor per session
       expect(list.map((r) => r.seq)).toEqual(list.map((_, i) => i + 1));

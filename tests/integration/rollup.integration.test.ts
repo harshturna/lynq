@@ -73,6 +73,15 @@ beforeAll(async () => {
     >[];
     await sql`insert into analytics.events ${sql(chunk, ...([...EVENT_COLUMNS] as string[]))}`;
   }
+  // A session that straddles UTC midnight is one session to the events scan
+  // and two to the rollup (D-015). An anonymous id cannot straddle it in
+  // production (the id rotates at midnight); an identified one can, and is
+  // the documented approximation. Drop them here so the comparison is exact.
+  await sql`delete from analytics.events e using (
+      select visitor_id, session_id from analytics.events
+      where site_id = ${siteId} group by 1, 2
+      having (min(ts) at time zone 'UTC')::date <> (max(ts) at time zone 'UTC')::date) x
+    where e.site_id = ${siteId} and e.visitor_id = x.visitor_id and e.session_id = x.session_id`;
   await sql`analyze analytics.events`;
   q = await import("@/lib/query/run");
 });

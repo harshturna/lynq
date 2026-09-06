@@ -73,6 +73,8 @@ describe("seeded rows through the query layer", () => {
     const { current } = await q.summary(ctx());
     expect(current.pageviews).toBe(stats.pageviews);
     expect(current.sessions).toBe(stats.sessions);
+    expect(current.visitors).toBe(stats.visitors);
+    expect(current.sessions).toBeGreaterThan(current.visitors);
     expect(current.custom_events).toBe(stats.custom);
     expect(current.bounce_rate).toBeCloseTo(
       (stats.bounced / stats.sessions) * 100,

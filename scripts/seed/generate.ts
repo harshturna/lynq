@@ -30,6 +30,8 @@ export type SeedOptions = {
 export type SeedStats = {
   rows: number;
   sessions: number;
+  /** distinct visitor ids over the whole range */
+  visitors: number;
   pageviews: number;
   engagement: number;
   vitals: number;
@@ -554,9 +556,11 @@ export function generate(opts: SeedOptions): {
     Math.floor(until.getTime() / DAY_MS) * DAY_MS - opts.days * DAY_MS
   );
   const rows: EventRow[] = [];
+  const seen = new Set<bigint>();
   const stats: SeedStats = {
     rows: 0,
     sessions: 0,
+    visitors: 0,
     pageviews: 0,
     engagement: 0,
     vitals: 0,
@@ -651,8 +655,6 @@ export function generate(opts: SeedOptions): {
   for (let d = 0; d <= opts.days; d++) {
     const dayStart = new Date(start.getTime() + d * DAY_MS);
     if (dayStart >= until) break;
-    const day = utcDay(dayStart);
-    const salt = daySalt(opts.seed, day);
     const weekday = dayStart.getUTCDay();
     const growth = 1 + 2 * (d / Math.max(1, opts.days - 1));
     const weekend = weekday === 0 || weekday === 6 ? 0.55 : 1;
@@ -687,292 +689,322 @@ export function generate(opts: SeedOptions): {
           : [sw, sh];
       const ip = user?.ip ?? f.internet.ipv4();
       const ua = `${b.browser}/${browserVersion} (${osPick.os} ${osVersion}; ${device})`;
-      const visitor = visitorId(salt, opts.siteId, ip, ua);
       const uhash = user
         ? userHash(opts.secret, opts.siteId, user.uid)
         : BigInt(0);
 
+      // Some visitors come back later the same day: the same daily id with a
+      // new session (an anonymous id only lives a day, D-003); identified
+      // users, who keep one id across days, more often.
+      const sessionsToday =
+        f.number.float({ min: 0, max: 1 }) < (user ? 0.3 : 0.12) ? 2 : 1;
       // Local hour drawn from the curve, shifted to UTC by the country's offset.
-      const hour = pick(HOURS.map((w, h) => ({ weight: w, value: h })));
-      let ts = new Date(
-        dayStart.getTime() +
-          ((hour - country.tz + 24) % 24) * 3_600_000 +
-          f.number.int({ min: 0, max: 3_599_999 })
-      );
-      if (ts >= until)
-        ts = new Date(
-          until.getTime() - f.number.int({ min: 1000, max: 600_000 })
+      const firstHour = pick(HOURS.map((w, h) => ({ weight: w, value: h })));
+      for (let s = 0; s < sessionsToday; s++) {
+        const hour =
+          s === 0
+            ? firstHour
+            : (firstHour + f.number.int({ min: 2, max: 8 })) % 24;
+        let ts = new Date(
+          dayStart.getTime() +
+            ((hour - country.tz + 24) % 24) * 3_600_000 +
+            f.number.int({ min: 0, max: 3_599_999 })
         );
-
-      const ref = pick(REFERRERS);
-      const utm = {
-        utm_source: ref.utm?.utm_source ?? "",
-        utm_medium: ref.utm?.utm_medium ?? "",
-        utm_campaign: ref.utm?.utm_campaign ?? "",
-        utm_term: "",
-        utm_content: "",
-      };
-      const cls = classify(ref.host, utm);
-      const sessionId = idFromText("session", f.string.uuid());
-      const n = user ? Math.min(6, pick(PAGEVIEWS) + 1) : pick(PAGEVIEWS);
-      let seq = 0;
-      let path = user
-        ? f.number.float({ min: 0, max: 1 }) < 0.6
-          ? "/login"
-          : pick(ENTRY)
-        : pick(ENTRY);
-      let signedUp = false;
-      let sessionEngaged = 0;
-      let sessionCustom = 0;
-      const common = {
-        visitor_id: visitor,
-        session_id: sessionId,
-        user_hash: uhash,
-        country: country.code,
-        region: region.code,
-        city,
-        device,
-        browser: b.browser,
-        browser_major: Number.parseInt(browserVersion, 10) || 0,
-        browser_version: browserVersion,
-        os: osPick.os,
-        os_version: osVersion,
-        screen_width: sw,
-        screen_height: sh,
-        viewport_width: vw,
-        viewport_height: vh,
-        language: country.lang,
-      };
-      const push = (r: EventRow) => {
-        // Engagement, vitals and custom rows trail the pageview; keep them inside the range.
-        if (r.ts >= until) {
-          r.ts = new Date(until.getTime() - 1);
-          r.received_at = new Date(until.getTime() + 500);
-        }
-        rows.push(r);
-        stats.rows++;
-      };
-      const stamp = (t: Date) => ({
-        ts: t,
-        received_at: new Date(
-          t.getTime() + f.number.int({ min: 150, max: 1500 })
-        ),
-      });
-
-      for (let p = 0; p < n; p++) {
-        const pageviewId = idFromText("pageview", f.string.uuid());
-        const first = p === 0;
-        const entry = first
-          ? {
-              referrer: ref.host,
-              referrer_url: ref.host ? `https://${ref.host}/` : "",
-              source: cls.source,
-              channel: cls.channel,
-              ...utm,
-            }
-          : {};
-        push(
-          blank({
-            ...stamp(ts),
-            seq: ++seq,
-            event: "pageview",
-            pageview_id: pageviewId,
-            path,
-            ...common,
-            ...entry,
-          })
-        );
-        stats.pageviews++;
-
-        // Engagement: how long the tab was visible on this page.
-        const bounceish = n === 1 && f.number.float({ min: 0, max: 1 }) < 0.55;
-        const engaged = Math.round(
-          bounceish
-            ? f.number.int({ min: 800, max: 9_000 })
-            : around(
-                f,
-                path.startsWith("/docs") || path.startsWith("/blog")
-                  ? 75_000
-                  : 28_000,
-                2.2
-              )
-        );
-        sessionEngaged += engaged;
-        const scroll = Math.min(
-          100,
-          Math.round(
-            engaged < 5000
-              ? f.number.int({ min: 5, max: 40 })
-              : f.number.int({ min: 30, max: 100 })
-          )
-        );
-        const endTs = new Date(ts.getTime() + engaged);
-        push(
-          blank({
-            ...stamp(endTs),
-            seq: ++seq,
-            event: "engagement",
-            pageview_id: pageviewId,
-            path,
-            ...common,
-            engaged_ms: engaged,
-            scroll_depth: scroll,
-          })
-        );
-        stats.engagement++;
-
-        // Web Vitals on most page loads; mobile is slower and noisier.
-        if (f.number.float({ min: 0, max: 1 }) < 0.65) {
-          const mobile = device !== "desktop";
-          const lcp = Math.round(around(f, mobile ? 2600 : 1400, 1.7));
-          const inpValue =
-            f.number.float({ min: 0, max: 1 }) < 0.8
-              ? Math.round(around(f, mobile ? 230 : 120, 1.8))
-              : null;
-          const clsValue =
-            f.number.float({ min: 0, max: 1 }) < 0.85
-              ? Number(around(f, 0.03, 2.5).toFixed(3))
-              : Number(around(f, 0.3, 1.4).toFixed(3));
-          const ttfb = Math.round(around(f, mobile ? 520 : 260, 1.6));
-          const fcp = Math.round(ttfb + around(f, mobile ? 900 : 550, 1.5));
-          push(
-            blank({
-              ...stamp(
-                new Date(ts.getTime() + f.number.int({ min: 1500, max: 6000 }))
-              ),
-              seq: ++seq,
-              event: "vitals",
-              pageview_id: pageviewId,
-              path,
-              ...common,
-              lcp,
-              cls: clsValue,
-              inp: inpValue,
-              fcp,
-              ttfb,
-              dcl: Math.round(fcp + around(f, 200, 1.4)),
-              load: Math.round(lcp + around(f, 600, 1.5)),
-              tti: Math.round(fcp + around(f, 400, 1.6)),
-              tbt: Math.round(around(f, mobile ? 180 : 60, 2)),
-              resources: f.number.int({ min: 18, max: 95 }),
-              lcp_target:
-                path === "/"
-                  ? "img.hero"
-                  : path.startsWith("/blog")
-                    ? "img.cover"
-                    : "h1",
-              inp_target: inpValue
-                ? path === "/pricing"
-                  ? "button.checkout"
-                  : path === "/"
-                    ? "button.signup"
-                    : "a.nav"
-                : null,
-            })
+        if (ts >= until)
+          ts = new Date(
+            until.getTime() - f.number.int({ min: 1000, max: 600_000 })
           );
-          stats.vitals++;
-        }
+        // Salted by the UTC day the session starts on, as the ingest does, so a
+        // late local evening that falls on the next UTC day gets that day's id.
+        const visitor = visitorId(
+          daySalt(opts.seed, utcDay(ts)),
+          opts.siteId,
+          ip,
+          ua
+        );
 
-        // Custom events, by page.
-        const custom = (
-          name: string,
-          props: Record<string, string>,
-          revenue: number | null = null
-        ) => {
-          push(
-            blank({
-              ...stamp(
-                new Date(
-                  ts.getTime() +
-                    f.number.int({ min: 2000, max: Math.max(2500, engaged) })
-                )
-              ),
-              seq: ++seq,
-              event: "custom",
-              name,
-              pageview_id: pageviewId,
-              path,
-              ...common,
-              props,
-              revenue: revenue === null ? null : revenue.toFixed(2),
-            })
-          );
-          stats.custom++;
-          sessionCustom++;
-          if (revenue) stats.revenue += revenue;
+        const ref = pick(REFERRERS);
+        const utm = {
+          utm_source: ref.utm?.utm_source ?? "",
+          utm_medium: ref.utm?.utm_medium ?? "",
+          utm_campaign: ref.utm?.utm_campaign ?? "",
+          utm_term: "",
+          utm_content: "",
         };
-        const roll = f.number.float({ min: 0, max: 1 });
-        if (path === "/" && roll < 0.1)
-          custom("video_play", { video: "product-tour" });
-        else if (path === "/pricing" && roll < 0.07)
-          custom("checkout_start", { plan: pick(PLANS).plan });
-        else if (path === "/signup" && roll < 0.42 && !signedUp) {
-          custom("signup_start", {
-            method: f.helpers.arrayElement(["email", "github", "google"]),
-          });
-          if (f.number.float({ min: 0, max: 1 }) < 0.7) {
-            const plan = pick(PLANS);
-            custom("signup", { plan: plan.plan });
-            signedUp = true;
-            if (f.number.float({ min: 0, max: 1 }) < 0.14)
-              custom(
-                "purchase",
-                { plan: plan.plan, currency: "USD", interval: "month" },
-                plan.price
-              );
+        const cls = classify(ref.host, utm);
+        const sessionId = idFromText("session", f.string.uuid());
+        const n = user ? Math.min(6, pick(PAGEVIEWS) + 1) : pick(PAGEVIEWS);
+        let seq = 0;
+        let path = user
+          ? f.number.float({ min: 0, max: 1 }) < 0.6
+            ? "/login"
+            : pick(ENTRY)
+          : pick(ENTRY);
+        let signedUp = false;
+        let sessionEngaged = 0;
+        let sessionCustom = 0;
+        const common = {
+          // as the ingest does: an identified user's id is the user hash
+          visitor_id: user ? uhash : visitor,
+          session_id: sessionId,
+          user_hash: uhash,
+          country: country.code,
+          region: region.code,
+          city,
+          device,
+          browser: b.browser,
+          browser_major: Number.parseInt(browserVersion, 10) || 0,
+          browser_version: browserVersion,
+          os: osPick.os,
+          os_version: osVersion,
+          screen_width: sw,
+          screen_height: sh,
+          viewport_width: vw,
+          viewport_height: vh,
+          language: country.lang,
+        };
+        const push = (r: EventRow) => {
+          // Engagement, vitals and custom rows trail the pageview; keep them inside the range.
+          if (r.ts >= until) {
+            r.ts = new Date(until.getTime() - 1);
+            r.received_at = new Date(until.getTime() + 500);
           }
-        } else if (path.startsWith("/blog") && roll < 0.08)
-          custom("outbound_click", {
-            url: f.helpers.arrayElement([
-              "https://github.com/aivia-ai/aivia",
-              "https://x.com/aivia_ai",
-              "https://arxiv.org/abs/2305.10601",
-            ]),
-          });
-        else if (path.startsWith("/docs") && roll < 0.03)
-          custom("download", {
-            file: f.helpers.arrayElement([
-              "aivia-cli-mac.zip",
-              "aivia-cli-linux.tar.gz",
-              "openapi.json",
-            ]),
-          });
-        else if (path.startsWith("/dashboard/agents/new") && roll < 0.5)
-          custom("agent_created", {
-            template: f.helpers.arrayElement(["support", "research", "blank"]),
-          });
+          rows.push(r);
+          stats.rows++;
+        };
+        const stamp = (t: Date) => ({
+          ts: t,
+          received_at: new Date(
+            t.getTime() + f.number.int({ min: 150, max: 1500 })
+          ),
+        });
 
-        // Identify once per session for known users, right after the first pageview.
-        if (first && user) {
+        for (let p = 0; p < n; p++) {
+          const pageviewId = idFromText("pageview", f.string.uuid());
+          const first = p === 0;
+          const entry = first
+            ? {
+                referrer: ref.host,
+                referrer_url: ref.host ? `https://${ref.host}/` : "",
+                source: cls.source,
+                channel: cls.channel,
+                ...utm,
+              }
+            : {};
           push(
             blank({
-              ...stamp(new Date(ts.getTime() + 300)),
+              ...stamp(ts),
               seq: ++seq,
-              event: "identify",
+              event: "pageview",
               pageview_id: pageviewId,
               path,
               ...common,
+              ...entry,
             })
           );
-          stats.identify++;
-        }
+          stats.pageviews++;
 
-        // Next page.
-        ts = new Date(endTs.getTime() + f.number.int({ min: 800, max: 5000 }));
-        if (ts >= until) break;
-        const next =
-          NEXT[path] ??
-          (path.startsWith("/blog")
-            ? BLOG_NEXT
-            : path.startsWith("/docs")
-              ? NEXT["/docs/api"]
-              : NEXT["/"]);
-        path = pick(next);
+          // Engagement: how long the tab was visible on this page.
+          const bounceish =
+            n === 1 && f.number.float({ min: 0, max: 1 }) < 0.55;
+          const engaged = Math.round(
+            bounceish
+              ? f.number.int({ min: 800, max: 9_000 })
+              : around(
+                  f,
+                  path.startsWith("/docs") || path.startsWith("/blog")
+                    ? 75_000
+                    : 28_000,
+                  2.2
+                )
+          );
+          sessionEngaged += engaged;
+          const scroll = Math.min(
+            100,
+            Math.round(
+              engaged < 5000
+                ? f.number.int({ min: 5, max: 40 })
+                : f.number.int({ min: 30, max: 100 })
+            )
+          );
+          const endTs = new Date(ts.getTime() + engaged);
+          push(
+            blank({
+              ...stamp(endTs),
+              seq: ++seq,
+              event: "engagement",
+              pageview_id: pageviewId,
+              path,
+              ...common,
+              engaged_ms: engaged,
+              scroll_depth: scroll,
+            })
+          );
+          stats.engagement++;
+
+          // Web Vitals on most page loads; mobile is slower and noisier.
+          if (f.number.float({ min: 0, max: 1 }) < 0.65) {
+            const mobile = device !== "desktop";
+            const lcp = Math.round(around(f, mobile ? 2600 : 1400, 1.7));
+            const inpValue =
+              f.number.float({ min: 0, max: 1 }) < 0.8
+                ? Math.round(around(f, mobile ? 230 : 120, 1.8))
+                : null;
+            const clsValue =
+              f.number.float({ min: 0, max: 1 }) < 0.85
+                ? Number(around(f, 0.03, 2.5).toFixed(3))
+                : Number(around(f, 0.3, 1.4).toFixed(3));
+            const ttfb = Math.round(around(f, mobile ? 520 : 260, 1.6));
+            const fcp = Math.round(ttfb + around(f, mobile ? 900 : 550, 1.5));
+            push(
+              blank({
+                ...stamp(
+                  new Date(
+                    ts.getTime() + f.number.int({ min: 1500, max: 6000 })
+                  )
+                ),
+                seq: ++seq,
+                event: "vitals",
+                pageview_id: pageviewId,
+                path,
+                ...common,
+                lcp,
+                cls: clsValue,
+                inp: inpValue,
+                fcp,
+                ttfb,
+                dcl: Math.round(fcp + around(f, 200, 1.4)),
+                load: Math.round(lcp + around(f, 600, 1.5)),
+                tti: Math.round(fcp + around(f, 400, 1.6)),
+                tbt: Math.round(around(f, mobile ? 180 : 60, 2)),
+                resources: f.number.int({ min: 18, max: 95 }),
+                lcp_target:
+                  path === "/"
+                    ? "img.hero"
+                    : path.startsWith("/blog")
+                      ? "img.cover"
+                      : "h1",
+                inp_target: inpValue
+                  ? path === "/pricing"
+                    ? "button.checkout"
+                    : path === "/"
+                      ? "button.signup"
+                      : "a.nav"
+                  : null,
+              })
+            );
+            stats.vitals++;
+          }
+
+          // Custom events, by page.
+          const custom = (
+            name: string,
+            props: Record<string, string>,
+            revenue: number | null = null
+          ) => {
+            push(
+              blank({
+                ...stamp(
+                  new Date(
+                    ts.getTime() +
+                      f.number.int({ min: 2000, max: Math.max(2500, engaged) })
+                  )
+                ),
+                seq: ++seq,
+                event: "custom",
+                name,
+                pageview_id: pageviewId,
+                path,
+                ...common,
+                props,
+                revenue: revenue === null ? null : revenue.toFixed(2),
+              })
+            );
+            stats.custom++;
+            sessionCustom++;
+            if (revenue) stats.revenue += revenue;
+          };
+          const roll = f.number.float({ min: 0, max: 1 });
+          if (path === "/" && roll < 0.1)
+            custom("video_play", { video: "product-tour" });
+          else if (path === "/pricing" && roll < 0.07)
+            custom("checkout_start", { plan: pick(PLANS).plan });
+          else if (path === "/signup" && roll < 0.42 && !signedUp) {
+            custom("signup_start", {
+              method: f.helpers.arrayElement(["email", "github", "google"]),
+            });
+            if (f.number.float({ min: 0, max: 1 }) < 0.7) {
+              const plan = pick(PLANS);
+              custom("signup", { plan: plan.plan });
+              signedUp = true;
+              if (f.number.float({ min: 0, max: 1 }) < 0.14)
+                custom(
+                  "purchase",
+                  { plan: plan.plan, currency: "USD", interval: "month" },
+                  plan.price
+                );
+            }
+          } else if (path.startsWith("/blog") && roll < 0.08)
+            custom("outbound_click", {
+              url: f.helpers.arrayElement([
+                "https://github.com/aivia-ai/aivia",
+                "https://x.com/aivia_ai",
+                "https://arxiv.org/abs/2305.10601",
+              ]),
+            });
+          else if (path.startsWith("/docs") && roll < 0.03)
+            custom("download", {
+              file: f.helpers.arrayElement([
+                "aivia-cli-mac.zip",
+                "aivia-cli-linux.tar.gz",
+                "openapi.json",
+              ]),
+            });
+          else if (path.startsWith("/dashboard/agents/new") && roll < 0.5)
+            custom("agent_created", {
+              template: f.helpers.arrayElement([
+                "support",
+                "research",
+                "blank",
+              ]),
+            });
+
+          // Identify once per session for known users, right after the first pageview.
+          if (first && user) {
+            push(
+              blank({
+                ...stamp(new Date(ts.getTime() + 300)),
+                seq: ++seq,
+                event: "identify",
+                pageview_id: pageviewId,
+                path,
+                ...common,
+              })
+            );
+            stats.identify++;
+          }
+
+          // Next page.
+          ts = new Date(
+            endTs.getTime() + f.number.int({ min: 800, max: 5000 })
+          );
+          if (ts >= until) break;
+          const next =
+            NEXT[path] ??
+            (path.startsWith("/blog")
+              ? BLOG_NEXT
+              : path.startsWith("/docs")
+                ? NEXT["/docs/api"]
+                : NEXT["/"]);
+          path = pick(next);
+        }
+        stats.sessions++;
+        seen.add(common.visitor_id);
+        if (n === 1 && sessionEngaged < 10_000 && sessionCustom === 0)
+          stats.bounced++;
       }
-      stats.sessions++;
-      if (n === 1 && sessionEngaged < 10_000 && sessionCustom === 0)
-        stats.bounced++;
     }
   }
+  stats.visitors = seen.size;
   return { rows, stats };
 }

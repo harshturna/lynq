@@ -4,7 +4,8 @@
  *   npm run seed -- [--site aivia.byharsh.com] [--days 365] [--visitors 40] [--seed 1] [--dry-run] [--wipe-only]
  *
  * Re-runnable: every run first deletes the site's rows with ingest_version 9
- * (only ever written by this script), then inserts a fresh year. Real tracker
+ * (only ever written by this script), then inserts a fresh year and rebuilds
+ * the site's daily rollup. Real tracker
  * rows (ingest_version 2) are never touched. Needs LYNQ_DB_POOLER_URL; uses
  * LYNQ_IDENTITY_SECRET for user hashes when set.
  */
@@ -110,6 +111,16 @@ async function main() {
   console.log(
     `analytics.events now holds ${check.n} seeded rows for the site, ${check.first?.toISOString()} to ${check.last?.toISOString()}`
   );
+  // The daily rollup (D-015) was built from the old rows; rebuild it now
+  // rather than waiting for the nightly housekeeping.
+  await sql`delete from analytics.rollup_daily where site_id = ${siteId}`;
+  await sql`delete from analytics.rollup_state where site_id = ${siteId}`;
+  const t1 = Date.now();
+  await sql.begin(async (tx) => {
+    await tx.unsafe("set local statement_timeout = 600000");
+    await tx`select analytics.rollup_refresh()`;
+  });
+  console.log(`daily rollup rebuilt in ${Date.now() - t1} ms`);
 }
 
 main()
